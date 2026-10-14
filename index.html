@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-/* Layout: cabina de análisis — vídeo + línea de tiempo a la izquierda, panel de etiquetado y lista de cortes a la derecha */
+/* Layout: cabina de análisis — vídeo + línea de tiempo a la izquierda; etiquetado, cortes y listas de reproducción a la derecha */
 :root{
   --bg:#0f1512; --panel:#161f1a; --panel2:#1c2721; --line:#2a3830;
   --fg:#e6ede8; --muted:#8fa197; --accent:#5fbf7f; --accent-ink:#0b1a10;
@@ -23,10 +23,12 @@ body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--body)}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:6px;padding:.4rem .7rem}
 button:hover{border-color:var(--muted)}
+button:disabled{opacity:.45;cursor:not-allowed}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
 button.ghost{background:transparent}
 input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:.35rem .5rem}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;padding:0}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 [hidden]{display:none!important}
 
@@ -36,26 +38,32 @@ header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.7rem max
 .vname{color:var(--muted);font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .hbtns{display:flex;gap:.4rem;flex-wrap:wrap}
 
-main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:1rem;padding:1rem max(16px,env(safe-area-inset-right,0px)) 1rem max(16px,env(safe-area-inset-left,0px))}
-@media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:1rem;padding:1rem max(16px,env(safe-area-inset-right,0px)) 1rem max(16px,env(safe-area-inset-left,0px))}
+@media (max-width:1020px){main{grid-template-columns:minmax(0,1fr)}}
 
 .stage{position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:100%}
 video{width:100%;height:100%;display:block;background:#000}
-.drop{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:1.5rem;border:2px dashed var(--line);border-radius:8px;background:
-  linear-gradient(var(--bg),var(--bg)) padding-box;}
+.drop{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:1.5rem;border:2px dashed var(--line);border-radius:8px;background:var(--bg)}
 .drop.over{border-color:var(--accent)}
 .drop h2{font-family:var(--display);font-size:2rem;margin:.2rem 0;text-transform:uppercase;letter-spacing:.03em}
 .drop p{color:var(--muted);max-width:42ch;margin:.4rem auto}
 .pitch{width:140px;opacity:.5;margin-bottom:.5rem}
-.rec{position:absolute;top:10px;left:10px;background:var(--danger);color:#fff;padding:.25rem .6rem;border-radius:4px;font-weight:600;font-size:.85rem}
-.flash{position:absolute;top:10px;right:10px;background:var(--panel);border:1px solid var(--accent);padding:.3rem .7rem;border-radius:4px;font-size:.9rem;opacity:0;transition:opacity .2s}
+.flash{position:absolute;top:10px;right:10px;background:var(--panel);border:1px solid var(--accent);padding:.3rem .7rem;border-radius:4px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;max-width:80%}
 .flash.show{opacity:1}
+
+.exportbox{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,14,12,.82);padding:1rem}
+.exportbox .inner{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem}
+.exportbox h4{margin:0 0 .3rem;font-family:var(--display);text-transform:uppercase;letter-spacing:.05em;font-size:1.25rem}
+.exportbox p{margin:.3rem 0;color:var(--muted);font-size:.88rem}
+.prog{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:.6rem 0}
+.prog div{height:100%;width:0;background:var(--accent);transition:width .2s linear}
+.exportbox canvas{width:100%;border-radius:6px;margin-top:.5rem;background:#000}
 
 .controls{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin-top:.6rem}
 .controls .time{margin-left:auto;font-size:1rem;color:var(--fg)}
 .timeline{position:relative;height:56px;margin-top:.6rem;background:var(--panel);border:1px solid var(--line);border-radius:6px;cursor:pointer;overflow:hidden}
-.timeline .row{position:absolute;left:0;right:0}
-.timeline .seg{position:absolute;height:12px;border-radius:2px;opacity:.9}
+.timeline .seg{position:absolute;border-radius:2px;opacity:.9}
+.timeline .seg.inpl{outline:1px solid var(--fg)}
 .timeline .head{position:absolute;top:0;bottom:0;width:2px;background:var(--fg);pointer-events:none}
 .timeline .tick{position:absolute;bottom:2px;font-size:.65rem;color:var(--muted);font-family:var(--mono);transform:translateX(-50%)}
 
@@ -66,11 +74,8 @@ aside{display:flex;flex-direction:column;gap:1rem;min-width:0}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.8rem}
 .card h3{font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:1.05rem;margin:0 0 .6rem;display:flex;align-items:center;gap:.5rem}
 .card h3 .sp{flex:1}
-.mode{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-bottom:.6rem}
-.mode input[type=number]{width:3.6rem}
-.seg-toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.seg-toggle button{border:0;border-radius:0;background:transparent;padding:.25rem .6rem;font-size:.85rem}
-.seg-toggle button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.card h3 .cnt{font-family:var(--mono);font-size:.8rem;color:var(--muted);letter-spacing:0}
+.mode{font-size:.85rem;color:var(--muted);margin-bottom:.6rem}
 .tags{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
 .tag{display:flex;align-items:center;gap:.5rem;text-align:left;padding:.55rem .6rem;border-left:5px solid var(--c);min-height:48px;line-height:1.15}
 .tag .k{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto}
@@ -80,9 +85,10 @@ aside{display:flex;flex-direction:column;gap:1rem;min-width:0}
 .desc{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;font-size:.85rem;align-items:center}
 
 .list{display:flex;flex-direction:column;gap:.4rem;max-height:420px;overflow:auto}
-.clip{display:grid;grid-template-columns:6px 1fr auto;gap:.6rem;align-items:start;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:.45rem .55rem .45rem 0;overflow:hidden}
+.clip{display:grid;grid-template-columns:6px auto 1fr auto;gap:.55rem;align-items:start;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:.45rem .55rem .45rem 0;overflow:hidden}
 .clip.playing{border-color:var(--accent)}
 .clip .bar{align-self:stretch;background:var(--c)}
+.clip .sel{padding-top:.15rem}
 .clip .t{font-weight:600}
 .clip .m{font-size:.8rem;color:var(--muted)}
 .clip input.note{width:100%;margin-top:.3rem;font-size:.82rem}
@@ -95,11 +101,29 @@ aside{display:flex;flex-direction:column;gap:1rem;min-width:0}
 .filters select{flex:1;min-width:0}
 .empty{color:var(--muted);font-size:.88rem;padding:.4rem 0}
 
+.plbar{display:flex;gap:.4rem;margin-bottom:.5rem}
+.plbar select{flex:1;min-width:0}
+#plName{width:100%;margin-bottom:.5rem;font-weight:600}
+.pli{display:grid;grid-template-columns:1.6rem 10px 1fr auto;gap:.5rem;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:.35rem .45rem;font-size:.86rem}
+.pli.playing{border-color:var(--accent)}
+.pli .n{font-family:var(--mono);color:var(--muted);font-size:.75rem;text-align:right}
+.pli .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pli .nm small{color:var(--muted);font-family:var(--mono)}
+.pli .b{display:flex;gap:.2rem}
+.pli .b button{padding:.1rem .4rem;font-size:.78rem}
+.pltotal{display:flex;justify-content:space-between;color:var(--muted);font-size:.82rem;margin:.5rem 0}
+.opts{display:flex;flex-direction:column;gap:.35rem;font-size:.85rem;border-top:1px solid var(--line);padding-top:.6rem}
+.opts label{display:flex;gap:.45rem;align-items:center}
+.plact{display:flex;gap:.4rem;margin-top:.7rem}
+.plact button{flex:1}
+.fmtnote{font-size:.78rem;color:var(--muted);margin:.5rem 0 0}
+
 .stats table{width:100%;border-collapse:collapse;font-size:.85rem}
 .stats td,.stats th{padding:.25rem .2rem;border-bottom:1px solid var(--line);text-align:left}
 .stats th{color:var(--muted);font-weight:500;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em}
 .stats td.n{text-align:right;font-family:var(--mono)}
-.dot{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:.4rem}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c)}
+.stats .dot{margin-right:.4rem}
 
 dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;max-width:min(560px,92vw);width:100%}
 dialog::backdrop{background:rgba(0,0,0,.6)}
@@ -134,7 +158,16 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
           <button class="primary" id="btnOpen2">Abrir vídeo</button>
         </div>
       </div>
-      <div class="rec" id="rec" hidden>● Grabando clip…</div>
+      <div class="exportbox" id="exportBox" hidden>
+        <div class="inner">
+          <h4>Generando vídeo</h4>
+          <p id="expText">Preparando…</p>
+          <div class="prog"><div id="expBar"></div></div>
+          <p>El vídeo se graba a velocidad real. <b>No cambies de pestaña ni minimices la ventana</b> hasta que termine.</p>
+          <canvas id="expCanvas" width="640" height="360"></canvas>
+          <div style="display:flex;justify-content:flex-end;margin-top:.6rem"><button id="expCancel">Cancelar</button></div>
+        </div>
+      </div>
       <div class="flash" id="flash"></div>
     </div>
 
@@ -160,9 +193,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <aside>
     <div class="card">
       <h3>Etiquetar acción</h3>
-      <div class="mode">
-        <span><b style="color:var(--fg)">1.er clic</b> marca el inicio de la acción · <b style="color:var(--fg)">2.º clic</b> en la misma etiqueta marca el final · <kbd>Esc</kbd> cancela</span>
-      </div>
+      <div class="mode"><b style="color:var(--fg)">1.er clic</b> marca el inicio de la acción · <b style="color:var(--fg)">2.º clic</b> en la misma etiqueta marca el final · <kbd>Esc</kbd> cancela</div>
       <div class="tags" id="tags"></div>
       <div class="desc">
         <label>Equipo <select id="team"><option>Propio</option><option>Rival</option></select></label>
@@ -171,13 +202,38 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     </div>
 
     <div class="card">
-      <h3>Cortes <span class="sp"></span><span class="mono" id="count" style="font-size:.85rem;color:var(--muted)">0</span></h3>
+      <h3>Cortes <span class="sp"></span><span class="cnt" id="count">0</span></h3>
       <div class="filters">
         <select id="fCat"><option value="">Todas las etiquetas</option></select>
         <select id="fTeam"><option value="">Ambos equipos</option><option>Propio</option><option>Rival</option></select>
-        <button id="bPlaylist" title="Reproducir seguidos los cortes filtrados">▶ Playlist</button>
+      </div>
+      <div class="filters">
+        <button id="bAddFiltered" style="flex:1" title="Añade a la lista de reproducción todos los cortes que se ven con el filtro actual">＋ Añadir filtrados a la lista</button>
+        <button id="bPlayFiltered" title="Reproducir seguidos los cortes filtrados">▶ Ver</button>
       </div>
       <div class="list" id="list"></div>
+    </div>
+
+    <div class="card">
+      <h3>Lista de reproducción <span class="sp"></span><span class="cnt" id="plCount">0</span></h3>
+      <div class="plbar">
+        <select id="plSel" aria-label="Elegir lista"></select>
+        <button id="plNew" title="Crear una lista nueva">+ Nueva</button>
+        <button id="plDel" title="Borrar esta lista (los cortes no se borran)">Borrar</button>
+      </div>
+      <input type="text" id="plName" aria-label="Nombre de la lista" placeholder="Nombre de la lista">
+      <div class="list" id="plItems" style="max-height:300px"></div>
+      <div class="pltotal"><span>Duración total</span><span class="mono" id="plDur">0:00</span></div>
+      <div class="opts">
+        <label><input type="checkbox" id="optTitles" checked> Rótulo de 2 s antes de cada corte (etiqueta, minuto y observación)</label>
+        <label><input type="checkbox" id="optOverlay" checked> Etiqueta sobreimpresa durante el corte</label>
+        <label>Salida <select id="optSep"><option value="one">Un único vídeo con todos los cortes</option><option value="sep">Un archivo por cada corte</option></select></label>
+      </div>
+      <div class="plact">
+        <button id="plPlay">▶ Reproducir lista</button>
+        <button id="plExport" class="primary">⤓ Generar MP4</button>
+      </div>
+      <p class="fmtnote" id="fmtNote"></p>
     </div>
 
     <div class="card stats">
@@ -213,11 +269,11 @@ const DEFAULT_CATS = [
   {name:'Finalización', color:'#ee8e6c'}
 ];
 const uid = () => Math.random().toString(36).slice(2,9);
-let state = {cats: DEFAULT_CATS.map(c => ({...c, id: uid()})), clips: []};
+let state = {cats: DEFAULT_CATS.map(c => ({...c, id: uid()})), clips: [], playlists: [], cur: null};
 let videoKey = null, videoName = '';
-let openCut = {};          // catId -> start time
+let openCut = {};          // catId -> instante de inicio
 let playback = null;       // {queue:[clips], i}
-let recording = false;
+let exporting = null;      // {abort:bool}
 
 /* ---------- utilidades ---------- */
 const fmt = t => {
@@ -226,15 +282,32 @@ const fmt = t => {
   return [h,m,s].map(n => String(n).padStart(2,'0')).join(':');
 };
 const fmtShort = t => { const m=Math.floor(t/60), s=(t%60).toFixed(1); return `${m}:${s.padStart(4,'0')}`; };
+const fmtDur = t => { t=Math.round(t); const m=Math.floor(t/60), s=t%60; return `${m}:${String(s).padStart(2,'0')}`; };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const catById = id => state.cats.find(c => c.id === id) || {name:'(borrada)', color:'#777'};
-function flash(msg){ const f=$('#flash'); f.textContent=msg; f.classList.add('show'); clearTimeout(flash.t); flash.t=setTimeout(()=>f.classList.remove('show'),1400); }
-function download(name, blob){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); }
+const slug = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w-]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'') || 'video';
+const catById = id => state.cats.find(c => c.id === id) || {name:'(borrada)', color:'#777777'};
+const clipById = id => state.clips.find(c => c.id === id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function flash(msg, ms=1600){ const f=$('#flash'); f.textContent=msg; f.classList.add('show'); clearTimeout(flash.t); flash.t=setTimeout(()=>f.classList.remove('show'),ms); }
+function download(name, blob){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},4000); }
 const baseName = () => (videoName || 'partido').replace(/\.[^.]+$/,'');
 
+/* ---------- listas de reproducción: estado ---------- */
+function curPL(){
+  let p = state.playlists.find(p => p.id === state.cur);
+  if (!p){
+    p = state.playlists[0];
+    if (!p){ p = {id:uid(), name:'Lista 1', ids:[]}; state.playlists.push(p); }
+    state.cur = p.id;
+  }
+  p.ids = p.ids.filter(id => clipById(id));
+  return p;
+}
+
+/* ---------- persistencia ---------- */
 function save(){
   try{ localStorage.setItem('tacticalab:cats', JSON.stringify(state.cats)); }catch(e){}
-  if (videoKey) try{ localStorage.setItem('tacticalab:'+videoKey, JSON.stringify(state.clips)); }catch(e){}
+  if (videoKey) try{ localStorage.setItem('tacticalab:'+videoKey, JSON.stringify({clips:state.clips, playlists:state.playlists, cur:state.cur})); }catch(e){}
 }
 try{ const c = JSON.parse(localStorage.getItem('tacticalab:cats')); if (Array.isArray(c) && c.length) state.cats = c; }catch(e){}
 
@@ -247,7 +320,12 @@ function loadVideo(file){
   $('#vname').textContent = file.name;
   $('#drop').hidden = true;
   openCut = {};
-  try{ const saved = JSON.parse(localStorage.getItem('tacticalab:'+videoKey)); state.clips = Array.isArray(saved) ? saved : []; }catch(e){ state.clips = []; }
+  state.clips = []; state.playlists = []; state.cur = null;
+  try{
+    const saved = JSON.parse(localStorage.getItem('tacticalab:'+videoKey));
+    if (Array.isArray(saved)) state.clips = saved;
+    else if (saved){ state.clips = saved.clips || []; state.playlists = saved.playlists || []; state.cur = saved.cur || null; }
+  }catch(e){}
   if (state.clips.length) flash(`Recuperados ${state.clips.length} cortes de este vídeo`);
   renderAll();
 }
@@ -256,20 +334,20 @@ $('#fileVideo').onchange = e => loadVideo(e.target.files[0]);
 const stage = $('#stage');
 ['dragenter','dragover'].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); $('#drop').classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); $('#drop').classList.remove('over'); }));
-stage.addEventListener('drop', e => loadVideo(e.dataTransfer.files[0]));
-video.addEventListener('error', () => flash('El navegador no puede reproducir este formato. Prueba con MP4 (H.264).'));
+stage.addEventListener('drop', e => { if (!exporting) loadVideo(e.dataTransfer.files[0]); });
+video.addEventListener('error', () => flash('El navegador no puede reproducir este formato. Prueba con MP4 (H.264).', 3000));
 
 /* ---------- controles ---------- */
 const FRAME = 1/25;
 const seek = t => { if (video.duration) video.currentTime = Math.max(0, Math.min(video.duration, t)); };
-function togglePlay(){ if (!video.src) return; playback = null; video.paused ? video.play() : video.pause(); }
+function togglePlay(){ if (!video.src || exporting) return; playback = null; markPlaying(); video.paused ? video.play() : video.pause(); }
 $('#bPlay').onclick = togglePlay;
 $('#bBack5').onclick = () => seek(video.currentTime-5);
 $('#bFwd5').onclick = () => seek(video.currentTime+5);
 $('#bFrameB').onclick = () => { video.pause(); seek(video.currentTime-FRAME); };
 $('#bFrameF').onclick = () => { video.pause(); seek(video.currentTime+FRAME); };
 $('#speed').onchange = e => video.playbackRate = +e.target.value;
-video.addEventListener('play', () => $('#bPlay').textContent = '❚❚ Pausa');
+video.addEventListener('play', () => { $('#bPlay').textContent = '❚❚ Pausa'; if (actx) actx.resume(); });
 video.addEventListener('pause', () => $('#bPlay').textContent = '▶ Play');
 video.addEventListener('loadedmetadata', renderTimeline);
 
@@ -280,12 +358,12 @@ $('#bShot').onclick = () => {
   c.toBlob(b => download(`${baseName()}_${fmt(video.currentTime).replace(/:/g,'-')}.png`, b), 'image/png');
 };
 
-/* bucle: tiempo, cabezal y fin de clip */
+/* bucle: tiempo, cabezal y fin de corte en reproducción */
 (function tick(){
   const t = video.currentTime, d = video.duration || 0;
   $('#time').textContent = `${fmt(t)} / ${fmt(d)}`;
   if (d) $('#head').style.left = (t/d*100)+'%';
-  if (playback && !video.paused){
+  if (playback && !exporting && !video.paused){
     const c = playback.queue[playback.i];
     if (t >= c.end){
       playback.i++;
@@ -298,8 +376,9 @@ $('#bShot').onclick = () => {
 
 /* línea de tiempo */
 $('#timeline').addEventListener('click', e => {
+  if (exporting) return;
   const r = e.currentTarget.getBoundingClientRect();
-  playback = null; seek((e.clientX - r.left)/r.width * (video.duration||0));
+  playback = null; markPlaying(); seek((e.clientX - r.left)/r.width * (video.duration||0));
 });
 function renderTimeline(){
   const tl = $('#timeline'), d = video.duration;
@@ -307,8 +386,9 @@ function renderTimeline(){
   if (!d) return;
   const lanes = state.cats.map(c => c.id);
   const laneH = Math.max(3, Math.floor(38 / Math.max(1,lanes.length)));
+  const inPl = new Set(curPL().ids);
   state.clips.forEach(c => {
-    const s = document.createElement('div'); s.className='seg';
+    const s = document.createElement('div'); s.className = 'seg' + (inPl.has(c.id) ? ' inpl' : '');
     const lane = Math.max(0, lanes.indexOf(c.cat));
     s.style.cssText = `left:${c.start/d*100}%;width:${Math.max(.25,(c.end-c.start)/d*100)}%;top:${3+lane*laneH}px;height:${laneH-1}px;background:${catById(c.cat).color}`;
     s.title = `${catById(c.cat).name} · ${fmt(c.start)}`;
@@ -320,7 +400,7 @@ function renderTimeline(){
   }
 }
 
-/* ---------- etiquetado ---------- */
+/* ---------- etiquetado manual: inicio y final ---------- */
 function tagAction(catId){
   if (!video.src){ flash('Primero carga un vídeo'); return; }
   const t = video.currentTime;
@@ -333,11 +413,10 @@ function tagAction(catId){
   addClip(catId, Math.min(s,t), Math.max(s,t));
 }
 function addClip(cat, start, end){
-  if (end - start < 0.5) end = start + 0.5;
   state.clips.push({id:uid(), cat, start:+start.toFixed(2), end:+end.toFixed(2), team:$('#team').value, result:$('#result').value, note:''});
   state.clips.sort((a,b)=>a.start-b.start);
   $('#result').value = '';
-  flash(`✓ ${catById(cat).name} · ${fmt(start)}`);
+  flash(`✓ ${catById(cat).name} · ${fmt(start)} → ${fmt(end)}`);
   save(); renderAll();
 }
 function renderTags(){
@@ -358,12 +437,14 @@ function renderList(){
   const fc = $('#fCat').value;
   $('#fCat').innerHTML = '<option value="">Todas las etiquetas</option>' + state.cats.map(c => `<option value="${c.id}" ${c.id===fc?'selected':''}>${esc(c.name)}</option>`).join('');
   const list = filtered();
+  const inPl = new Set(curPL().ids);
   $('#count').textContent = list.length === state.clips.length ? list.length : `${list.length} / ${state.clips.length}`;
   if (!state.clips.length){ $('#list').innerHTML = '<div class="empty">Todavía no hay cortes. Pulsa una etiqueta (o su número) cuando empiece la acción y vuelve a pulsarla cuando termine.</div>'; return; }
   if (!list.length){ $('#list').innerHTML = '<div class="empty">Ningún corte coincide con el filtro.</div>'; return; }
   $('#list').innerHTML = list.map(c => { const cat = catById(c.cat); return `
     <div class="clip" style="--c:${cat.color}" data-id="${c.id}">
       <div class="bar"></div>
+      <div class="sel"><input type="checkbox" ${inPl.has(c.id)?'checked':''} title="Incluir en la lista de reproducción" aria-label="Incluir en la lista"></div>
       <div style="min-width:0">
         <div class="t">${esc(cat.name)}</div>
         <div class="m mono">${fmtShort(c.start)} → ${fmtShort(c.end)} · ${(c.end-c.start).toFixed(1)} s</div>
@@ -374,12 +455,18 @@ function renderList(){
         <button data-a="play" title="Ver corte">▶</button>
         <button data-a="in" title="Fijar inicio en el instante actual">[</button>
         <button data-a="out" title="Fijar fin en el instante actual">]</button>
-        <button data-a="rec" title="Exportar este corte como vídeo .webm">⤓</button>
+        <button data-a="rec" title="Descargar solo este corte como vídeo">⤓</button>
         <button data-a="del" title="Borrar corte">✕</button>
       </div>
     </div>`; }).join('');
   $('#list').querySelectorAll('.clip').forEach(el => {
-    const c = state.clips.find(x => x.id === el.dataset.id);
+    const c = clipById(el.dataset.id);
+    el.querySelector('input[type=checkbox]').onchange = e => {
+      const p = curPL();
+      if (e.target.checked){ if (!p.ids.includes(c.id)) p.ids.push(c.id); }
+      else p.ids = p.ids.filter(id => id !== c.id);
+      save(); renderPlaylist(); renderTimeline();
+    };
     el.querySelector('.note').oninput = e => { c.note = e.target.value; save(); };
     el.querySelector('.note').onkeydown = e => e.stopPropagation();
     el.querySelectorAll('button').forEach(b => b.onclick = () => {
@@ -387,9 +474,9 @@ function renderList(){
       if (a==='play') playQueue([c]);
       if (a==='in'){ c.start = +video.currentTime.toFixed(2); if (c.end<=c.start) c.end=c.start+1; save(); renderAll(); }
       if (a==='out'){ c.end = +video.currentTime.toFixed(2); if (c.end<=c.start) c.start=Math.max(0,c.end-1); save(); renderAll(); }
-      if (a==='rec') exportClip(c);
+      if (a==='rec') exportClips([c], {titles:false, overlay:$('#optOverlay').checked, separate:false, name:`${baseName()}_${catById(c.cat).name}_${fmt(c.start).replace(/:/g,'-')}`});
       if (a==='del'){
-        if (b.dataset.confirm){ state.clips = state.clips.filter(x => x !== c); save(); renderAll(); }
+        if (b.dataset.confirm){ state.clips = state.clips.filter(x => x !== c); state.playlists.forEach(p => p.ids = p.ids.filter(id => id !== c.id)); save(); renderAll(); }
         else { b.dataset.confirm='1'; b.textContent='¿Borrar?'; setTimeout(()=>{ if(b.isConnected){ delete b.dataset.confirm; b.textContent='✕'; } },2500); }
       }
     });
@@ -398,42 +485,286 @@ function renderList(){
 }
 function markPlaying(){
   const cur = playback && playback.queue[playback.i];
-  document.querySelectorAll('.clip').forEach(el => el.classList.toggle('playing', !!cur && el.dataset.id===cur.id));
+  document.querySelectorAll('.clip,.pli').forEach(el => el.classList.toggle('playing', !!cur && el.dataset.id===cur.id));
 }
 function playQueue(q){
-  if (!q.length || !video.src) return;
+  if (!q.length || !video.src || exporting) return;
   playback = {queue:q, i:0};
   video.currentTime = q[0].start; video.play(); markPlaying();
 }
 $('#fCat').onchange = $('#fTeam').onchange = renderList;
-$('#bPlaylist').onclick = () => { const q = filtered(); if (!q.length) flash('No hay cortes que reproducir'); else { playQueue(q); flash(`Playlist: ${q.length} cortes`); } };
+$('#bPlayFiltered').onclick = () => { const q = filtered(); if (!q.length) flash('No hay cortes que reproducir'); else { playQueue(q); flash(`Reproduciendo ${q.length} cortes`); } };
+$('#bAddFiltered').onclick = () => {
+  const p = curPL(); let n = 0;
+  filtered().forEach(c => { if (!p.ids.includes(c.id)){ p.ids.push(c.id); n++; } });
+  save(); renderList(); renderPlaylist(); renderTimeline();
+  flash(n ? `Añadidos ${n} cortes a «${p.name}»` : 'Esos cortes ya estaban en la lista');
+};
 
-/* ---------- exportar clip como vídeo (graba en tiempo real) ---------- */
-async function exportClip(c){
-  if (recording) return;
-  const cap = video.captureStream || video.mozCaptureStream;
-  if (!cap || !window.MediaRecorder){ flash('Tu navegador no permite exportar clips. Usa Chrome, Edge o Firefox.'); return; }
-  recording = true; playback = null; video.pause();
-  video.currentTime = c.start;
-  await new Promise(r => video.addEventListener('seeked', r, {once:true}));
-  const stream = cap.call(video);
-  const mime = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m => MediaRecorder.isTypeSupported(m)) || '';
-  const rec = new MediaRecorder(stream, mime ? {mimeType:mime} : {});
-  const chunks = [];
-  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
-  rec.onstop = () => {
-    recording = false; $('#rec').hidden = true;
-    download(`${baseName()}_${catById(c.cat).name.replace(/\s+/g,'-')}_${fmt(c.start).replace(/:/g,'-')}.webm`, new Blob(chunks, {type:'video/webm'}));
-  };
-  const rate = video.playbackRate; video.playbackRate = 1;
-  $('#rec').hidden = false;
-  rec.start(); await video.play();
-  const stopper = () => {
-    if (video.currentTime >= c.end || video.paused || video.ended){ video.pause(); video.playbackRate = rate; rec.stop(); }
-    else requestAnimationFrame(stopper);
-  };
-  stopper();
+/* ---------- panel de lista de reproducción ---------- */
+function renderPlaylist(){
+  const p = curPL();
+  $('#plSel').innerHTML = state.playlists.map(x => `<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(x.name)} (${x.ids.filter(id=>clipById(id)).length})</option>`).join('');
+  if (document.activeElement !== $('#plName')) $('#plName').value = p.name;
+  const items = p.ids.map(clipById).filter(Boolean);
+  $('#plCount').textContent = items.length;
+  const titles = $('#optTitles').checked;
+  const dur = items.reduce((s,c)=>s+c.end-c.start,0) + (titles && items.length ? 2*items.length + ($('#optSep').value==='one'?2.5:0) : 0);
+  $('#plDur').textContent = fmtDur(dur);
+  $('#plExport').disabled = $('#plPlay').disabled = !items.length;
+  if (!items.length){ $('#plItems').innerHTML = '<div class="empty">Marca la casilla de los cortes que quieras incluir, o filtra y pulsa «Añadir filtrados a la lista».</div>'; return; }
+  $('#plItems').innerHTML = items.map((c,i) => { const cat = catById(c.cat); return `
+    <div class="pli" data-id="${c.id}">
+      <span class="n">${i+1}</span><span class="dot" style="--c:${cat.color}"></span>
+      <span class="nm" title="${esc(c.note)}">${esc(cat.name)} <small>${fmtShort(c.start)} · ${(c.end-c.start).toFixed(0)} s</small></span>
+      <span class="b">
+        <button data-a="up" title="Subir" ${i===0?'disabled':''}>↑</button>
+        <button data-a="down" title="Bajar" ${i===items.length-1?'disabled':''}>↓</button>
+        <button data-a="rm" title="Quitar de la lista">✕</button>
+      </span>
+    </div>`; }).join('');
+  $('#plItems').querySelectorAll('.pli').forEach(el => {
+    el.querySelectorAll('button').forEach(b => b.onclick = () => {
+      const i = p.ids.indexOf(el.dataset.id), a = b.dataset.a;
+      if (a==='up' && i>0) [p.ids[i-1],p.ids[i]] = [p.ids[i],p.ids[i-1]];
+      if (a==='down' && i<p.ids.length-1) [p.ids[i+1],p.ids[i]] = [p.ids[i],p.ids[i+1]];
+      if (a==='rm') p.ids.splice(i,1);
+      save(); renderPlaylist(); if (a==='rm'){ renderList(); renderTimeline(); }
+    });
+  });
+  markPlaying();
 }
+$('#plSel').onchange = e => { state.cur = e.target.value; save(); renderList(); renderPlaylist(); renderTimeline(); };
+$('#plName').oninput = e => { curPL().name = e.target.value || 'Sin nombre'; save(); const o = $('#plSel').selectedOptions[0]; if (o) o.textContent = curPL().name; };
+$('#plName').onkeydown = e => e.stopPropagation();
+$('#plNew').onclick = () => {
+  const p = {id:uid(), name:`Lista ${state.playlists.length+1}`, ids:[]};
+  state.playlists.push(p); state.cur = p.id; save(); renderList(); renderPlaylist(); renderTimeline();
+  $('#plName').focus(); $('#plName').select();
+};
+$('#plDel').onclick = e => {
+  const b = e.currentTarget;
+  if (!b.dataset.confirm){ b.dataset.confirm='1'; b.textContent='¿Seguro?'; setTimeout(()=>{ delete b.dataset.confirm; b.textContent='Borrar'; },2500); return; }
+  delete b.dataset.confirm; b.textContent='Borrar';
+  state.playlists = state.playlists.filter(x => x.id !== state.cur); state.cur = null;
+  save(); renderList(); renderPlaylist(); renderTimeline(); flash('Lista borrada (los cortes siguen en el análisis)');
+};
+['optTitles','optSep'].forEach(id => $('#'+id).onchange = renderPlaylist);
+$('#plPlay').onclick = () => { const items = curPL().ids.map(clipById).filter(Boolean); playQueue(items); };
+$('#plExport').onclick = () => {
+  const p = curPL(); const items = p.ids.map(clipById).filter(Boolean);
+  exportClips(items, {titles:$('#optTitles').checked, overlay:$('#optOverlay').checked, separate:$('#optSep').value==='sep', name:p.name});
+};
+
+/* ---------- generación de vídeo (MP4 cuando el navegador lo permite) ---------- */
+function pickFormat(){
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return null;
+  const opts = [
+    ['video/mp4;codecs=avc1.640028,mp4a.40.2','mp4'],
+    ['video/mp4;codecs=avc1.4d0028,mp4a.40.2','mp4'],
+    ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','mp4'],
+    ['video/mp4;codecs=avc1,mp4a.40.2','mp4'],
+    ['video/mp4','mp4'],
+    ['video/webm;codecs=vp9,opus','webm'],
+    ['video/webm;codecs=vp8,opus','webm'],
+    ['video/webm','webm']
+  ];
+  for (const [mime, ext] of opts) if (MediaRecorder.isTypeSupported(mime)) return {mime, ext, type: ext==='mp4' ? 'video/mp4' : 'video/webm'};
+  return null;
+}
+const FORMAT = pickFormat();
+(function(){
+  if (!FORMAT){ $('#fmtNote').textContent = 'Este navegador no permite generar vídeo. Usa Chrome o Edge actualizados.'; $('#plExport').textContent = '⤓ Generar vídeo'; }
+  else if (FORMAT.ext === 'mp4' && /avc1/.test(FORMAT.mime)) $('#fmtNote').textContent = 'Se generará un archivo .mp4 (H.264). La grabación se hace a velocidad real: 3 minutos de cortes tardan unos 3 minutos.';
+  else if (FORMAT.ext === 'mp4') $('#fmtNote').textContent = 'Se generará un .mp4, pero este navegador no usa H.264 y puede no abrirse en QuickTime o PowerPoint (sí en VLC). Para máxima compatibilidad usa Chrome o Edge actualizados. La grabación se hace a velocidad real.';
+  else { $('#plExport').textContent = '⤓ Generar WebM'; $('#fmtNote').textContent = 'Este navegador solo genera vídeo .webm. Para obtener .mp4 abre la app en Chrome o Edge actualizados. La grabación se hace a velocidad real.'; }
+})();
+
+/* audio: se enruta el vídeo por Web Audio para poder grabar su sonido */
+let actx = null, outGain = null, recDest = null;
+function ensureAudio(){
+  if (actx) return;
+  try{
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = actx.createMediaElementSource(video);
+    outGain = actx.createGain(); recDest = actx.createMediaStreamDestination();
+    src.connect(outGain).connect(actx.destination);
+    src.connect(recDest);
+  }catch(e){ actx = null; recDest = null; }
+}
+
+function wrapText(ctx, text, x, y, maxW, lh, maxLines){
+  const words = String(text).split(/\s+/); let line = '', n = 0;
+  for (const w of words){
+    const test = line ? line+' '+w : w;
+    if (ctx.measureText(test).width > maxW && line){ ctx.fillText(line, x, y + n*lh); line = w; if (++n >= maxLines) return; }
+    else line = test;
+  }
+  if (line) ctx.fillText(line, x, y + n*lh);
+}
+function drawTitle(ctx, W, H, c, i, n){
+  const cat = catById(c.cat), u = H/720;
+  ctx.fillStyle = '#0f1512'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = cat.color; ctx.fillRect(0,0,Math.round(24*u),H);
+  const x = Math.round(90*u);
+  ctx.fillStyle = '#8fa197'; ctx.font = `600 ${Math.round(30*u)}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+  ctx.fillText(`CORTE ${i+1} / ${n}`, x, H*0.30);
+  ctx.fillStyle = '#e6ede8'; ctx.font = `700 ${Math.round(92*u)}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+  ctx.fillText(cat.name.toUpperCase(), x, H*0.30 + 100*u);
+  const res = c.result==='ok' ? '  ·  ✓ Éxito' : c.result==='ko' ? '  ·  ✗ Fallo' : '';
+  ctx.fillStyle = cat.color; ctx.font = `500 ${Math.round(36*u)}px "Barlow", system-ui, sans-serif`;
+  ctx.fillText(`Equipo ${c.team.toLowerCase()}  ·  min ${fmt(c.start)}${res}`, x, H*0.30 + 160*u);
+  if (c.note){ ctx.fillStyle = '#c9d4cd'; ctx.font = `400 ${Math.round(34*u)}px "Barlow", system-ui, sans-serif`; wrapText(ctx, c.note, x, H*0.30 + 235*u, W - x - 90*u, 46*u, 3); }
+}
+function drawIntro(ctx, W, H, name, n, dur){
+  const u = H/720;
+  ctx.fillStyle = '#0f1512'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#5fbf7f'; ctx.fillRect(0,H-Math.round(14*u),W,Math.round(14*u));
+  const x = Math.round(90*u);
+  ctx.fillStyle = '#5fbf7f'; ctx.font = `600 ${Math.round(30*u)}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+  ctx.fillText('TÁCTICA LAB · VIDEOANÁLISIS', x, H*0.36);
+  ctx.fillStyle = '#e6ede8'; ctx.font = `700 ${Math.round(96*u)}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+  wrapText(ctx, name.toUpperCase(), x, H*0.36 + 105*u, W - 2*x, 100*u, 2);
+  ctx.fillStyle = '#8fa197'; ctx.font = `500 ${Math.round(34*u)}px "Barlow", system-ui, sans-serif`;
+  ctx.fillText(`${videoName}  ·  ${n} cortes  ·  ${fmtDur(dur)}`, x, H*0.78);
+}
+function drawOverlay(ctx, W, H, c){
+  const cat = catById(c.cat), u = H/720;
+  const label = `${cat.name}  ·  ${c.team}${c.result==='ok'?'  ·  ✓':c.result==='ko'?'  ·  ✗':''}`;
+  ctx.font = `600 ${Math.round(30*u)}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+  const tw = ctx.measureText(label).width, pad = 16*u, h = 50*u, x = 30*u, y = H - h - 30*u;
+  ctx.fillStyle = 'rgba(15,21,18,.82)'; ctx.fillRect(x, y, tw + pad*2 + 10*u, h);
+  ctx.fillStyle = cat.color; ctx.fillRect(x, y, 10*u, h);
+  ctx.fillStyle = '#ffffff'; ctx.textBaseline = 'middle'; ctx.fillText(label, x + 10*u + pad, y + h/2); ctx.textBaseline = 'alphabetic';
+  const tc = fmt(video.currentTime); ctx.font = `500 ${Math.round(24*u)}px "JetBrains Mono", monospace`;
+  const w2 = ctx.measureText(tc).width + pad*2;
+  ctx.fillStyle = 'rgba(15,21,18,.82)'; ctx.fillRect(W - w2 - 30*u, 30*u, w2, 40*u);
+  ctx.fillStyle = '#ffffff'; ctx.textBaseline = 'middle'; ctx.fillText(tc, W - w2 - 30*u + pad, 50*u); ctx.textBaseline = 'alphabetic';
+}
+
+function seekTo(t){
+  return new Promise(res => {
+    if (Math.abs(video.currentTime - t) < 0.01){ res(); return; }
+    const done = () => { video.removeEventListener('seeked', done); res(); };
+    video.addEventListener('seeked', done); video.currentTime = t;
+    setTimeout(done, 4000);
+  });
+}
+
+async function exportClips(list, opts){
+  if (exporting) return;
+  if (!list.length){ flash('No hay cortes seleccionados'); return; }
+  if (!video.src || !video.videoWidth){ flash('Primero carga el vídeo del partido'); return; }
+  if (!FORMAT){ flash('Este navegador no permite generar vídeo. Usa Chrome o Edge.', 3000); return; }
+
+  exporting = {abort:false};
+  playback = null; markPlaying(); video.pause();
+  ensureAudio(); if (actx){ try{ await actx.resume(); }catch(e){} }
+  if (outGain) outGain.gain.value = 0;   // silencio en altavoces mientras se graba
+  const prevRate = video.playbackRate; video.playbackRate = 1;
+  try{ await document.fonts.ready; }catch(e){}
+
+  // lienzo de grabación (máx. 1920 px de ancho, dimensiones pares)
+  let W = Math.min(video.videoWidth, 1920); W -= W % 2;
+  let H = Math.round(W * video.videoHeight / video.videoWidth); H -= H % 2;
+  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const prev = $('#expCanvas'), pctx = prev.getContext('2d');
+  prev.width = 640; prev.height = Math.round(640*H/W);
+
+  const tracks = [...canvas.captureStream(30).getVideoTracks()];
+  if (recDest) tracks.push(...recDest.stream.getAudioTracks());
+  const stream = new MediaStream(tracks);
+
+  const titleDur = opts.titles ? 2000 : 0;
+  const introDur = (opts.titles && !opts.separate && list.length > 1) ? 2500 : 0;
+  const total = list.reduce((s,c)=>s+(c.end-c.start)*1000+titleDur,0) + introDur;
+  let doneMs = 0, sceneStart = 0;
+  let scene = {type:'black'};
+
+  // bucle de dibujo
+  let drawing = true;
+  (function draw(){
+    if (!drawing) return;
+    if (scene.type === 'intro') drawIntro(ctx, W, H, opts.name, list.length, total/1000);
+    else if (scene.type === 'title') drawTitle(ctx, W, H, scene.clip, scene.i, list.length);
+    else if (scene.type === 'video'){ ctx.drawImage(video, 0, 0, W, H); if (opts.overlay) drawOverlay(ctx, W, H, scene.clip); }
+    else { ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H); }
+    pctx.drawImage(canvas, 0, 0, prev.width, prev.height);
+    requestAnimationFrame(draw);
+  })();
+
+  const box = $('#exportBox'); box.hidden = false;
+  const setProg = (text) => {
+    const pct = Math.min(100, Math.round(doneMs/total*100));
+    $('#expBar').style.width = pct + '%';
+    $('#expText').textContent = `${text} · ${pct}% · quedan ~${fmtDur(Math.max(0,(total-doneMs)/1000))}`;
+  };
+
+  let rec = null, chunks = [];
+  const startRec = () => {
+    chunks = [];
+    rec = new MediaRecorder(stream, {mimeType: FORMAT.mime, videoBitsPerSecond: H >= 1000 ? 8e6 : 5e6, audioBitsPerSecond: 128000});
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    rec.start(1000);
+  };
+  const stopRec = () => new Promise(res => {
+    rec.onstop = () => res(new Blob(chunks, {type: FORMAT.type}));
+    if (rec.state === 'paused') rec.resume();
+    rec.stop();
+  });
+  const holdScene = async (ms, label) => {
+    const t0 = performance.now(), base = doneMs;
+    while (!exporting.abort){
+      const el = performance.now() - t0; doneMs = base + Math.min(el, ms); setProg(label);
+      if (el >= ms) break; await sleep(50);
+    }
+  };
+
+  let files = 0;
+  try{
+    for (let i = 0; i < list.length && !exporting.abort; i++){
+      const c = list[i];
+      const label = `Corte ${i+1} de ${list.length}`;
+      if (rec && rec.state === 'recording') rec.pause();
+      await seekTo(c.start);
+      if (i === 0 && introDur){ scene = {type:'intro'}; startRec(); await holdScene(introDur, 'Portada'); rec.pause(); }
+      scene = opts.titles ? {type:'title', clip:c, i} : {type:'video', clip:c};
+      await sleep(80);  // deja pintar el primer fotograma antes de grabar
+      if (!rec || opts.separate) startRec(); else rec.resume();
+      if (opts.titles){ await holdScene(titleDur, label); scene = {type:'video', clip:c}; }
+      const base = doneMs;
+      await video.play();
+      while (!exporting.abort && !video.ended && video.currentTime < c.end){
+        doneMs = base + (video.currentTime - c.start)*1000; setProg(label); await sleep(40);
+      }
+      video.pause();
+      doneMs = base + (c.end - c.start)*1000;
+      if (opts.separate && !exporting.abort){
+        const blob = await stopRec(); rec = null;
+        download(`${String(i+1).padStart(2,'0')}_${slug(opts.name)}_${slug(catById(c.cat).name)}_${fmt(c.start).replace(/:/g,'-')}.${FORMAT.ext}`, blob); files++;
+      }
+    }
+    if (!opts.separate && rec && !exporting.abort){
+      setProg('Guardando archivo');
+      const blob = await stopRec();
+      download(`${slug(opts.name)}.${FORMAT.ext}`, blob); files++;
+    }
+  } catch(err){
+    console.error(err); flash('No se pudo generar el vídeo: ' + (err && err.message || err), 4000);
+  } finally {
+    const aborted = exporting.abort;
+    if (rec && rec.state !== 'inactive') try{ rec.stop(); }catch(e){}
+    drawing = false; video.pause(); video.playbackRate = prevRate;
+    if (outGain) outGain.gain.value = 1;
+    stream.getVideoTracks().forEach(t => t.stop());
+    box.hidden = true; exporting = null;
+    if (aborted) flash('Generación cancelada');
+    else if (files) flash(files > 1 ? `Descargados ${files} vídeos .${FORMAT.ext}` : `Vídeo .${FORMAT.ext} descargado`, 3000);
+  }
+}
+$('#expCancel').onclick = () => { if (exporting) exporting.abort = true; };
+document.addEventListener('visibilitychange', () => { if (document.hidden && exporting) flash('Vuelve a esta pestaña: la grabación se detiene si está oculta', 4000); });
 
 /* ---------- resumen ---------- */
 function renderStats(){
@@ -462,20 +793,20 @@ function renderCatEditor(){
   $('#catEditor').querySelectorAll('.catrow').forEach(row => {
     const c = state.cats.find(x => x.id===row.dataset.id);
     const [col, txt] = row.querySelectorAll('input');
-    col.oninput = () => { c.color = col.value; save(); renderAll(false); };
-    txt.oninput = () => { c.name = txt.value || 'Sin nombre'; save(); renderAll(false); };
+    col.oninput = () => { c.color = col.value; save(); renderAll(); };
+    txt.oninput = () => { c.name = txt.value || 'Sin nombre'; save(); renderAll(); };
     txt.onkeydown = e => e.stopPropagation();
-    row.querySelector('button').onclick = () => { state.cats = state.cats.filter(x => x!==c); save(); renderCatEditor(); renderAll(false); };
+    row.querySelector('button').onclick = () => { state.cats = state.cats.filter(x => x!==c); save(); renderCatEditor(); renderAll(); };
   });
 }
 $('#btnCats').onclick = () => { renderCatEditor(); $('#dlgCats').showModal(); };
 $('#catDone').onclick = () => $('#dlgCats').close();
-$('#catAdd').onclick = () => { state.cats.push({id:uid(), name:'Nueva etiqueta', color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0')}); save(); renderCatEditor(); renderAll(false); };
-$('#catReset').onclick = () => { state.cats = DEFAULT_CATS.map(c => ({...c, id:uid()})); save(); renderCatEditor(); renderAll(false); };
+$('#catAdd').onclick = () => { state.cats.push({id:uid(), name:'Nueva etiqueta', color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0')}); save(); renderCatEditor(); renderAll(); };
+$('#catReset').onclick = () => { state.cats = DEFAULT_CATS.map(c => ({...c, id:uid()})); save(); renderCatEditor(); renderAll(); };
 
 /* ---------- guardar / cargar / CSV ---------- */
 $('#btnSave').onclick = () => {
-  const data = {app:'TacticaLab', version:1, video:videoName, created:new Date().toISOString(), cats:state.cats, clips:state.clips};
+  const data = {app:'TacticaLab', version:2, video:videoName, created:new Date().toISOString(), cats:state.cats, clips:state.clips, playlists:state.playlists, cur:state.cur};
   download(`${baseName()}_analisis.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
 };
 $('#btnLoad').onclick = () => $('#fileProj').click();
@@ -485,8 +816,9 @@ $('#fileProj').onchange = e => {
     try{
       const d = JSON.parse(t);
       if (!Array.isArray(d.cats) || !Array.isArray(d.clips)) throw 0;
-      state.cats = d.cats; state.clips = d.clips; save(); renderAll();
-      flash(`Proyecto cargado: ${d.clips.length} cortes` + (d.video && d.video!==videoName ? ` (vídeo original: ${d.video})` : ''));
+      state.cats = d.cats; state.clips = d.clips; state.playlists = Array.isArray(d.playlists) ? d.playlists : []; state.cur = d.cur || null;
+      save(); renderAll();
+      flash(`Proyecto cargado: ${d.clips.length} cortes, ${state.playlists.length} listas` + (d.video && d.video!==videoName ? ` (vídeo original: ${d.video})` : ''), 3000);
     }catch(err){ flash('El archivo no es un proyecto válido de Táctica Lab'); }
   });
   e.target.value = '';
@@ -494,14 +826,17 @@ $('#fileProj').onchange = e => {
 $('#btnCsv').onclick = () => {
   if (!state.clips.length){ flash('No hay cortes que exportar'); return; }
   const q = v => `"${String(v).replace(/"/g,'""')}"`;
-  const lines = [['n','etiqueta','equipo','resultado','inicio','fin','inicio_s','fin_s','duracion_s','observacion'].join(';')];
-  state.clips.forEach((c,i) => lines.push([i+1, q(catById(c.cat).name), c.team, c.result==='ok'?'Éxito':c.result==='ko'?'Fallo':'', fmt(c.start), fmt(c.end), String(c.start).replace('.',','), String(c.end).replace('.',','), (c.end-c.start).toFixed(1).replace('.',','), q(c.note)].join(';')));
+  const lines = [['n','etiqueta','equipo','resultado','inicio','fin','inicio_s','fin_s','duracion_s','observacion','listas'].join(';')];
+  state.clips.forEach((c,i) => {
+    const pls = state.playlists.filter(p => p.ids.includes(c.id)).map(p => p.name).join(' | ');
+    lines.push([i+1, q(catById(c.cat).name), c.team, c.result==='ok'?'Éxito':c.result==='ko'?'Fallo':'', fmt(c.start), fmt(c.end), String(c.start).replace('.',','), String(c.end).replace('.',','), (c.end-c.start).toFixed(1).replace('.',','), q(c.note), q(pls)].join(';'));
+  });
   download(`${baseName()}_cortes.csv`, new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'}));
 };
 
 /* ---------- teclado ---------- */
 document.addEventListener('keydown', e => {
-  if (e.target.matches('input,select,textarea') || $('#dlgCats').open) return;
+  if (exporting || e.target.matches('input,select,textarea') || $('#dlgCats').open) return;
   if (e.code==='Space'){ e.preventDefault(); togglePlay(); }
   else if (e.key==='ArrowLeft'){ e.preventDefault(); seek(video.currentTime-(e.shiftKey?1:5)); }
   else if (e.key==='ArrowRight'){ e.preventDefault(); seek(video.currentTime+(e.shiftKey?1:5)); }
@@ -510,8 +845,9 @@ document.addEventListener('keydown', e => {
   else if (e.key==='Escape'){ if (Object.keys(openCut).length) flash('Corte abierto cancelado'); openCut = {}; renderTags(); }
   else if (/^[1-9]$/.test(e.key)){ const c = state.cats[+e.key-1]; if (c) tagAction(c.id); }
 });
+window.addEventListener('beforeunload', e => { if (exporting){ e.preventDefault(); e.returnValue = ''; } });
 
-function renderAll(){ renderTags(); renderList(); renderTimeline(); renderStats(); }
+function renderAll(){ renderTags(); renderList(); renderPlaylist(); renderTimeline(); renderStats(); }
 renderAll();
 })();
 </script>
