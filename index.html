@@ -161,12 +161,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="card">
       <h3>Etiquetar acción</h3>
       <div class="mode">
-        <div class="seg-toggle" role="group" aria-label="Modo de corte">
-          <button id="mQuick" class="on">Rápido</button>
-          <button id="mInOut">Inicio / Fin</button>
-        </div>
-        <span id="quickOpts">antes <input type="number" id="pre" min="0" max="60" value="5"> s · después <input type="number" id="post" min="0" max="60" value="3"> s</span>
-        <span id="inoutHelp" hidden>1.er clic abre el corte, 2.º clic lo cierra</span>
+        <span><b style="color:var(--fg)">1.er clic</b> marca el inicio de la acción · <b style="color:var(--fg)">2.º clic</b> en la misma etiqueta marca el final · <kbd>Esc</kbd> cancela</span>
       </div>
       <div class="tags" id="tags"></div>
       <div class="desc">
@@ -220,7 +215,6 @@ const DEFAULT_CATS = [
 const uid = () => Math.random().toString(36).slice(2,9);
 let state = {cats: DEFAULT_CATS.map(c => ({...c, id: uid()})), clips: []};
 let videoKey = null, videoName = '';
-let mode = 'quick';
 let openCut = {};          // catId -> start time
 let playback = null;       // {queue:[clips], i}
 let recording = false;
@@ -327,27 +321,16 @@ function renderTimeline(){
 }
 
 /* ---------- etiquetado ---------- */
-function setMode(m){
-  mode = m; openCut = {};
-  $('#mQuick').classList.toggle('on', m==='quick'); $('#mInOut').classList.toggle('on', m==='inout');
-  $('#quickOpts').hidden = m!=='quick'; $('#inoutHelp').hidden = m!=='inout';
-  renderTags();
-}
-$('#mQuick').onclick = () => setMode('quick');
-$('#mInOut').onclick = () => setMode('inout');
-
 function tagAction(catId){
   if (!video.src){ flash('Primero carga un vídeo'); return; }
-  const t = video.currentTime, d = video.duration || t;
+  const t = video.currentTime;
   const cat = catById(catId);
-  if (mode === 'quick'){
-    const pre = +$('#pre').value || 0, post = +$('#post').value || 0;
-    addClip(catId, Math.max(0,t-pre), Math.min(d,t+post));
-  } else {
-    if (openCut[catId] === undefined){ openCut[catId] = t; flash(`Inicio: ${cat.name}`); renderTags(); return; }
-    const s = openCut[catId]; delete openCut[catId];
-    addClip(catId, Math.min(s,t), Math.max(s,t) || Math.min(d, s+1));
+  if (openCut[catId] === undefined){
+    openCut[catId] = t; flash(`● Inicio: ${cat.name} · ${fmt(t)}`); renderTags(); return;
   }
+  const s = openCut[catId]; delete openCut[catId];
+  if (Math.abs(t - s) < 0.2){ flash('Corte cancelado: inicio y final en el mismo instante'); renderTags(); return; }
+  addClip(catId, Math.min(s,t), Math.max(s,t));
 }
 function addClip(cat, start, end){
   if (end - start < 0.5) end = start + 0.5;
@@ -360,7 +343,7 @@ function addClip(cat, start, end){
 function renderTags(){
   $('#tags').innerHTML = state.cats.map((c,i) => `
     <button class="tag ${openCut[c.id]!==undefined?'open':''}" style="--c:${c.color}" data-id="${c.id}">
-      <span>${esc(c.name)}${openCut[c.id]!==undefined?`<br><small class="mono">desde ${fmt(openCut[c.id])}</small>`:''}</span>
+      <span>${esc(c.name)}${openCut[c.id]!==undefined?`<br><small class="mono">● desde ${fmt(openCut[c.id])} · clic para cerrar</small>`:''}</span>
       ${i<9?`<span class="k">${i+1}</span>`:''}
     </button>`).join('');
   $('#tags').querySelectorAll('.tag').forEach(b => b.onclick = () => tagAction(b.dataset.id));
@@ -376,7 +359,7 @@ function renderList(){
   $('#fCat').innerHTML = '<option value="">Todas las etiquetas</option>' + state.cats.map(c => `<option value="${c.id}" ${c.id===fc?'selected':''}>${esc(c.name)}</option>`).join('');
   const list = filtered();
   $('#count').textContent = list.length === state.clips.length ? list.length : `${list.length} / ${state.clips.length}`;
-  if (!state.clips.length){ $('#list').innerHTML = '<div class="empty">Todavía no hay cortes. Reproduce el vídeo y pulsa una etiqueta (o su número) cuando ocurra la acción.</div>'; return; }
+  if (!state.clips.length){ $('#list').innerHTML = '<div class="empty">Todavía no hay cortes. Pulsa una etiqueta (o su número) cuando empiece la acción y vuelve a pulsarla cuando termine.</div>'; return; }
   if (!list.length){ $('#list').innerHTML = '<div class="empty">Ningún corte coincide con el filtro.</div>'; return; }
   $('#list').innerHTML = list.map(c => { const cat = catById(c.cat); return `
     <div class="clip" style="--c:${cat.color}" data-id="${c.id}">
@@ -524,7 +507,7 @@ document.addEventListener('keydown', e => {
   else if (e.key==='ArrowRight'){ e.preventDefault(); seek(video.currentTime+(e.shiftKey?1:5)); }
   else if (e.key===','){ video.pause(); seek(video.currentTime-FRAME); }
   else if (e.key==='.'){ video.pause(); seek(video.currentTime+FRAME); }
-  else if (e.key==='Escape'){ openCut = {}; renderTags(); }
+  else if (e.key==='Escape'){ if (Object.keys(openCut).length) flash('Corte abierto cancelado'); openCut = {}; renderTags(); }
   else if (/^[1-9]$/.test(e.key)){ const c = state.cats[+e.key-1]; if (c) tagAction(c.id); }
 });
 
