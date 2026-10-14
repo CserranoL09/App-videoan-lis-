@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Táctica Lab · Videoanálisis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: cabina de análisis — vídeo + línea de tiempo a la izquierda, panel de etiquetado y lista de cortes a la derecha */
+:root{
+  --bg:#0f1512; --panel:#161f1a; --panel2:#1c2721; --line:#2a3830;
+  --fg:#e6ede8; --muted:#8fa197; --accent:#5fbf7f; --accent-ink:#0b1a10;
+  --danger:#e0655a;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--body)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:6px;padding:.4rem .7rem}
+button:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.ghost{background:transparent}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:.35rem .5rem}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+
+header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.7rem max(16px,env(safe-area-inset-right,0px)) .7rem max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{font-family:var(--display);font-weight:700;font-size:1.5rem;letter-spacing:.02em;text-transform:uppercase}
+.brand span{color:var(--accent)}
+.vname{color:var(--muted);font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.hbtns{display:flex;gap:.4rem;flex-wrap:wrap}
+
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:1rem;padding:1rem max(16px,env(safe-area-inset-right,0px)) 1rem max(16px,env(safe-area-inset-left,0px))}
+@media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}}
+
+.stage{position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:100%}
+video{width:100%;height:100%;display:block;background:#000}
+.drop{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:1.5rem;border:2px dashed var(--line);border-radius:8px;background:
+  linear-gradient(var(--bg),var(--bg)) padding-box;}
+.drop.over{border-color:var(--accent)}
+.drop h2{font-family:var(--display);font-size:2rem;margin:.2rem 0;text-transform:uppercase;letter-spacing:.03em}
+.drop p{color:var(--muted);max-width:42ch;margin:.4rem auto}
+.pitch{width:140px;opacity:.5;margin-bottom:.5rem}
+.rec{position:absolute;top:10px;left:10px;background:var(--danger);color:#fff;padding:.25rem .6rem;border-radius:4px;font-weight:600;font-size:.85rem}
+.flash{position:absolute;top:10px;right:10px;background:var(--panel);border:1px solid var(--accent);padding:.3rem .7rem;border-radius:4px;font-size:.9rem;opacity:0;transition:opacity .2s}
+.flash.show{opacity:1}
+
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin-top:.6rem}
+.controls .time{margin-left:auto;font-size:1rem;color:var(--fg)}
+.timeline{position:relative;height:56px;margin-top:.6rem;background:var(--panel);border:1px solid var(--line);border-radius:6px;cursor:pointer;overflow:hidden}
+.timeline .row{position:absolute;left:0;right:0}
+.timeline .seg{position:absolute;height:12px;border-radius:2px;opacity:.9}
+.timeline .head{position:absolute;top:0;bottom:0;width:2px;background:var(--fg);pointer-events:none}
+.timeline .tick{position:absolute;bottom:2px;font-size:.65rem;color:var(--muted);font-family:var(--mono);transform:translateX(-50%)}
+
+.help{color:var(--muted);font-size:.82rem;margin-top:.6rem}
+kbd{font-family:var(--mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .3rem;background:var(--panel2);color:var(--fg)}
+
+aside{display:flex;flex-direction:column;gap:1rem;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.8rem}
+.card h3{font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:1.05rem;margin:0 0 .6rem;display:flex;align-items:center;gap:.5rem}
+.card h3 .sp{flex:1}
+.mode{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-bottom:.6rem}
+.mode input[type=number]{width:3.6rem}
+.seg-toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg-toggle button{border:0;border-radius:0;background:transparent;padding:.25rem .6rem;font-size:.85rem}
+.seg-toggle button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.tags{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.tag{display:flex;align-items:center;gap:.5rem;text-align:left;padding:.55rem .6rem;border-left:5px solid var(--c);min-height:48px;line-height:1.15}
+.tag .k{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto}
+.tag.open{background:color-mix(in srgb,var(--c) 30%,var(--panel2));animation:pulse 1s infinite alternate}
+@keyframes pulse{to{border-left-width:10px}}
+@media (prefers-reduced-motion:reduce){.tag.open{animation:none}}
+.desc{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;font-size:.85rem;align-items:center}
+
+.list{display:flex;flex-direction:column;gap:.4rem;max-height:420px;overflow:auto}
+.clip{display:grid;grid-template-columns:6px 1fr auto;gap:.6rem;align-items:start;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:.45rem .55rem .45rem 0;overflow:hidden}
+.clip.playing{border-color:var(--accent)}
+.clip .bar{align-self:stretch;background:var(--c)}
+.clip .t{font-weight:600}
+.clip .m{font-size:.8rem;color:var(--muted)}
+.clip input.note{width:100%;margin-top:.3rem;font-size:.82rem}
+.clip .acts{display:flex;flex-direction:column;gap:.25rem}
+.clip .acts button{padding:.15rem .45rem;font-size:.8rem}
+.badge{display:inline-block;font-size:.7rem;padding:0 .35rem;border-radius:3px;border:1px solid var(--line);margin-right:.2rem}
+.badge.ok{border-color:var(--accent);color:var(--accent)}
+.badge.ko{border-color:var(--danger);color:var(--danger)}
+.filters{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem}
+.filters select{flex:1;min-width:0}
+.empty{color:var(--muted);font-size:.88rem;padding:.4rem 0}
+
+.stats table{width:100%;border-collapse:collapse;font-size:.85rem}
+.stats td,.stats th{padding:.25rem .2rem;border-bottom:1px solid var(--line);text-align:left}
+.stats th{color:var(--muted);font-weight:500;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em}
+.stats td.n{text-align:right;font-family:var(--mono)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:.4rem}
+
+dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;max-width:min(560px,92vw);width:100%}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+.catrow{display:grid;grid-template-columns:44px 1fr 56px auto;gap:.4rem;margin-bottom:.4rem;align-items:center}
+.catrow input[type=color]{padding:0;height:34px;width:44px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Táctica <span>Lab</span></div>
+  <div class="vname" id="vname">Sin vídeo cargado</div>
+  <div class="hbtns">
+    <button id="btnOpen" class="primary">Abrir vídeo</button>
+    <button id="btnCats">Editar etiquetas</button>
+    <button id="btnSave">Guardar proyecto</button>
+    <button id="btnLoad">Cargar proyecto</button>
+    <button id="btnCsv">Exportar CSV</button>
+  </div>
+  <input type="file" id="fileVideo" accept="video/*" hidden>
+  <input type="file" id="fileProj" accept=".json,application/json" hidden>
+</header>
+
+<main>
+  <section style="min-width:0">
+    <div class="stage" id="stage">
+      <video id="video" playsinline></video>
+      <div class="drop" id="drop">
+        <div>
+          <svg class="pitch" viewBox="0 0 140 90" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="136" height="86" rx="2"/><line x1="70" y1="2" x2="70" y2="88"/><circle cx="70" cy="45" r="13"/><rect x="2" y="25" width="20" height="40"/><rect x="118" y="25" width="20" height="40"/></svg>
+          <h2>Carga el partido</h2>
+          <p>Arrastra aquí un archivo de vídeo (MP4 o WebM) o pulsa <b>Abrir vídeo</b>. El vídeo no se sube a ningún servidor: se reproduce en tu propio ordenador.</p>
+          <button class="primary" id="btnOpen2">Abrir vídeo</button>
+        </div>
+      </div>
+      <div class="rec" id="rec" hidden>● Grabando clip…</div>
+      <div class="flash" id="flash"></div>
+    </div>
+
+    <div class="controls">
+      <button id="bBack5" title="Retroceder 5 s">−5 s</button>
+      <button id="bFrameB" title="Fotograma anterior">◂|</button>
+      <button id="bPlay" class="primary" style="min-width:5.5rem">▶ Play</button>
+      <button id="bFrameF" title="Fotograma siguiente">|▸</button>
+      <button id="bFwd5" title="Avanzar 5 s">+5 s</button>
+      <select id="speed" title="Velocidad">
+        <option value="0.25">0.25×</option><option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="4">4×</option>
+      </select>
+      <button id="bShot" title="Guardar fotograma como imagen PNG">📷 Captura</button>
+      <span class="time mono" id="time">00:00:00 / 00:00:00</span>
+    </div>
+    <div class="timeline" id="timeline"><div class="head" id="head"></div></div>
+    <p class="help">
+      <kbd>Espacio</kbd> play/pausa · <kbd>←</kbd><kbd>→</kbd> ±5 s · <kbd>,</kbd><kbd>.</kbd> fotograma · <kbd>1</kbd>–<kbd>9</kbd> etiquetar · <kbd>Esc</kbd> cancelar corte abierto · Clic en la línea de tiempo para saltar.
+    </p>
+  </section>
+
+  <aside>
+    <div class="card">
+      <h3>Etiquetar acción</h3>
+      <div class="mode">
+        <div class="seg-toggle" role="group" aria-label="Modo de corte">
+          <button id="mQuick" class="on">Rápido</button>
+          <button id="mInOut">Inicio / Fin</button>
+        </div>
+        <span id="quickOpts">antes <input type="number" id="pre" min="0" max="60" value="5"> s · después <input type="number" id="post" min="0" max="60" value="3"> s</span>
+        <span id="inoutHelp" hidden>1.er clic abre el corte, 2.º clic lo cierra</span>
+      </div>
+      <div class="tags" id="tags"></div>
+      <div class="desc">
+        <label>Equipo <select id="team"><option>Propio</option><option>Rival</option></select></label>
+        <label>Resultado <select id="result"><option value="">—</option><option value="ok">✓ Éxito</option><option value="ko">✗ Fallo</option></select></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Cortes <span class="sp"></span><span class="mono" id="count" style="font-size:.85rem;color:var(--muted)">0</span></h3>
+      <div class="filters">
+        <select id="fCat"><option value="">Todas las etiquetas</option></select>
+        <select id="fTeam"><option value="">Ambos equipos</option><option>Propio</option><option>Rival</option></select>
+        <button id="bPlaylist" title="Reproducir seguidos los cortes filtrados">▶ Playlist</button>
+      </div>
+      <div class="list" id="list"></div>
+    </div>
+
+    <div class="card stats">
+      <h3>Resumen</h3>
+      <div id="stats"></div>
+    </div>
+  </aside>
+</main>
+
+<dialog id="dlgCats">
+  <h3 style="font-family:var(--display);text-transform:uppercase;letter-spacing:.05em;margin-top:0">Etiquetas del modelo de juego</h3>
+  <p style="color:var(--muted);font-size:.85rem;margin-top:0">Color · nombre · tecla. Adapta las etiquetas a las fases y principios que trabajéis en clase.</p>
+  <div id="catEditor"></div>
+  <div style="display:flex;gap:.5rem;justify-content:space-between;margin-top:.8rem;flex-wrap:wrap">
+    <button id="catAdd">+ Añadir etiqueta</button>
+    <div style="display:flex;gap:.5rem"><button id="catReset" class="ghost">Restaurar por defecto</button><button id="catDone" class="primary">Hecho</button></div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const video = $('#video');
+const DEFAULT_CATS = [
+  {name:'Ataque organizado', color:'#4f9be0'},
+  {name:'Defensa organizada', color:'#e0655a'},
+  {name:'Transición ofensiva', color:'#5fbf7f'},
+  {name:'Transición defensiva', color:'#e5a63c'},
+  {name:'ABP ofensiva', color:'#a37be0'},
+  {name:'ABP defensiva', color:'#d16aa8'},
+  {name:'Salida de balón', color:'#3fc1c0'},
+  {name:'Pressing', color:'#c9c95a'},
+  {name:'Finalización', color:'#ee8e6c'}
+];
+const uid = () => Math.random().toString(36).slice(2,9);
+let state = {cats: DEFAULT_CATS.map(c => ({...c, id: uid()})), clips: []};
+let videoKey = null, videoName = '';
+let mode = 'quick';
+let openCut = {};          // catId -> start time
+let playback = null;       // {queue:[clips], i}
+let recording = false;
+
+/* ---------- utilidades ---------- */
+const fmt = t => {
+  if (!isFinite(t)) t = 0;
+  const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = Math.floor(t%60);
+  return [h,m,s].map(n => String(n).padStart(2,'0')).join(':');
+};
+const fmtShort = t => { const m=Math.floor(t/60), s=(t%60).toFixed(1); return `${m}:${s.padStart(4,'0')}`; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const catById = id => state.cats.find(c => c.id === id) || {name:'(borrada)', color:'#777'};
+function flash(msg){ const f=$('#flash'); f.textContent=msg; f.classList.add('show'); clearTimeout(flash.t); flash.t=setTimeout(()=>f.classList.remove('show'),1400); }
+function download(name, blob){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); }
+const baseName = () => (videoName || 'partido').replace(/\.[^.]+$/,'');
+
+function save(){
+  try{ localStorage.setItem('tacticalab:cats', JSON.stringify(state.cats)); }catch(e){}
+  if (videoKey) try{ localStorage.setItem('tacticalab:'+videoKey, JSON.stringify(state.clips)); }catch(e){}
+}
+try{ const c = JSON.parse(localStorage.getItem('tacticalab:cats')); if (Array.isArray(c) && c.length) state.cats = c; }catch(e){}
+
+/* ---------- carga de vídeo ---------- */
+function loadVideo(file){
+  if (!file || !file.type.startsWith('video')) { flash('Ese archivo no es un vídeo'); return; }
+  video.src = URL.createObjectURL(file);
+  videoName = file.name;
+  videoKey = file.name + '|' + file.size;
+  $('#vname').textContent = file.name;
+  $('#drop').hidden = true;
+  openCut = {};
+  try{ const saved = JSON.parse(localStorage.getItem('tacticalab:'+videoKey)); state.clips = Array.isArray(saved) ? saved : []; }catch(e){ state.clips = []; }
+  if (state.clips.length) flash(`Recuperados ${state.clips.length} cortes de este vídeo`);
+  renderAll();
+}
+$('#btnOpen').onclick = $('#btnOpen2').onclick = () => $('#fileVideo').click();
+$('#fileVideo').onchange = e => loadVideo(e.target.files[0]);
+const stage = $('#stage');
+['dragenter','dragover'].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); $('#drop').classList.add('over'); }));
+['dragleave','drop'].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); $('#drop').classList.remove('over'); }));
+stage.addEventListener('drop', e => loadVideo(e.dataTransfer.files[0]));
+video.addEventListener('error', () => flash('El navegador no puede reproducir este formato. Prueba con MP4 (H.264).'));
+
+/* ---------- controles ---------- */
+const FRAME = 1/25;
+const seek = t => { if (video.duration) video.currentTime = Math.max(0, Math.min(video.duration, t)); };
+function togglePlay(){ if (!video.src) return; playback = null; video.paused ? video.play() : video.pause(); }
+$('#bPlay').onclick = togglePlay;
+$('#bBack5').onclick = () => seek(video.currentTime-5);
+$('#bFwd5').onclick = () => seek(video.currentTime+5);
+$('#bFrameB').onclick = () => { video.pause(); seek(video.currentTime-FRAME); };
+$('#bFrameF').onclick = () => { video.pause(); seek(video.currentTime+FRAME); };
+$('#speed').onchange = e => video.playbackRate = +e.target.value;
+video.addEventListener('play', () => $('#bPlay').textContent = '❚❚ Pausa');
+video.addEventListener('pause', () => $('#bPlay').textContent = '▶ Play');
+video.addEventListener('loadedmetadata', renderTimeline);
+
+$('#bShot').onclick = () => {
+  if (!video.videoWidth) return;
+  const c = document.createElement('canvas'); c.width = video.videoWidth; c.height = video.videoHeight;
+  c.getContext('2d').drawImage(video,0,0);
+  c.toBlob(b => download(`${baseName()}_${fmt(video.currentTime).replace(/:/g,'-')}.png`, b), 'image/png');
+};
+
+/* bucle: tiempo, cabezal y fin de clip */
+(function tick(){
+  const t = video.currentTime, d = video.duration || 0;
+  $('#time').textContent = `${fmt(t)} / ${fmt(d)}`;
+  if (d) $('#head').style.left = (t/d*100)+'%';
+  if (playback && !video.paused){
+    const c = playback.queue[playback.i];
+    if (t >= c.end){
+      playback.i++;
+      if (playback.i < playback.queue.length){ video.currentTime = playback.queue[playback.i].start; markPlaying(); }
+      else { video.pause(); playback = null; markPlaying(); }
+    }
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* línea de tiempo */
+$('#timeline').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  playback = null; seek((e.clientX - r.left)/r.width * (video.duration||0));
+});
+function renderTimeline(){
+  const tl = $('#timeline'), d = video.duration;
+  tl.querySelectorAll('.seg,.tick').forEach(n => n.remove());
+  if (!d) return;
+  const lanes = state.cats.map(c => c.id);
+  const laneH = Math.max(3, Math.floor(38 / Math.max(1,lanes.length)));
+  state.clips.forEach(c => {
+    const s = document.createElement('div'); s.className='seg';
+    const lane = Math.max(0, lanes.indexOf(c.cat));
+    s.style.cssText = `left:${c.start/d*100}%;width:${Math.max(.25,(c.end-c.start)/d*100)}%;top:${3+lane*laneH}px;height:${laneH-1}px;background:${catById(c.cat).color}`;
+    s.title = `${catById(c.cat).name} · ${fmt(c.start)}`;
+    tl.appendChild(s);
+  });
+  const step = d > 3600 ? 900 : d > 1200 ? 600 : d > 300 ? 120 : 30;
+  for (let t = step; t < d; t += step){
+    const k = document.createElement('div'); k.className='tick'; k.style.left = (t/d*100)+'%'; k.textContent = Math.round(t/60)+"'"; tl.appendChild(k);
+  }
+}
+
+/* ---------- etiquetado ---------- */
+function setMode(m){
+  mode = m; openCut = {};
+  $('#mQuick').classList.toggle('on', m==='quick'); $('#mInOut').classList.toggle('on', m==='inout');
+  $('#quickOpts').hidden = m!=='quick'; $('#inoutHelp').hidden = m!=='inout';
+  renderTags();
+}
+$('#mQuick').onclick = () => setMode('quick');
+$('#mInOut').onclick = () => setMode('inout');
+
+function tagAction(catId){
+  if (!video.src){ flash('Primero carga un vídeo'); return; }
+  const t = video.currentTime, d = video.duration || t;
+  const cat = catById(catId);
+  if (mode === 'quick'){
+    const pre = +$('#pre').value || 0, post = +$('#post').value || 0;
+    addClip(catId, Math.max(0,t-pre), Math.min(d,t+post));
+  } else {
+    if (openCut[catId] === undefined){ openCut[catId] = t; flash(`Inicio: ${cat.name}`); renderTags(); return; }
+    const s = openCut[catId]; delete openCut[catId];
+    addClip(catId, Math.min(s,t), Math.max(s,t) || Math.min(d, s+1));
+  }
+}
+function addClip(cat, start, end){
+  if (end - start < 0.5) end = start + 0.5;
+  state.clips.push({id:uid(), cat, start:+start.toFixed(2), end:+end.toFixed(2), team:$('#team').value, result:$('#result').value, note:''});
+  state.clips.sort((a,b)=>a.start-b.start);
+  $('#result').value = '';
+  flash(`✓ ${catById(cat).name} · ${fmt(start)}`);
+  save(); renderAll();
+}
+function renderTags(){
+  $('#tags').innerHTML = state.cats.map((c,i) => `
+    <button class="tag ${openCut[c.id]!==undefined?'open':''}" style="--c:${c.color}" data-id="${c.id}">
+      <span>${esc(c.name)}${openCut[c.id]!==undefined?`<br><small class="mono">desde ${fmt(openCut[c.id])}</small>`:''}</span>
+      ${i<9?`<span class="k">${i+1}</span>`:''}
+    </button>`).join('');
+  $('#tags').querySelectorAll('.tag').forEach(b => b.onclick = () => tagAction(b.dataset.id));
+}
+
+/* ---------- lista de cortes ---------- */
+function filtered(){
+  const fc = $('#fCat').value, ft = $('#fTeam').value;
+  return state.clips.filter(c => (!fc || c.cat===fc) && (!ft || c.team===ft));
+}
+function renderList(){
+  const fc = $('#fCat').value;
+  $('#fCat').innerHTML = '<option value="">Todas las etiquetas</option>' + state.cats.map(c => `<option value="${c.id}" ${c.id===fc?'selected':''}>${esc(c.name)}</option>`).join('');
+  const list = filtered();
+  $('#count').textContent = list.length === state.clips.length ? list.length : `${list.length} / ${state.clips.length}`;
+  if (!state.clips.length){ $('#list').innerHTML = '<div class="empty">Todavía no hay cortes. Reproduce el vídeo y pulsa una etiqueta (o su número) cuando ocurra la acción.</div>'; return; }
+  if (!list.length){ $('#list').innerHTML = '<div class="empty">Ningún corte coincide con el filtro.</div>'; return; }
+  $('#list').innerHTML = list.map(c => { const cat = catById(c.cat); return `
+    <div class="clip" style="--c:${cat.color}" data-id="${c.id}">
+      <div class="bar"></div>
+      <div style="min-width:0">
+        <div class="t">${esc(cat.name)}</div>
+        <div class="m mono">${fmtShort(c.start)} → ${fmtShort(c.end)} · ${(c.end-c.start).toFixed(1)} s</div>
+        <div class="m"><span class="badge">${esc(c.team)}</span>${c.result==='ok'?'<span class="badge ok">✓ Éxito</span>':c.result==='ko'?'<span class="badge ko">✗ Fallo</span>':''}</div>
+        <input class="note" placeholder="Observación (p. ej. superioridad 3v2 por dentro)" value="${esc(c.note)}">
+      </div>
+      <div class="acts">
+        <button data-a="play" title="Ver corte">▶</button>
+        <button data-a="in" title="Fijar inicio en el instante actual">[</button>
+        <button data-a="out" title="Fijar fin en el instante actual">]</button>
+        <button data-a="rec" title="Exportar este corte como vídeo .webm">⤓</button>
+        <button data-a="del" title="Borrar corte">✕</button>
+      </div>
+    </div>`; }).join('');
+  $('#list').querySelectorAll('.clip').forEach(el => {
+    const c = state.clips.find(x => x.id === el.dataset.id);
+    el.querySelector('.note').oninput = e => { c.note = e.target.value; save(); };
+    el.querySelector('.note').onkeydown = e => e.stopPropagation();
+    el.querySelectorAll('button').forEach(b => b.onclick = () => {
+      const a = b.dataset.a;
+      if (a==='play') playQueue([c]);
+      if (a==='in'){ c.start = +video.currentTime.toFixed(2); if (c.end<=c.start) c.end=c.start+1; save(); renderAll(); }
+      if (a==='out'){ c.end = +video.currentTime.toFixed(2); if (c.end<=c.start) c.start=Math.max(0,c.end-1); save(); renderAll(); }
+      if (a==='rec') exportClip(c);
+      if (a==='del'){
+        if (b.dataset.confirm){ state.clips = state.clips.filter(x => x !== c); save(); renderAll(); }
+        else { b.dataset.confirm='1'; b.textContent='¿Borrar?'; setTimeout(()=>{ if(b.isConnected){ delete b.dataset.confirm; b.textContent='✕'; } },2500); }
+      }
+    });
+  });
+  markPlaying();
+}
+function markPlaying(){
+  const cur = playback && playback.queue[playback.i];
+  document.querySelectorAll('.clip').forEach(el => el.classList.toggle('playing', !!cur && el.dataset.id===cur.id));
+}
+function playQueue(q){
+  if (!q.length || !video.src) return;
+  playback = {queue:q, i:0};
+  video.currentTime = q[0].start; video.play(); markPlaying();
+}
+$('#fCat').onchange = $('#fTeam').onchange = renderList;
+$('#bPlaylist').onclick = () => { const q = filtered(); if (!q.length) flash('No hay cortes que reproducir'); else { playQueue(q); flash(`Playlist: ${q.length} cortes`); } };
+
+/* ---------- exportar clip como vídeo (graba en tiempo real) ---------- */
+async function exportClip(c){
+  if (recording) return;
+  const cap = video.captureStream || video.mozCaptureStream;
+  if (!cap || !window.MediaRecorder){ flash('Tu navegador no permite exportar clips. Usa Chrome, Edge o Firefox.'); return; }
+  recording = true; playback = null; video.pause();
+  video.currentTime = c.start;
+  await new Promise(r => video.addEventListener('seeked', r, {once:true}));
+  const stream = cap.call(video);
+  const mime = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+  const rec = new MediaRecorder(stream, mime ? {mimeType:mime} : {});
+  const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  rec.onstop = () => {
+    recording = false; $('#rec').hidden = true;
+    download(`${baseName()}_${catById(c.cat).name.replace(/\s+/g,'-')}_${fmt(c.start).replace(/:/g,'-')}.webm`, new Blob(chunks, {type:'video/webm'}));
+  };
+  const rate = video.playbackRate; video.playbackRate = 1;
+  $('#rec').hidden = false;
+  rec.start(); await video.play();
+  const stopper = () => {
+    if (video.currentTime >= c.end || video.paused || video.ended){ video.pause(); video.playbackRate = rate; rec.stop(); }
+    else requestAnimationFrame(stopper);
+  };
+  stopper();
+}
+
+/* ---------- resumen ---------- */
+function renderStats(){
+  if (!state.clips.length){ $('#stats').innerHTML = '<div class="empty">El resumen aparecerá al crear cortes.</div>'; return; }
+  const rows = state.cats.map(cat => {
+    const cs = state.clips.filter(c => c.cat===cat.id);
+    const prop = cs.filter(c=>c.team==='Propio').length, riv = cs.length-prop;
+    const ok = cs.filter(c=>c.result==='ok').length, ko = cs.filter(c=>c.result==='ko').length;
+    const dur = cs.reduce((s,c)=>s+c.end-c.start,0);
+    return {cat, n:cs.length, prop, riv, eff: ok+ko ? Math.round(ok/(ok+ko)*100)+'%' : '—', dur};
+  }).filter(r => r.n);
+  $('#stats').innerHTML = `<table><thead><tr><th>Etiqueta</th><th class="n">Prop.</th><th class="n">Rival</th><th class="n">Éxito</th><th class="n">Tiempo</th></tr></thead><tbody>${
+    rows.map(r => `<tr><td><span class="dot" style="--c:${r.cat.color}"></span>${esc(r.cat.name)}</td><td class="n">${r.prop}</td><td class="n">${r.riv}</td><td class="n">${r.eff}</td><td class="n">${fmtShort(r.dur)}</td></tr>`).join('')
+  }</tbody></table>`;
+}
+
+/* ---------- editor de etiquetas ---------- */
+function renderCatEditor(){
+  $('#catEditor').innerHTML = state.cats.map((c,i) => `
+    <div class="catrow" data-id="${c.id}">
+      <input type="color" value="${c.color}" aria-label="Color">
+      <input type="text" value="${esc(c.name)}" aria-label="Nombre">
+      <span class="mono" style="color:var(--muted);text-align:center">${i<9?'tecla '+(i+1):'—'}</span>
+      <button class="ghost" title="Borrar etiqueta">✕</button>
+    </div>`).join('');
+  $('#catEditor').querySelectorAll('.catrow').forEach(row => {
+    const c = state.cats.find(x => x.id===row.dataset.id);
+    const [col, txt] = row.querySelectorAll('input');
+    col.oninput = () => { c.color = col.value; save(); renderAll(false); };
+    txt.oninput = () => { c.name = txt.value || 'Sin nombre'; save(); renderAll(false); };
+    txt.onkeydown = e => e.stopPropagation();
+    row.querySelector('button').onclick = () => { state.cats = state.cats.filter(x => x!==c); save(); renderCatEditor(); renderAll(false); };
+  });
+}
+$('#btnCats').onclick = () => { renderCatEditor(); $('#dlgCats').showModal(); };
+$('#catDone').onclick = () => $('#dlgCats').close();
+$('#catAdd').onclick = () => { state.cats.push({id:uid(), name:'Nueva etiqueta', color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0')}); save(); renderCatEditor(); renderAll(false); };
+$('#catReset').onclick = () => { state.cats = DEFAULT_CATS.map(c => ({...c, id:uid()})); save(); renderCatEditor(); renderAll(false); };
+
+/* ---------- guardar / cargar / CSV ---------- */
+$('#btnSave').onclick = () => {
+  const data = {app:'TacticaLab', version:1, video:videoName, created:new Date().toISOString(), cats:state.cats, clips:state.clips};
+  download(`${baseName()}_analisis.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
+};
+$('#btnLoad').onclick = () => $('#fileProj').click();
+$('#fileProj').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  f.text().then(t => {
+    try{
+      const d = JSON.parse(t);
+      if (!Array.isArray(d.cats) || !Array.isArray(d.clips)) throw 0;
+      state.cats = d.cats; state.clips = d.clips; save(); renderAll();
+      flash(`Proyecto cargado: ${d.clips.length} cortes` + (d.video && d.video!==videoName ? ` (vídeo original: ${d.video})` : ''));
+    }catch(err){ flash('El archivo no es un proyecto válido de Táctica Lab'); }
+  });
+  e.target.value = '';
+};
+$('#btnCsv').onclick = () => {
+  if (!state.clips.length){ flash('No hay cortes que exportar'); return; }
+  const q = v => `"${String(v).replace(/"/g,'""')}"`;
+  const lines = [['n','etiqueta','equipo','resultado','inicio','fin','inicio_s','fin_s','duracion_s','observacion'].join(';')];
+  state.clips.forEach((c,i) => lines.push([i+1, q(catById(c.cat).name), c.team, c.result==='ok'?'Éxito':c.result==='ko'?'Fallo':'', fmt(c.start), fmt(c.end), String(c.start).replace('.',','), String(c.end).replace('.',','), (c.end-c.start).toFixed(1).replace('.',','), q(c.note)].join(';')));
+  download(`${baseName()}_cortes.csv`, new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'}));
+};
+
+/* ---------- teclado ---------- */
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input,select,textarea') || $('#dlgCats').open) return;
+  if (e.code==='Space'){ e.preventDefault(); togglePlay(); }
+  else if (e.key==='ArrowLeft'){ e.preventDefault(); seek(video.currentTime-(e.shiftKey?1:5)); }
+  else if (e.key==='ArrowRight'){ e.preventDefault(); seek(video.currentTime+(e.shiftKey?1:5)); }
+  else if (e.key===','){ video.pause(); seek(video.currentTime-FRAME); }
+  else if (e.key==='.'){ video.pause(); seek(video.currentTime+FRAME); }
+  else if (e.key==='Escape'){ openCut = {}; renderTags(); }
+  else if (/^[1-9]$/.test(e.key)){ const c = state.cats[+e.key-1]; if (c) tagAction(c.id); }
+});
+
+function renderAll(){ renderTags(); renderList(); renderTimeline(); renderStats(); }
+renderAll();
+})();
+</script>
+</body>
+</html>
