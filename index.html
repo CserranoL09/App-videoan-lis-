@@ -61,6 +61,8 @@ video{width:100%;height:100%;display:block;background:#000}
 
 .controls{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin-top:.6rem}
 .controls .time{margin-left:auto;font-size:1rem;color:var(--fg)}
+.jump{display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem;color:var(--muted)}
+.jump input{width:3.8rem;text-align:center;font-family:var(--mono)}
 .timeline{position:relative;height:56px;margin-top:.6rem;background:var(--panel);border:1px solid var(--line);border-radius:6px;cursor:pointer;overflow:hidden}
 .timeline .seg{position:absolute;border-radius:2px;opacity:.9}
 .timeline .seg.inpl{outline:1px solid var(--fg)}
@@ -172,11 +174,12 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     </div>
 
     <div class="controls">
-      <button id="bBack5" title="Retroceder 5 s">−5 s</button>
+      <button id="bBack5" title="Retroceder">−5 s</button>
       <button id="bFrameB" title="Fotograma anterior">◂|</button>
       <button id="bPlay" class="primary" style="min-width:5.5rem">▶ Play</button>
       <button id="bFrameF" title="Fotograma siguiente">|▸</button>
-      <button id="bFwd5" title="Avanzar 5 s">+5 s</button>
+      <button id="bFwd5" title="Avanzar">+5 s</button>
+      <label class="jump" title="Segundos que avanzan o retroceden los botones y las flechas (1–60)">Salto <input type="number" id="jumpSec" min="1" max="60" step="1" value="5" inputmode="numeric" aria-label="Segundos de salto"> s</label>
       <select id="speed" title="Velocidad">
         <option value="0.25">0.25×</option><option value="0.5">0.5×</option>
         <option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="4">4×</option>
@@ -186,7 +189,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     </div>
     <div class="timeline" id="timeline"><div class="head" id="head"></div></div>
     <p class="help">
-      <kbd>Espacio</kbd> play/pausa · <kbd>←</kbd><kbd>→</kbd> ±5 s · <kbd>,</kbd><kbd>.</kbd> fotograma · <kbd>1</kbd>–<kbd>9</kbd> etiquetar · <kbd>Esc</kbd> cancelar corte abierto · Clic en la línea de tiempo para saltar.
+      <kbd>Espacio</kbd> play/pausa · <kbd>←</kbd><kbd>→</kbd> saltar <span id="jumpHelp">5</span> s · <kbd>Mayús</kbd>+<kbd>←</kbd><kbd>→</kbd> ±1 s · <kbd>,</kbd><kbd>.</kbd> fotograma · <kbd>1</kbd>–<kbd>9</kbd> etiquetar · <kbd>Esc</kbd> cancelar corte abierto · Clic en la línea de tiempo para saltar.
     </p>
   </section>
 
@@ -342,8 +345,26 @@ const FRAME = 1/25;
 const seek = t => { if (video.duration) video.currentTime = Math.max(0, Math.min(video.duration, t)); };
 function togglePlay(){ if (!video.src || exporting) return; playback = null; markPlaying(); video.paused ? video.play() : video.pause(); }
 $('#bPlay').onclick = togglePlay;
-$('#bBack5').onclick = () => seek(video.currentTime-5);
-$('#bFwd5').onclick = () => seek(video.currentTime+5);
+/* salto editable (1–60 s) */
+let JUMP = 5;
+try{ const j = +localStorage.getItem('tacticalab:jump'); if (j >= 1 && j <= 60) JUMP = j; }catch(e){}
+function setJump(v, fix){
+  v = Math.round(+v);
+  if (!isFinite(v) || v < 1) v = 1;
+  if (v > 60){ v = 60; flash('El salto máximo es de 60 segundos'); }
+  JUMP = v;
+  if (fix) $('#jumpSec').value = v;
+  $('#bBack5').textContent = `−${v} s`; $('#bFwd5').textContent = `+${v} s`;
+  $('#bBack5').title = `Retroceder ${v} s`; $('#bFwd5').title = `Avanzar ${v} s`;
+  $('#jumpHelp').textContent = v;
+  try{ localStorage.setItem('tacticalab:jump', v); }catch(e){}
+}
+$('#jumpSec').oninput = e => { if (e.target.value !== '' && +e.target.value >= 1 && +e.target.value <= 60) setJump(e.target.value, false); };
+$('#jumpSec').onchange = e => setJump(e.target.value, true);
+$('#jumpSec').onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') e.target.blur(); };
+setJump(JUMP, true);
+$('#bBack5').onclick = () => seek(video.currentTime-JUMP);
+$('#bFwd5').onclick = () => seek(video.currentTime+JUMP);
 $('#bFrameB').onclick = () => { video.pause(); seek(video.currentTime-FRAME); };
 $('#bFrameF').onclick = () => { video.pause(); seek(video.currentTime+FRAME); };
 $('#speed').onchange = e => video.playbackRate = +e.target.value;
@@ -838,8 +859,8 @@ $('#btnCsv').onclick = () => {
 document.addEventListener('keydown', e => {
   if (exporting || e.target.matches('input,select,textarea') || $('#dlgCats').open) return;
   if (e.code==='Space'){ e.preventDefault(); togglePlay(); }
-  else if (e.key==='ArrowLeft'){ e.preventDefault(); seek(video.currentTime-(e.shiftKey?1:5)); }
-  else if (e.key==='ArrowRight'){ e.preventDefault(); seek(video.currentTime+(e.shiftKey?1:5)); }
+  else if (e.key==='ArrowLeft'){ e.preventDefault(); seek(video.currentTime-(e.shiftKey?1:JUMP)); }
+  else if (e.key==='ArrowRight'){ e.preventDefault(); seek(video.currentTime+(e.shiftKey?1:JUMP)); }
   else if (e.key===','){ video.pause(); seek(video.currentTime-FRAME); }
   else if (e.key==='.'){ video.pause(); seek(video.currentTime+FRAME); }
   else if (e.key==='Escape'){ if (Object.keys(openCut).length) flash('Corte abierto cancelado'); openCut = {}; renderTags(); }
