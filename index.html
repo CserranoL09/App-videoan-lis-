@@ -42,7 +42,10 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:1rem;padding:1re
 @media (max-width:1020px){main{grid-template-columns:minmax(0,1fr)}}
 
 .stage{position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:100%}
-video{width:100%;height:100%;display:block;background:#000}
+video{width:100%;height:100%;display:block;background:#000;cursor:pointer}
+.ppicon{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:rgba(15,21,18,.7);color:#fff;display:grid;place-items:center;font-size:34px;pointer-events:none;opacity:0;transform:scale(.8);transition:opacity .35s,transform .35s}
+.ppicon.show{opacity:1;transform:scale(1);transition:none}
+@media (prefers-reduced-motion:reduce){.ppicon{transition:none}}
 .drop{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:1.5rem;border:2px dashed var(--line);border-radius:8px;background:var(--bg)}
 .drop.over{border-color:var(--accent)}
 .drop h2{font-family:var(--display);font-size:2rem;margin:.2rem 0;text-transform:uppercase;letter-spacing:.03em}
@@ -171,6 +174,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
         </div>
       </div>
       <div class="flash" id="flash"></div>
+      <div class="ppicon" id="ppIcon" aria-hidden="true">▶</div>
     </div>
 
     <div class="controls">
@@ -189,7 +193,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     </div>
     <div class="timeline" id="timeline"><div class="head" id="head"></div></div>
     <p class="help">
-      <kbd>Espacio</kbd> play/pausa · <kbd>←</kbd><kbd>→</kbd> saltar <span id="jumpHelp">5</span> s · <kbd>Mayús</kbd>+<kbd>←</kbd><kbd>→</kbd> ±1 s · <kbd>,</kbd><kbd>.</kbd> fotograma · <kbd>1</kbd>–<kbd>9</kbd> etiquetar · <kbd>Esc</kbd> cancelar corte abierto · Clic en la línea de tiempo para saltar.
+      <kbd>Espacio</kbd> o clic en el vídeo: play/pausa · <kbd>←</kbd><kbd>→</kbd> saltar <span id="jumpHelp">5</span> s · <kbd>Mayús</kbd>+<kbd>←</kbd><kbd>→</kbd> ±1 s · <kbd>,</kbd><kbd>.</kbd> fotograma · <kbd>1</kbd>–<kbd>9</kbd> etiquetar · <kbd>Esc</kbd> cancelar corte abierto · Clic en la línea de tiempo para saltar.
     </p>
   </section>
 
@@ -345,6 +349,14 @@ const FRAME = 1/25;
 const seek = t => { if (video.duration) video.currentTime = Math.max(0, Math.min(video.duration, t)); };
 function togglePlay(){ if (!video.src || exporting) return; playback = null; markPlaying(); video.paused ? video.play() : video.pause(); }
 $('#bPlay').onclick = togglePlay;
+/* clic sobre el vídeo: reproducir / pausar (respeta la lista en curso) */
+video.addEventListener('click', () => {
+  if (!video.src || exporting) return;
+  if (video.paused) video.play(); else video.pause();
+  const ic = $('#ppIcon'); ic.textContent = video.paused ? '❚❚' : '▶';
+  ic.classList.add('show'); void ic.offsetWidth;
+  clearTimeout(ic.t); ic.t = setTimeout(() => ic.classList.remove('show'), 60);
+});
 /* salto editable (1–60 s) */
 let JUMP = 5;
 try{ const j = +localStorage.getItem('tacticalab:jump'); if (j >= 1 && j <= 60) JUMP = j; }catch(e){}
