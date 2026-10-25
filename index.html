@@ -776,6 +776,18 @@ main > .tagcard{min-width:0}
   body.lay-below .controls .time{font-size:.9rem;padding:.25rem .5rem}
   body.lay-below .controls .jump{font-size:.82rem}
 }
+/* ===== v3.7 · Grabar desde la cámara ===== */
+.lp-cam{width:100%;max-width:640px;display:flex;flex-direction:column;align-items:center;gap:.45rem;padding:.55rem;border:1px dashed var(--line2);border-radius:var(--r-sm);background:color-mix(in srgb,var(--bg2) 80%,transparent)}
+.lp-cam.rec{border-style:solid;border-color:var(--ko)}
+.lp-cam-h{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
+.lp-cam-cfg{display:flex;flex-wrap:wrap;gap:.4rem .8rem;align-items:center;justify-content:center;font-size:.84rem;color:var(--muted)}
+.lp-cam-cfg label{display:inline-flex;align-items:center;gap:.35rem;min-width:0}
+.lp-cam-cfg select{max-width:220px;min-width:0}
+#camPrev{width:100%;max-height:34vh;aspect-ratio:16/9;object-fit:contain;background:#000;border-radius:8px}
+.lp-cam-info{margin:0;font-size:.8rem;color:var(--muted);text-align:center;max-width:60ch}
+.lp-cam-info.warn{color:var(--ko);font-weight:600}
+.lp-cam.rec .lp-cam-info{color:var(--fg);font-family:var(--mono);font-size:.76rem}
+@media (max-width:760px){ #camPrev{max-height:18vh} .lp-cam{padding:.4rem} }
 </style>
 </head>
 <body>
@@ -830,6 +842,17 @@ main > .tagcard{min-width:0}
           <span>Cada acción:</span>
           <label><input type="number" id="lpPre" min="0" max="60" step="1" value="8" inputmode="numeric" aria-label="Segundos antes de la acción"> s antes</label>
           <label><input type="number" id="lpPost" min="0" max="60" step="1" value="4" inputmode="numeric" aria-label="Segundos después de la acción"> s después</label>
+        </div>
+        <div class="lp-cam" id="lpCam" hidden>
+          <div class="lp-cam-h"><button type="button" id="camBtn">🎥 Grabar desde la cámara</button></div>
+          <div class="lp-cam-cfg" id="camCfg" hidden>
+            <label>Cámara <select id="camDev" aria-label="Cámara o capturadora"><option value="">Cámara</option></select></label>
+            <label>Calidad <select id="camRes"><option value="1080">1080p</option><option value="720" selected>720p</option><option value="480">480p</option></select></label>
+            <label class="chk"><input type="checkbox" id="camAudio" checked> Sonido</label>
+            <button type="button" id="camSave">💾 Guardar directamente en el ordenador</button>
+          </div>
+          <video id="camPrev" muted playsinline hidden></video>
+          <p class="lp-cam-info" id="camInfo" aria-live="polite"></p>
         </div>
         <p class="lp-wake" id="lpWake"></p>
       </div>
@@ -1168,8 +1191,13 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.6';
+const APP_VERSION = '3.7';
 const CHANGELOG = [
+  {v:'3.7', date:'Octubre 2026', items:[
+    '<b>Grabar desde la cámara mientras etiquetas:</b> en «Registro en directo», «🎥 Grabar desde la cámara» graba el partido con una cámara web, una capturadora o la cámara del móvil. La grabación empieza con «Iniciar 1.ª parte», se pausa en el descanso y termina con «Fin del partido».',
+    'Al terminar, el vídeo queda vinculado al partido y las acciones ya son cortes normales: no hace falta sincronizar. Las partes quedan marcadas para el minuto real.',
+    'En Chrome y Edge el vídeo se puede guardar directamente en el ordenador mientras se graba. En Safari se guarda en la memoria: se descarga una copia al terminar la 1.ª parte y el vídeo completo al final.'
+  ]},
   {v:'3.6', date:'Octubre 2026', items:[
     '<b>Etiquetas a la derecha del vídeo</b> y Cortes, Lista de reproducción y Resumen debajo: nueva disposición por defecto en el ordenador. En ⚙ Configurar puedes elegir también «Todo debajo del vídeo» o «Todo a la derecha».',
     '<b>Zoom del vídeo</b> de 1× a 4× para ver detalles: Ctrl + rueda (o pellizco del trackpad) sobre el vídeo, pellizco en el móvil, botones − / 1× / + o teclas + / − / 0. Con zoom, arrastra para mover la imagen. La pizarra, la captura y el modo presentación funcionan con zoom.',
@@ -1272,7 +1300,8 @@ let pendPlayers = new Set();// jugadores marcados para el próximo corte
 let previewStop = null;
 let selClip = null;
 let vzMain = null, vzPres = null;   // v3.6 · zoom del vídeo (reproductor y presentación)
-let mirror = null;                  // v3.6 · ventana emergente sincronizada         // v3.3 · corte seleccionado (▶ o clic en su tarjeta)
+let mirror = null;                  // v3.6 · ventana emergente sincronizada
+let cam = null;                     // v3.7 · grabación desde la cámara (solo en memoria de esta pestaña)         // v3.3 · corte seleccionado (▶ o clic en su tarjeta)
 const tlv = {mid:null, span:0, v0:0}; // v3.3 · zoom de la línea de tiempo (span 0 = partido entero)     // v3.1 · fin de la vista previa de sincronización (lo consulta el bucle de reproducción)
 // estado de la pizarra (se declara aquí porque el bucle de reproducción lo consulta desde el inicio)
 const board = {on:false, tool:'arrow', color:'#ffd400', w:.007, shapes:[], undo:[], redo:[], cur:null, path:null, clipId:null, t:0, sel:-1, poly:null, polyHover:null, drag:null, fill:null, hold:3, live:false};
@@ -1420,6 +1449,7 @@ function sanitizeClipLive(L){
   const r = cleanNum(L.r), sec = v => { const n = Math.round(+v); return isFinite(n) && n >= 0 && n <= 60 ? n : null; };
   const o = {p, s, r: r !== null && r >= s && r < 86400 ? r : s, pre: sec(L.pre) ?? 8, post: sec(L.post) ?? 4};
   if (L.out === true) o.out = true;
+  const v = cleanNum(L.v); if (v !== null && v < 86400) o.v = v;   // v3.7 · instante en el vídeo grabado con la cámara
   return {live: o};
 }
 function sanitizeMatchLive(L){
@@ -1436,7 +1466,8 @@ function sanitizeMatchLive(L){
   const off = +L.offset;
   return {phase, t1, t2, pauseAt: (phase === 'h1' || phase === 'h2') ? ms(L.pauseAt) : null, pre: sec(L.pre, 8), post: sec(L.post, 4),
     synced: !!L.synced, offset: isFinite(off) ? clamp(Math.round(off*2)/2, -30, 30) : 0,
-    H1: L.H1 == null ? null : cleanNum(L.H1), H2: L.H2 == null ? null : cleanNum(L.H2)};
+    H1: L.H1 == null ? null : cleanNum(L.H1), H2: L.H2 == null ? null : cleanNum(L.H2),
+    ...(L.cam && typeof L.cam === 'object' ? {cam: Object.fromEntries(['h1','e1','h2','e2'].map(k => [k, L.cam[k] == null ? null : cleanNum(L.cam[k])]).concat([['done', L.cam.done === true]]))} : {})};
 }
 function sanitizeMatches(arr){
   const map = {}, out = [];
@@ -1496,7 +1527,7 @@ const FIXED_KEYS = new Set(Object.values(KEY));
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
 function save(){
   try{ localStorage.setItem(KEY.cats, JSON.stringify(state.cats)); }catch(e){}
-  try{ localStorage.setItem(KEY.project, JSON.stringify({version:8, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur})); }
+  try{ localStorage.setItem(KEY.project, JSON.stringify({version:9, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur})); }
   catch(e){ flash('No se pudo guardar en este navegador (almacenamiento lleno). Usa «Guardar proyecto» para no perder el trabajo.', 5000); }
 }
 function saveBrand(){ try{ localStorage.setItem(KEY.brand, JSON.stringify(brand)); }catch(e){ flash('No se pudo guardar el escudo en este navegador (imagen demasiado grande)', 3500); } }
@@ -1715,6 +1746,7 @@ function ensureMatch(id){
 }
 async function openMatch(id){
   const m = matchById(id); if (!m || exporting) return;
+  if (cam && cam.rec && cam.mid !== id){ flash('Termina la grabación del partido en directo antes de abrir otro partido', 3500); return; }
   if (m.live && !m.live.synced && !urls[id]){ openLive(id); return; }
   if (!urls[id]){ relinkTarget = id; flash(`Selecciona el vídeo de ${matchLabel(m)} (${m.fileName})`, 3000); $('#fileRelink').click(); return; }
   playback = null; markPlaying();
@@ -2787,7 +2819,7 @@ function seekTo(t){
 }
 function setBusy(on){
   $('aside').inert = on; $('#lib').inert = on;
-  ['btnOpen','btnOpen2','btnLoad','btnCfg','btnCats','bBoard','btnReport','btnXlsx','plPresent','bCompare','btnImportEv','bWin'].forEach(id => { const b = $('#'+id); if (b) b.disabled = on; });
+  ['btnOpen','btnOpen2','btnLoad','btnCfg','btnCats','bBoard','btnReport','btnXlsx','plPresent','bCompare','btnImportEv','bWin','camBtn'].forEach(id => { const b = $('#'+id); if (b) b.disabled = on; });
 }
 async function exportClips(list, opts){
   if (exporting) return;
@@ -3127,7 +3159,7 @@ $('#catReset').onclick = async () => {
    GUARDAR / CARGAR PROYECTO (v5 con partidos y registro en directo; abre también v4 y proyectos v1–v3 de un solo vídeo)
    ========================================================= */
 $('#btnSave').onclick = () => {
-  const data = {app:'TacticaLab', version:8, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur};
+  const data = {app:'TacticaLab', version:9, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur};
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const one = state.matches.length === 1 ? baseFile(state.matches[0].fileName) : 'tactica-lab';
   download(`${slug(one)}_analisis_${stamp}.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
@@ -3849,6 +3881,7 @@ function createLiveMatch(){
   flash('Partido en directo creado: pon el rival y pulsa «Iniciar 1.ª parte»', 3500);
 }
 function openLive(id){
+  if (cam && cam.rec && cam.mid !== id){ flash('Termina la grabación del partido en directo antes de abrir otro partido', 3500); return; }
   closeBoard(true); cancelFreeze(); playback = null; markPlaying();
   video.pause(); video.removeAttribute('src'); video.load();
   curMatch = id; openCut = {}; showDropMsg.sticky = false;
@@ -3868,7 +3901,7 @@ function livePhase(action){
   else if (action === 'resume'){ closePause(L['t'+livePart(L)]); }
   else if (action === 'undo1' && L.t1 && !L.t2){ L.t1.pausedMs += now - L.t1.end; L.t1.end = null; L.phase = 'h1'; }
   else if (action === 'undo2' && L.t2){ L.t2.pausedMs += now - L.t2.end; L.t2.end = null; L.phase = 'h2'; }
-  save(); renderLivePanel(); renderLib(); keepAwake();
+  save(); camOnPhase(action, m); renderLivePanel(); renderLib(); keepAwake();
   const msg = {start1:'1.ª parte en marcha', end1:'Descanso', start2:'2.ª parte en marcha', end2:'Fin del partido · añade el vídeo con ✎ para sincronizar', pause:'Reloj en pausa', resume:'Reloj en marcha', undo1:'1.ª parte reanudada', undo2:'2.ª parte reanudada'}[action];
   if (msg) flash(msg, 2500);
 }
@@ -3885,6 +3918,7 @@ function addLiveClip(catId){
   const vb = p === 2 ? PART_GAP : 0;
   const clip = {id:uid(), matchId:curMatch, cat:catId, start:+Math.max(0, vb + s - pre).toFixed(2), end:+(vb + s + post).toFixed(2),
     team:$('#team').value, result:$('#result').value, note:'', zone:pendZone, players:[...pendPlayers], drawings:[], tags:{}, live:{p, s, r, pre, post}};
+  if (camRecording(curMatch)) clip.live.v = +camSec().toFixed(2);   // v3.7: instante exacto en el vídeo que se está grabando
   pushUndo('registrar acción');
   state.clips.push(clip);
   $('#result').value = ''; pendZone = null; pendPlayers.clear();
@@ -3911,9 +3945,18 @@ function renderLivePanel(){
     h1: pz + B('end1','■ Fin 1.ª parte'),
     ht: B('start2','▶ Iniciar 2.ª parte','primary') + B('undo1','↺ Reanudar 1.ª parte','ghost'),
     h2: pz + B('end2','■ Fin del partido'),
-    end: B('sync','🎬 Añadir el vídeo y sincronizar','primary') + B('undo2','↺ Reanudar 2.ª parte','ghost')
+    end: cam && cam.mid === m.id ? '<button type="button" disabled>Guardando la grabación…</button>' : B('sync','🎬 Añadir el vídeo y sincronizar','primary') + B('undo2','↺ Reanudar 2.ª parte','ghost')
   }[L.phase];
-  $('#lpBtns').querySelectorAll('button').forEach(b => b.onclick = () => b.dataset.act === 'sync' ? beginSyncFlow(m.id) : livePhase(b.dataset.act));
+  $('#lpBtns').querySelectorAll('button').forEach(b => b.onclick = async () => {
+    const act = b.dataset.act;
+    if (act === 'sync') return beginSyncFlow(m.id);
+    if (act === 'end2' && camRecording(m.id)){
+      const r = await ask({title:'Fin del partido', text:'Se detendrá la grabación y el vídeo quedará vinculado al partido con todos los cortes listos. Después no se podrá reanudar la 2.ª parte.', buttons:[{label:'Seguir grabando', value:null}, {label:'Terminar y guardar', value:'yes', kind:'primary'}]});
+      if (r.value !== 'yes') return;
+    }
+    livePhase(act);
+  });
+  renderCamPanel();
   if (document.activeElement !== $('#lpPre')) $('#lpPre').value = L.pre;
   if (document.activeElement !== $('#lpPost')) $('#lpPost').value = L.post;
   $('#lpClock').textContent = clockText(L, m.half || 45);
@@ -3931,13 +3974,14 @@ function liveTick(){
   const m = matchById(curMatch); if (!m || !m.live) return;
   const txt = clockText(m.live, m.half || 45);
   if ($('#lpClock').textContent !== txt) $('#lpClock').textContent = txt;
+  camTick();
 }
 
 /* ---------- pantalla siempre encendida (Wake Lock, si el navegador lo permite) ---------- */
 let wakeLock = null, wakeAsked = false, wakeFailed = false;
 async function keepAwake(){
   const m = matchById(curMatch);
-  const want = liveMode() && m && (m.live.phase === 'h1' || m.live.phase === 'h2') && document.visibilityState === 'visible';
+  const want = ((liveMode() && m && (m.live.phase === 'h1' || m.live.phase === 'h2')) || camActive()) && document.visibilityState === 'visible';
   const supported = 'wakeLock' in navigator;
   if (want && supported && !wakeLock && !wakeAsked){
     wakeAsked = true;
@@ -4744,6 +4788,199 @@ function mirrorPaint(M, shapes){
   ctx.setTransform(1, 0, 0, 1, (W - cw)/2, (H - ch)/2);
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, cw, ch); ctx.clip(); drawShapes(ctx, cw, ch, shapes); ctx.restore();
 }
+
+
+/* =========================================================
+   v3.7 · GRABAR DESDE LA CÁMARA O CAPTURADORA MIENTRAS SE ETIQUETA (Registro en directo)
+   - La grabación empieza con «Iniciar 1.ª parte», se pausa en el descanso y termina con «Fin del partido».
+   - Cada acción guarda clip.live.v = segundo del vídeo grabado → al terminar, los cortes ya son normales (sin sincronizar).
+   - Chrome/Edge: se escribe en el disco mientras se graba (showSaveFilePicker). Safari y otros: en memoria,
+     con una copia de seguridad que se descarga al terminar la 1.ª parte y el archivo completo al final.
+   ========================================================= */
+const CAM_RATES = {1080: 6e6, 720: 3.5e6, 480: 1.5e6};
+const camSupported = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+const camActive = () => !!(cam && cam.stream);
+const camRecording = mid => !!(cam && cam.rec && cam.rec.state !== 'inactive' && (!mid || cam.mid === mid));
+/* tiempo grabado (s): suma de los tramos con la grabadora en marcha */
+const camSec = () => cam ? ((cam.acc + (cam.since != null ? performance.now() - cam.since : 0))/1000) : 0;
+function camPickMime(audio){
+  const opts = audio ? ['video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']
+                     : ['video/mp4;codecs=avc1','video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  for (const mime of opts) if (MediaRecorder.isTypeSupported(mime)) return {mime, ext: mime.startsWith('video/mp4') ? 'mp4' : 'webm', type: mime.startsWith('video/mp4') ? 'video/mp4' : 'video/webm'};
+  return {mime: '', ext: 'webm', type: 'video/webm'};
+}
+const fmtSize = b => b >= 1e9 ? (b/1e9).toFixed(2).replace('.',',') + ' GB' : b >= 1e6 ? Math.round(b/1e6) + ' MB' : Math.max(1, Math.round(b/1e3)) + ' KB';
+function camFileName(m){
+  const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return `${slug(m && m.rival ? 'vs ' + m.rival : 'partido')}_${stamp}`;
+}
+/* ---------- activar la cámara y vista previa ---------- */
+async function camStart(){
+  if (!camSupported()){ camMsg('Este navegador no permite grabar desde la cámara. Alternativa: graba con la app de cámara del móvil o de la cámara y, al terminar, usa «Añadir el vídeo y sincronizar».', true); return; }
+  const m = matchById(curMatch); if (!m || !m.live) return;
+  const res = +$('#camRes').value || 720, dev = $('#camDev').value, audio = $('#camAudio').checked;
+  const h = res, w = Math.round(res*16/9);
+  try{
+    const st = await navigator.mediaDevices.getUserMedia({video: Object.assign({width: {ideal: w}, height: {ideal: h}, frameRate: {ideal: 30}}, dev ? {deviceId: {exact: dev}} : {facingMode: 'environment'}), audio});
+    if (cam && cam.stream) cam.stream.getTracks().forEach(t => t.stop());
+    cam = Object.assign(cam || {}, {mid: m.id, stream: st, res, audio, rec: null, chunks: [], bytes: 0, acc: 0, since: null, marks: {}, sink: cam && cam.mid === m.id ? cam.sink : null});
+    const v = $('#camPrev'); v.srcObject = st; v.muted = true; v.hidden = false; try{ await v.play(); }catch(e){}
+    const tr = st.getVideoTracks()[0];
+    if (tr) tr.addEventListener('ended', () => { if (camRecording()) camMsg('⚠ La cámara se ha desconectado. Pulsa «Fin del partido» para guardar lo grabado.', true); });
+    await camFillDevices(tr && tr.getSettings ? tr.getSettings().deviceId : '');
+    keepAwake(); renderCamPanel();
+    flash('Cámara lista: la grabación empezará al pulsar «Iniciar 1.ª parte»', 3500);
+  }catch(e){
+    const n = e && e.name;
+    camMsg(n === 'NotAllowedError' ? 'Has denegado el permiso de la cámara. Para grabar, permite la cámara (y el micrófono si quieres sonido) en los ajustes del navegador para esta página.'
+      : n === 'NotFoundError' || n === 'OverconstrainedError' ? 'No se encuentra esa cámara o no admite esa calidad. Prueba otra cámara o una calidad menor.'
+      : 'No se pudo abrir la cámara (' + (e && e.message || n || 'error') + ').', true);
+  }
+}
+async function camFillDevices(cur){
+  try{
+    const list = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+    $('#camDev').innerHTML = list.map((d, i) => `<option value="${esc(d.deviceId)}">${esc(d.label || `Cámara ${i+1}`)}</option>`).join('') || '<option value="">Cámara</option>';
+    if (cur && list.some(d => d.deviceId === cur)) $('#camDev').value = cur;
+  }catch(e){}
+}
+function camStop(){
+  if (!cam) return;
+  if (cam.stream) cam.stream.getTracks().forEach(t => t.stop());
+  cam = null; $('#camPrev').srcObject = null; $('#camPrev').hidden = true; keepAwake(); renderCamPanel();
+}
+async function camChooseFile(){
+  const m = matchById(curMatch); if (!cam || !m) return;
+  if (typeof window.showSaveFilePicker !== 'function'){ camMsg('Este navegador no puede guardar directamente en el disco: el vídeo se guardará en la memoria y se descargará al terminar cada parte.'); return; }
+  const f = camPickMime(cam.audio);
+  try{
+    const handle = await window.showSaveFilePicker({suggestedName: `${camFileName(m)}.${f.ext}`, types: [{description: 'Vídeo', accept: {[f.type]: ['.' + f.ext]}}]});
+    cam.sink = {handle, writable: await handle.createWritable(), queue: Promise.resolve(), failed: false};
+    renderCamPanel(); flash('El vídeo se guardará directamente en tu ordenador mientras grabas', 3000);
+  }catch(e){ /* cancelado */ }
+}
+/* ---------- grabación ---------- */
+function camRecStart(){
+  const f = camPickMime(cam.audio), m = matchById(cam.mid);
+  cam.fmt = f; cam.name = `${camFileName(m)}.${f.ext}`;
+  const opts = {videoBitsPerSecond: CAM_RATES[cam.res] || 3.5e6}; if (f.mime) opts.mimeType = f.mime; if (cam.audio) opts.audioBitsPerSecond = 128000;
+  let rec; try{ rec = new MediaRecorder(cam.stream, opts); }catch(e){ try{ rec = new MediaRecorder(cam.stream); }catch(err){ camMsg('Este navegador no puede grabar la cámara. Graba con otra app y sincroniza después.', true); return false; } }
+  cam.rec = rec; cam.chunks = []; cam.bytes = 0; cam.acc = 0;
+  rec.ondataavailable = e => {
+    if (!e.data || !e.data.size) return;
+    cam.bytes += e.data.size;
+    if (cam.sink) cam.sink.queue = cam.sink.queue.then(() => cam.sink.writable.write(e.data)).catch(err => { cam.sink.failed = true; console.error(err); });
+    else cam.chunks.push(e.data);
+  };
+  rec.start(1000); cam.since = performance.now();
+  return true;
+}
+function camPause(){ if (!cam || !cam.rec || cam.rec.state !== 'recording') return; cam.rec.pause(); cam.acc += performance.now() - cam.since; cam.since = null; }
+/* pide a la grabadora los datos pendientes y espera a que lleguen */
+function camFlush(){
+  return new Promise(res => {
+    if (!cam || !cam.rec || cam.rec.state === 'inactive'){ res(); return; }
+    const rec = cam.rec, h = () => { rec.removeEventListener('dataavailable', h); setTimeout(res, 50); };
+    rec.addEventListener('dataavailable', h);
+    try{ rec.requestData(); }catch(e){ rec.removeEventListener('dataavailable', h); res(); }
+    setTimeout(() => { rec.removeEventListener('dataavailable', h); res(); }, 4000);
+  });
+}
+function camResume(){ if (!cam || !cam.rec || cam.rec.state !== 'paused') return; cam.rec.resume(); cam.since = performance.now(); }
+/* copia de seguridad en memoria (Safari y otros): lo grabado hasta el descanso */
+async function camBackup(){
+  if (!cam || cam.sink) return;
+  const c = cam; await camFlush();
+  if (cam !== c || !c.chunks.length || !c.rec || c.rec.state !== 'paused') return;
+  download(c.name.replace(/(\.\w+)$/, '_hasta-el-descanso$1'), new Blob(c.chunks, {type: c.fmt.type}));
+  flash('Copia de seguridad de la 1.ª parte descargada', 3000);
+}
+async function camFinish(){
+  if (!cam || !cam.rec) return;
+  const m = matchById(cam.mid), rec = cam.rec;
+  if (cam.since != null){ cam.acc += performance.now() - cam.since; cam.since = null; }
+  cam.finishing = true; renderCamPanel(); flash('Guardando la grabación…', 4000);
+  await new Promise(res => { rec.onstop = res; try{ if (rec.state === 'paused') rec.resume(); rec.stop(); }catch(e){ res(); } setTimeout(res, 8000); });
+  let file = null;
+  try{
+    if (cam.sink){
+      await cam.sink.queue; await cam.sink.writable.close();
+      if (cam.sink.failed) throw new Error('fallo al escribir en el disco');
+      file = await cam.sink.handle.getFile();
+    } else {
+      const blob = new Blob(cam.chunks, {type: cam.fmt.type});
+      file = new File([blob], cam.name, {type: cam.fmt.type});
+      download(cam.name, blob);
+    }
+  }catch(e){ camMsg('No se pudo guardar el vídeo grabado: ' + (e && e.message || e), true); }
+  const marks = cam.marks;
+  cam.stream.getTracks().forEach(t => t.stop());
+  cam = null; $('#camPrev').srcObject = null; $('#camPrev').hidden = true;
+  if (!m) return;
+  // las acciones pasan a ser cortes normales con su instante en el vídeo grabado
+  let n = 0;
+  state.clips.forEach(c => { if (c.matchId === m.id && c.live && c.live.v != null){ c.start = +Math.max(0, c.live.v - c.live.pre).toFixed(2); c.end = +(c.live.v + c.live.post).toFixed(2); n++; } });
+  m.h1 = marks.h1 ?? 0; m.e1 = marks.e1 ?? null; m.h2 = marks.h2 ?? null; m.e2 = marks.e2 ?? null;
+  m.live.cam = Object.assign({}, marks, {done: true});
+  if (file){
+    m.live.synced = true; m.live.offset = 0; m.live.H1 = m.h1; m.live.H2 = m.h2;
+    clearHistory(); linkFile(m, file); save();
+    curMatch = null; await openMatch(m.id);
+    flash(`Grabación guardada (${fmtSize(file.size)}): ${nCortes(n)} listos para ver, recortar y exportar`, 5000);
+  } else { save(); renderAll(); }
+  keepAwake();
+}
+/* se llama desde livePhase después de cambiar de fase */
+function camOnPhase(action, m){
+  if (!cam || !cam.stream || cam.mid !== m.id) return;
+  if (action === 'start1' && !cam.rec){ if (camRecStart()){ cam.marks = {h1: 0}; flash('● Grabando · 1.ª parte', 2500); } }
+  else if (action === 'end1'){ cam.marks.e1 = +camSec().toFixed(2); camPause(); camBackup(); }
+  else if (action === 'start2'){ camResume(); cam.marks.h2 = +camSec().toFixed(2); }
+  else if (action === 'undo1'){ delete cam.marks.e1; camResume(); }
+  else if (action === 'end2'){ cam.marks.e2 = +camSec().toFixed(2); camFinish(); }
+  renderCamPanel();
+}
+/* ---------- panel ---------- */
+function camMsg(t, warn){ const el = $('#camInfo'); el.textContent = t; el.classList.toggle('warn', !!warn); }
+function renderCamPanel(){
+  const m = matchById(curMatch), box = $('#lpCam');
+  const show = !!(m && m.live && !m.live.synced && (m.live.phase === 'pre' || (cam && cam.mid === m.id)));
+  box.hidden = !show; if (!show) return;
+  const on = !!(cam && cam.stream && cam.mid === m.id), recd = !!(on && cam.rec);
+  $('#camBtn').hidden = recd;
+  $('#camBtn').textContent = on ? '✕ Quitar la cámara' : '🎥 Grabar desde la cámara';
+  $('#camCfg').hidden = !on || recd;
+  $('#camSave').hidden = typeof window.showSaveFilePicker !== 'function';
+  $('#camSave').textContent = on && cam.sink ? '💾 Se guardará en: ' + (cam.sink.handle.name || 'tu ordenador') : '💾 Guardar directamente en el ordenador';
+  $('#camPrev').hidden = !on;
+  $('#lpCam').classList.toggle('rec', recd && cam.rec.state === 'recording');
+  if (!on){ camMsg(camSupported() ? 'Graba el partido con una cámara web, una capturadora o la cámara del móvil mientras etiquetas: al terminar, los cortes ya estarán sincronizados.' : 'Este navegador no permite grabar desde la cámara: graba con otra app y usa después «Añadir el vídeo y sincronizar».'); return; }
+  if (!recd){
+    const perH = (CAM_RATES[cam.res] || 3.5e6)*3600/8;
+    camMsg(`Lista. Ocupará unos ${fmtSize(perH)} por hora` + (cam.sink ? ' y se guarda en el disco mientras grabas.' : (typeof window.showSaveFilePicker === 'function' ? '. Recomendado: «Guardar directamente en el ordenador».' : ' (en memoria: se descarga una copia al terminar la 1.ª parte y el vídeo completo al final; mejor 720p o 480p).')));
+    if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(e => { if (cam && !cam.rec && e && e.quota) $('#camInfo').textContent += ` · Espacio libre estimado: ${fmtSize(Math.max(0, e.quota - (e.usage || 0)))}.`; }).catch(() => {});
+  }
+  camTick(true);
+}
+let camTickAt = 0;
+function camTick(force){
+  if (!cam || !cam.rec || $('#livePanel').hidden) return;
+  const now = performance.now(); if (!force && now - camTickAt < 900) return; camTickAt = now;
+  // algunos navegadores solo entregan los datos al pausar o parar: se piden cada 10 s para escribirlos en el disco o en memoria por trozos
+  if (cam.rec.state === 'recording' && now - (cam.flushAt || 0) > 10000){ cam.flushAt = now; try{ cam.rec.requestData(); }catch(e){} }
+  const st = cam.finishing ? 'Guardando…' : cam.rec.state === 'paused' ? '❚❚ Grabación en pausa (descanso)' : '● REC';
+  camMsg(`${st} · ${mmss(camSec())} grabados · ${fmtSize(cam.bytes)} · ${cam.sink ? 'guardando en el disco' : 'en memoria'} · No cierres ni recargues la pestaña.`);
+}
+$('#camBtn').onclick = () => camActive() ? camStop() : camStart();
+$('#camSave').onclick = camChooseFile;
+['camRes','camDev','camAudio'].forEach(id => $('#'+id).onchange = () => { if (camActive() && !cam.rec) camStart(); });
+document.addEventListener('visibilitychange', () => {
+  if (!camRecording()) return;
+  if (document.visibilityState === 'hidden') cam.wasHidden = true;
+  else if (cam.wasHidden){ cam.wasHidden = false; const tr = cam.stream.getVideoTracks()[0];
+    flash(tr && tr.readyState === 'ended' ? '⚠ La cámara se detuvo mientras la app estaba en segundo plano' : 'Has salido de la app: en algunos móviles la cámara se detiene en segundo plano. Comprueba que el contador sigue avanzando.', 5000); }
+});
+window.addEventListener('beforeunload', e => { if (camRecording()){ e.preventDefault(); e.returnValue = ''; } });
 
 /* =========================================================
    INICIO
