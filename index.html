@@ -837,6 +837,11 @@ body.tac-open{overflow:hidden}
 /* cabecera: cabe un botón más (Pizarra táctica) sin pasar a dos filas en 1366 px */
 .hbtns{gap:.15rem}
 .hbtns button:not(.primary){padding-left:.5rem;padding-right:.5rem}
+/* v3.9 · seguimiento */
+.boardbar .bt-sm{display:inline-flex;align-items:center;gap:.25rem;font-size:.82rem;white-space:nowrap}
+.boardbar .bt-info{font-size:.76rem;color:var(--accent-hi);white-space:nowrap;padding:.15rem .4rem;border:1px solid color-mix(in srgb,var(--accent-hi) 50%,transparent);border-radius:6px}
+.boardbar .bt-info[hidden]{display:none}
+@media (max-width:760px){ .boardbar .bt-info{white-space:normal} }
 </style>
 </head>
 <body>
@@ -948,6 +953,14 @@ body.tac-open{overflow:hidden}
         <button id="bRedo" title="Rehacer (Ctrl+Y)" aria-label="Rehacer">↷</button>
         <button id="bDelShape" title="Borrar la forma seleccionada (Supr)" disabled>Borrar forma</button>
         <button id="bClear" title="Borrar todo el dibujo">Borrar todo</button>
+      </div>
+      <span class="sep"></span>
+      <div class="grp" id="bTrackBox" role="group" aria-label="Seguir al jugador">
+        <button id="bTrack" disabled>🎯 Seguir al jugador</button>
+        <button id="bTrackPop" title="Quitar el último punto del seguimiento" disabled>Quitar último punto</button>
+        <button id="bTrackOff" title="La forma deja de moverse y queda fija" disabled>Quitar seguimiento</button>
+        <label class="bt-sm" title="Movimiento suavizado entre puntos"><input type="checkbox" id="bTrackSmooth" disabled> Suave</label>
+        <span class="bt-info mono" id="bTrackInfo" hidden aria-live="polite"></span>
       </div>
       <span class="sep"></span>
       <div class="grp">
@@ -1297,8 +1310,13 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.8';
+const APP_VERSION = '3.9';
 const CHANGELOG = [
+  {v:'3.9', date:'Octubre 2026', items:[
+    '<b>Dibujos que siguen al jugador:</b> en la pizarra, selecciona una forma con «✥ Mover» (un foco, un dorsal, una zona…) y pulsa «🎯 Seguir al jugador». Avanza el vídeo con → , «.» o la línea de tiempo, arrastra la forma a la nueva posición del jugador y se guarda otro punto. Hasta 30 puntos por forma.',
+    'Al reproducir, la forma se mueve entre los puntos (con «Suave» el movimiento es más natural) y solo se ve entre el primero y el último. Se ve igual en el reproductor, en la otra ventana, al presentar, en el vídeo generado, en el PNG y en el Informe.',
+    '«Quitar último punto» y «Quitar seguimiento» (la forma vuelve a ser fija). La barra de la pizarra indica cuántos puntos tiene y entre qué segundos.'
+  ]},
   {v:'3.8', date:'Octubre 2026', items:[
     '<b>Pizarra táctica:</b> nuevo botón «Pizarra táctica» con un campo 2D sin vídeo (fútbol 11, fútbol 7, fútbol sala, medio campo o último tercio, en horizontal o vertical) para preparar charlas y tareas.',
     'Coloca jugadores propios y rivales con dorsal (doble clic para cambiar dorsal y nombre), balón, conos, picas, vallas, miniporterías y porterías; dibuja flechas, curvas, líneas, zonas y texto. «Colocar un sistema» pone de golpe 1-4-3-3, 1-4-4-2, 1-4-2-3-1, 1-3-5-2, 1-5-3-2 (y los de F7 y sala) con los dorsales de tu plantilla.',
@@ -1412,6 +1430,7 @@ let previewStop = null;
 let selClip = null;
 let vzMain = null, vzPres = null;   // v3.6 · zoom del vídeo (reproductor y presentación)
 let mirror = null;                  // v3.6 · ventana emergente sincronizada
+let trackLastT = null, trackShown = false, overlayBase = null, paintedShapes = null;   // v3.9 · seguimiento de dibujos
 let cam = null;                     // v3.7 · grabación desde la cámara (solo en memoria de esta pestaña)         // v3.3 · corte seleccionado (▶ o clic en su tarjeta)
 const tlv = {mid:null, span:0, v0:0}; // v3.3 · zoom de la línea de tiempo (span 0 = partido entero)     // v3.1 · fin de la vista previa de sincronización (lo consulta el bucle de reproducción)
 // estado de la pizarra (se declara aquí porque el bucle de reproducción lo consulta desde el inicio)
@@ -1500,7 +1519,7 @@ function sanitizeBoards(arr){
         if (it.k === 'A' || it.k === 'B'){ const n = String(it.n ?? '').replace(/[^\d]/g, '').slice(0, 3); if (n) o.n = n; const nm = cleanStr(it.name, 20).trim(); if (nm) o.name = nm; }
         return o;
       }),
-      shapes: sanitizeShapes(st && st.shapes),
+      shapes: sanitizeShapes(st && st.shapes).map(s => { delete s.track; delete s.tsm; return s; }),
       dur: +clamp(+(st && st.dur) || 2, .5, 10).toFixed(1)
     }));
     return {id, name: cleanStr(b.name, 60).trim() || 'Pizarra', field: TAC_FIELDS[b.field] ? b.field : 'f11', vertical: b.vertical === true, steps: steps.length ? steps : [{items: [], shapes: [], dur: 2}]};
@@ -1553,6 +1572,8 @@ function sanitizeShapes(arr){
     if (s.type === 'text') o.text = cleanStr(s.text, 120);
     if (s.type === 'num') o.text = String(s.text ?? '').replace(/[^\d]/g,'').slice(0,3);
     if (s.fill != null && s.fill !== '' && isFinite(+s.fill)) o.fill = +clamp(+s.fill, 0, 1).toFixed(2);
+    // v3.9 (opcional): la forma sigue a un jugador entre fotogramas clave
+    if (Array.isArray(s.track)){ const k = sanitizeTrack(s.track); if (k.length >= 2){ o.track = k; if (s.tsm === true) o.tsm = true; } }
     return o;
   }).filter(s => s.pts.length >= (s.type === 'text' || s.type === 'num' ? 1 : s.type === 'poly' ? 3 : 2) && (s.type !== 'num' || s.text));
 }
@@ -1578,7 +1599,7 @@ function sanitizeClip(c, catMap, matchMap, fallbackMatch){
     note: cleanStr(c.note, 500),
     zone: Number.isInteger(z) && z >= 1 && z <= 18 ? z : null,
     players: [...new Set((Array.isArray(c.players) ? c.players : []).map(p => String(p).replace(/[^\d]/g,'').slice(0,3)).filter(Boolean))].slice(0, 11),
-    drawings: sanitizeDrawings(c.drawings),
+    drawings: trimTracks(sanitizeDrawings(c.drawings), start, end),
     tags: sanitizeTags(c.tags), ...sanitizeClipLive(c.live)};
 }
 /* v3.1 · acción registrada en directo: {p, s, r, pre, post} */
@@ -1667,7 +1688,7 @@ const FIXED_KEYS = new Set(Object.values(KEY));
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
 function save(){
   try{ localStorage.setItem(KEY.cats, JSON.stringify(state.cats)); }catch(e){}
-  try{ localStorage.setItem(KEY.project, JSON.stringify({version:10, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
+  try{ localStorage.setItem(KEY.project, JSON.stringify({version:11, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
   catch(e){ flash('No se pudo guardar en este navegador (almacenamiento lleno). Usa «Guardar proyecto» para no perder el trabajo.', 5000); }
 }
 function saveBrand(){ try{ localStorage.setItem(KEY.brand, JSON.stringify(brand)); }catch(e){ flash('No se pudo guardar el escudo en este navegador (imagen demasiado grande)', 3500); } }
@@ -2010,7 +2031,7 @@ $('#bShot').onclick = () => exportFramePNG();
 /* fotograma con el dibujo en PNG (también desde la barra de la pizarra · v3.4) */
 function exportFramePNG(){
   if (!video.videoWidth){ flash('Primero abre un partido'); return; }
-  const shapes = board.on ? board.shapes : (freeze ? freeze.shapes : (shownStatic ? shownStatic.shapes : null));
+  const shapes = paintedShapes;   // v3.9: lo que se ve (también las formas que siguen a un jugador)
   const vw = video.videoWidth, vh = video.videoHeight, crop = zoomCrop(), c = document.createElement('canvas'), ctx = c.getContext('2d');
   if (crop){
     // v3.6: con zoom se guarda lo que se ve, a la resolución del vídeo
@@ -2070,6 +2091,7 @@ function cancelFreeze(){ if (freeze){ clearTimeout(freeze.timer); freeze = null;
   }
   if (previewStop != null && !video.paused && t >= previewStop){ video.pause(); previewStop = null; }
   lastT = video.paused ? (freeze ? t : null) : t;
+  trackTick(t);
   liveTick();
   updateClipTime(t);
   mirrorTick();
@@ -2103,8 +2125,9 @@ function playQueue(q){
    LÍNEA DE TIEMPO
    ========================================================= */
 $('#timeline').addEventListener('click', e => {
-  if (exporting || !ready() || board.on) return;
+  if (exporting || !ready() || (board.on && !boardTracking())) return;
   const r = e.currentTarget.getBoundingClientRect(), v = tlView();
+  if (board.on){ seek(v.v0 + (e.clientX - r.left)/r.width * v.span); return; }   // v3.9 · seguimiento con la pizarra abierta
   cancelFreeze(); playback = null; markPlaying(); seek(v.v0 + (e.clientX - r.left)/r.width * v.span);
 });
 $('#timeline').addEventListener('keydown', e => {
@@ -2480,21 +2503,24 @@ function paintShapes(shapes, preview){
   if (bc.width !== W || bc.height !== H){ bc.width = W; bc.height = H; }
   const ctx = bc.getContext('2d');
   ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,W,H);
-  const list = (shapes || []).concat(preview ? [preview] : []);
+  // v3.9: las formas con seguimiento se pintan en su posición del instante actual
+  const disp = shapes ? shapes.map(dispShape) : null;
+  paintedShapes = disp;
+  const list = (disp || []).concat(preview ? [preview] : []);
   if (!list.length) return;
   const cr = contentRect();
   ctx.setTransform(dpr,0,0,dpr, cr.x*dpr, cr.y*dpr);
   ctx.save(); ctx.beginPath(); ctx.rect(0,0,cr.w,cr.h); ctx.clip();
   drawShapes(ctx, cr.w, cr.h, list);
   // v3.4 · forma seleccionada con la herramienta Mover
-  if (board.on && board.sel >= 0 && shapes && shapes[board.sel]){
-    const b = shapeBox(shapes[board.sel], cr.w, cr.h), m = 6;
+  if (board.on && board.sel >= 0 && disp && disp[board.sel]){
+    const b = shapeBox(disp[board.sel], cr.w, cr.h), m = 6;
     ctx.save(); ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#ffffff'; ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 3;
     ctx.strokeRect(b[0]-m, b[1]-m, b[2]-b[0]+2*m, b[3]-b[1]+2*m); ctx.restore();
   }
   ctx.restore();
 }
-function paintOverlay(shapes){ if (!board.on) paintShapes(shapes); }
+function paintOverlay(shapes){ overlayBase = shapes; if (!board.on) paintShapes(ready() ? withTracks(shapes, matchDrawings(), video.currentTime) : shapes); }
 window.addEventListener('resize', () => { if (board.on) paintShapes(board.shapes); else paintOverlay(freeze ? freeze.shapes : shownStatic ? shownStatic.shapes : null); });
 
 /* dibuja una lista de formas en un contexto de W×H (pantalla, captura o MP4) */
@@ -2595,6 +2621,7 @@ function boardStatus(){
   $('#bUndo').disabled = !board.undo.length; $('#bRedo').disabled = !board.redo.length; $('#bClear').disabled = !board.shapes.length;
   $('#bDelShape').disabled = !(board.sel >= 0 && board.shapes[board.sel]);
   $('#bHold').value = (board.live ? 'live' : '') + holdOf(board);
+  renderTrackUI();
 }
 function persistBoard(){
   const c = clipById(board.clipId); if (!c){ boardStatus(); return; }
@@ -2717,7 +2744,7 @@ function shapeHit(s, p, w, h){
 }
 function hitShape(e){
   const cr = contentRect(), [sx, sy] = stageXY(e), p = [sx - cr.x, sy - cr.y];
-  for (let i = board.shapes.length - 1; i >= 0; i--) if (shapeHit(board.shapes[i], p, cr.w, cr.h)) return i;
+  for (let i = board.shapes.length - 1; i >= 0; i--) if (shapeHit(dispShape(board.shapes[i]), p, cr.w, cr.h)) return i;
   return -1;
 }
 /* trazo libre: simplificación (Ramer–Douglas–Peucker) hasta un máximo de 60 puntos */
@@ -2791,7 +2818,14 @@ bc.addEventListener('pointermove', e => {
   if (board.drag){
     const dx = p[0] - board.drag.p0[0], dy = p[1] - board.drag.p0[1];
     if (Math.abs(dx) + Math.abs(dy) > .002) board.drag.moved = true;
-    const n = cloneShapes(board.drag.orig); n[board.sel].pts = n[board.sel].pts.map(q => [+(q[0]+dx).toFixed(4), +(q[1]+dy).toFixed(4)]);
+    const n = cloneShapes(board.drag.orig), sh = n[board.sel];
+    if (sh.track && sh.track.length){
+      // v3.9: arrastrar una forma con seguimiento guarda un punto en el instante actual del vídeo
+      const t = video.currentTime, o = trackOff(sh, t);
+      if (!trackInClip(t)){ if (!board.drag.warned){ board.drag.warned = true; flash('Este instante está fuera del corte: vuelve dentro del corte para añadir puntos', 3500); } return; }
+      if (sh.track.length >= TRACK_MAX && !sh.track.some(x => Math.abs(x.t - t) < .04)){ if (!board.drag.warned){ board.drag.warned = true; flash(`Máximo ${TRACK_MAX} puntos por forma`); } return; }
+      sh.track = setKey(sh.track, t, o[0] + dx, o[1] + dy);
+    } else sh.pts = sh.pts.map(q => [+(q[0]+dx).toFixed(4), +(q[1]+dy).toFixed(4)]);
     board.drag.next = n; paintShapes(n);
     return;
   }
@@ -3031,7 +3065,8 @@ async function exportClips(list, opts){
       drawVideoFit(ctx, W, H);
       drawWatermark(ctx, W, H);
       // v3.4: congelado con su duración o, si el dibujo es «sin congelar», visible mientras pasa el vídeo
-      const sh = scene.type === 'freeze' ? scene.shapes : (scene.clip ? (liveDrawingAt(clipDrawings(scene.clip), video.currentTime) || {}).shapes : null);
+      const sh0 = scene.type === 'freeze' ? scene.shapes : (scene.clip ? (liveDrawingAt(clipDrawings(scene.clip), video.currentTime) || {}).shapes : null);
+      const sh = scene.clip ? withTracks(sh0, clipDrawings(scene.clip), video.currentTime) : sh0;
       if (sh){ const b = videoBox(W, H); ctx.save(); ctx.translate(b.x, b.y); ctx.beginPath(); ctx.rect(0,0,b.w,b.h); ctx.clip(); drawShapes(ctx, b.w, b.h, sh); ctx.restore(); }
       if (opts.overlay) drawOverlay(ctx, W, H, scene.clip);
     }
@@ -3300,7 +3335,7 @@ $('#catReset').onclick = async () => {
    GUARDAR / CARGAR PROYECTO (v5 con partidos y registro en directo; abre también v4 y proyectos v1–v3 de un solo vídeo)
    ========================================================= */
 $('#btnSave').onclick = () => {
-  const data = {app:'TacticaLab', version:10, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
+  const data = {app:'TacticaLab', version:11, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const one = state.matches.length === 1 ? baseFile(state.matches[0].fileName) : 'tactica-lab';
   download(`${slug(one)}_analisis_${stamp}.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
@@ -3396,6 +3431,13 @@ document.addEventListener('keydown', e => {
     if (board.poly && e.key === 'Enter'){ e.preventDefault(); closePoly(); return; }
     if (board.poly && e.key === 'Escape'){ e.preventDefault(); board.poly = null; paintShapes(board.shapes); flash('Zona libre cancelada'); return; }
     if ((e.key === 'Delete' || e.key === 'Backspace') && board.sel >= 0){ e.preventDefault(); deleteSelectedShape(); return; }
+    if (boardTracking() && !e.ctrlKey && !e.metaKey && !e.altKey){
+      // v3.9 · seguimiento: avanzar o retroceder el vídeo sin cerrar la pizarra
+      if (e.key === 'ArrowLeft'){ e.preventDefault(); seek(video.currentTime - (e.shiftKey ? 1 : JUMP)); return; }
+      if (e.key === 'ArrowRight'){ e.preventDefault(); seek(video.currentTime + (e.shiftKey ? 1 : JUMP)); return; }
+      if (e.key === ','){ e.preventDefault(); seek(video.currentTime - FRAME); return; }
+      if (e.key === '.'){ e.preventDefault(); seek(video.currentTime + FRAME); return; }
+    }
     if (zoomKey(vzMain, e)) return;
     if (e.key === 'Escape' || (k === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey)){ e.preventDefault(); closeBoard(); }
     return;
@@ -3689,7 +3731,7 @@ async function captureShots(){
     if (!await wait('seeked', 6000)) continue;
     const w = 400, h = Math.round(w * (v.videoHeight || 9) / (v.videoWidth || 16));
     cv.width = w; cv.height = h; ctx.drawImage(v, 0, 0, w, h);
-    if (d0) drawShapes(ctx, w, h, d0.shapes);
+    if (d0) drawShapes(ctx, w, h, withTracks(d0.shapes, clipDrawings(c), d0.t));
     try{ reportShots[c.id] = cv.toDataURL('image/jpeg', .82); }catch(e){}
   }
   v.removeAttribute('src'); v.load();
@@ -3770,6 +3812,8 @@ $('#btnXlsx').onclick = exportXlsx;
 const pv = $('#pVideo'), pBoard = $('#pBoard');
 const pres = {list:[], i:0, frozen:null, lastT:null, raf:0};
 function presPaint(shapes){
+  pres.base = shapes; const c0 = pres.list[pres.i];
+  if (c0 && anyTrack(c0.drawings)) shapes = withTracks(shapes, c0.drawings, pv.currentTime);   // v3.9
   const st = $('#prStage').getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
   pBoard.width = Math.max(1, Math.round(st.width*dpr)); pBoard.height = Math.max(1, Math.round(st.height*dpr));
   const ctx = pBoard.getContext('2d'); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,pBoard.width,pBoard.height);
@@ -3808,7 +3852,7 @@ function presTick(){
       if (d){ pres.skip = d; pres.shown = null; pv.pause(); pv.currentTime = d.t; presPaint(d.shapes); pres.frozen = setTimeout(() => { pres.frozen = null; presPaint(null); pres.lastT = d.t; pv.play(); presBtn(); }, holdOf(d)*1000); }
     }
     // v3.4 · dibujos «sin congelar» en la presentación
-    if (!pres.frozen){ const lv = liveDrawingAt(c.drawings, t) || null; if (lv !== pres.shown){ pres.shown = lv; presPaint(lv ? lv.shapes : null); } }
+    if (!pres.frozen){ const lv = liveDrawingAt(c.drawings, t) || null; if (lv !== pres.shown){ pres.shown = lv; presPaint(lv ? lv.shapes : null); } else if (anyTrack(c.drawings)) presPaint(pres.base); }
     pres.lastT = t;
     if (!pres.frozen && t >= c.end){
       if ($('#prLoop').checked){ pv.currentTime = c.start; pres.lastT = null; }
@@ -4920,7 +4964,7 @@ function mirrorTick(){
   const ct = $('#clipTime'), show = !ct.hidden && brand.clipTime !== false;
   if (M.info.hidden !== !show) M.info.hidden = !show;
   if (show && M.info.textContent !== ct.textContent) M.info.textContent = ct.textContent;
-  mirrorPaint(M, board.on ? board.shapes : freeze ? freeze.shapes : shownStatic ? shownStatic.shapes : null);
+  mirrorPaint(M, paintedShapes);
 }
 function mirrorPaint(M, shapes){
   const w = M.win, dpr = w.devicePixelRatio || 1, W = Math.max(1, Math.round(w.innerWidth*dpr)), H = Math.max(1, Math.round(w.innerHeight*dpr));
@@ -5573,6 +5617,123 @@ function tacKeys(e){
   else if (e.key === 'ArrowRight'){ e.preventDefault(); const b = tacBoard(); if (b && tac.step < b.steps.length - 1){ tacStop(); tac.step++; tac.sel = null; renderTacUI(); renderTac(); } }
   else if (e.key === 'ArrowLeft'){ e.preventDefault(); if (tac.step > 0){ tacStop(); tac.step--; tac.sel = null; renderTacUI(); renderTac(); } }
   return true;
+}
+
+
+/* =========================================================
+   v3.9 · DIBUJOS QUE SIGUEN AL JUGADOR (fotogramas clave manuales)
+   shape.track = [{t, dx, dy}]  · t en segundos del vídeo, dx/dy desplazamiento relativo respecto a pts
+   shape.tsm = true             · movimiento suavizado entre fotogramas clave
+   ========================================================= */
+const TRACK_MAX = 30;
+function isTracked(s){ return !!(s && s.track && s.track.length >= 2); }
+function trackOff(s, t){
+  const k = s.track; if (!k || !k.length) return [0, 0];
+  if (t <= k[0].t) return [k[0].dx, k[0].dy];
+  const n = k.length - 1; if (t >= k[n].t) return [k[n].dx, k[n].dy];
+  let i = 0; while (i < n - 1 && t > k[i + 1].t) i++;
+  const a = k[i], b = k[i + 1], u = b.t > a.t ? (t - a.t)/(b.t - a.t) : 1;
+  if (!s.tsm) return [a.dx + (b.dx - a.dx)*u, a.dy + (b.dy - a.dy)*u];
+  // suavizado: Catmull-Rom entre los puntos vecinos
+  const p0 = k[Math.max(0, i - 1)], p3 = k[Math.min(n, i + 2)], u2 = u*u, u3 = u2*u;
+  const cr = (q0, q1, q2, q3) => .5*((2*q1) + (-q0 + q2)*u + (2*q0 - 5*q1 + 4*q2 - q3)*u2 + (-q0 + 3*q1 - 3*q2 + q3)*u3);
+  return [cr(p0.dx, a.dx, b.dx, p3.dx), cr(p0.dy, a.dy, b.dy, p3.dy)];
+}
+function trackActive(s, t){ return isTracked(s) && t >= s.track[0].t - .02 && t <= s.track[s.track.length - 1].t + .02; }
+function trackShape(s, t){
+  const o = trackOff(s, t), c = Object.assign({}, s, {pts: s.pts.map(p => [p[0] + o[0], p[1] + o[1]])});
+  delete c.track; delete c.tsm; return c;
+}
+/* forma tal como se ve en la pizarra en el instante actual (aunque esté fuera del tramo) */
+function dispShape(s){ return s && s.track && s.track.length ? trackShape(s, video.currentTime) : s; }
+/* formas visibles: las normales del dibujo mostrado + las que siguen a un jugador en este instante (de cualquier dibujo) */
+function withTracks(base, drawings, t){
+  const tr = [];
+  (drawings || []).forEach(d => (d.shapes || []).forEach(s => { if (trackActive(s, t)) tr.push(trackShape(s, t)); }));
+  if (!tr.length) return base ? base.filter(s => !isTracked(s)) : base;
+  return (base || []).filter(s => !isTracked(s)).concat(tr);
+}
+function anyTrack(drawings){ return (drawings || []).some(d => (d.shapes || []).some(isTracked)); }
+function matchDrawings(){ return drawingsOfMatch().map(x => x.d); }
+/* saneado (también al abrir proyectos) */
+function sanitizeTrack(k){
+  const seen = new Set();
+  const out = (Array.isArray(k) ? k : []).map(x => ({t: cleanNum(x && x.t), dx: +clamp(+(x && x.dx) || 0, -1.5, 1.5).toFixed(4), dy: +clamp(+(x && x.dy) || 0, -1.5, 1.5).toFixed(4)}))
+    .filter(x => x.t !== null && !seen.has(x.t) && seen.add(x.t)).sort((a, b) => a.t - b.t);
+  return out.slice(0, TRACK_MAX);
+}
+function trimTracks(drawings, start, end){
+  (drawings || []).forEach(d => (d.shapes || []).forEach(s => {
+    if (!s.track) return;
+    s.track = s.track.filter(k => k.t >= start - .05 && k.t <= end + .05);
+    if (s.track.length < 2){ delete s.track; delete s.tsm; }
+  }));
+  return drawings;
+}
+
+/* ---------- pizarra: modo seguimiento ---------- */
+function selShape(){ return board.on && board.sel >= 0 ? board.shapes[board.sel] : null; }
+function boardTracking(){ const s = selShape(); return !!(s && s.track && s.track.length); }
+function setKey(track, t, dx, dy){
+  const k = (track || []).filter(x => Math.abs(x.t - t) >= .04);
+  k.push({t: +t.toFixed(2), dx: +dx.toFixed(4), dy: +dy.toFixed(4)});
+  return k.sort((a, b) => a.t - b.t);
+}
+function trackInClip(t){
+  const c = clipById(board.clipId);
+  return !c || (t >= c.start - .05 && t <= c.end + .05);
+}
+function renderTrackUI(){
+  const s = selShape(), k = s && s.track ? s.track : null, box = $('#bTrackBox');
+  if (!box) return;
+  $('#bTrack').disabled = !s; $('#bTrack').textContent = k && k.length ? '🎯 Punto aquí' : '🎯 Seguir al jugador';
+  $('#bTrack').title = k && k.length ? 'Añadir un fotograma clave en este instante con la posición actual' : 'La forma seleccionada seguirá al jugador: avanza el vídeo y arrástrala a su nueva posición';
+  $('#bTrackPop').disabled = !(k && k.length); $('#bTrackOff').disabled = !(k && k.length);
+  $('#bTrackSmooth').disabled = !(k && k.length); $('#bTrackSmooth').checked = !!(s && s.tsm);
+  const info = $('#bTrackInfo');
+  if (k && k.length){ info.hidden = false; info.textContent = `Seguimiento: ${k.length} punto${k.length === 1 ? '' : 's'} · ${fmtShort(k[0].t)}–${fmtShort(k[k.length - 1].t)}${k.length < 2 ? ' · avanza el vídeo (→ o .) y arrastra la forma' : ''}`; }
+  else { info.hidden = true; info.textContent = ''; }
+}
+function trackCommit(mut){
+  const n = cloneShapes(board.shapes), s = n[board.sel]; if (!s) return;
+  mut(s); if (s.track && !s.track.length){ delete s.track; delete s.tsm; }
+  commitShapes(n); renderTrackUI();
+}
+$('#bTrack').onclick = () => {
+  const s = selShape(); if (!s) return;
+  const t = video.currentTime;
+  if (!trackInClip(t)){ flash('Este instante está fuera del corte: vuelve dentro del corte para añadir el punto', 3500); return; }
+  if ((s.track || []).length >= TRACK_MAX && !(s.track || []).some(x => Math.abs(x.t - t) < .04)){ flash(`Máximo ${TRACK_MAX} puntos por forma`); return; }
+  const first = !(s.track && s.track.length), o = trackOff(s, t);
+  trackCommit(x => { x.track = setKey(x.track, t, o[0], o[1]); });
+  flash(first ? 'Seguimiento iniciado: avanza el vídeo (→ o .) y arrastra la forma a la nueva posición del jugador' : `Punto añadido en ${fmtShort(t)}`, 4000);
+};
+$('#bTrackPop').onclick = () => {
+  const s = selShape(); if (!s || !s.track || !s.track.length) return;
+  trackCommit(x => { x.track = x.track.slice(0, -1); });
+  flash('Último punto quitado');
+};
+$('#bTrackOff').onclick = () => {
+  const s = selShape(); if (!s || !s.track) return;
+  const o = trackOff(s, s.track[0].t);
+  // la forma se queda donde estaba en el primer punto
+  trackCommit(x => { x.pts = x.pts.map(p => [+(p[0] + o[0]).toFixed(4), +(p[1] + o[1]).toFixed(4)]); delete x.track; delete x.tsm; });
+  flash('Seguimiento quitado: la forma vuelve a ser fija');
+};
+$('#bTrackSmooth').onchange = e => { const s = selShape(); if (!s || !s.track) return; trackCommit(x => { if (e.target.checked) x.tsm = true; else delete x.tsm; }); };
+/* repintado continuo: pizarra en seguimiento, reproductor y presentación */
+function trackTick(t){
+  if (board.on){
+    if (board.shapes.some(s => s.track && s.track.length) && t !== trackLastT && !board.drag && !board.cur){ trackLastT = t; paintShapes(board.shapes, typeof polyPreview === 'function' ? polyPreview() : null); }
+    return;
+  }
+  if (exporting || !ready()) return;
+  if (t === trackLastT) return;
+  trackLastT = t;
+  const ds = matchDrawings();
+  if (!anyTrack(ds)){ if (trackShown){ trackShown = false; paintOverlay(overlayBase); } return; }
+  const now = ds.some(d => d.shapes.some(s => trackActive(s, t)));
+  if (now || trackShown){ trackShown = now; paintOverlay(overlayBase); }
 }
 
 /* =========================================================
