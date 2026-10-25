@@ -788,6 +788,55 @@ main > .tagcard{min-width:0}
 .lp-cam-info.warn{color:var(--ko);font-weight:600}
 .lp-cam.rec .lp-cam-info{color:var(--fg);font-family:var(--mono);font-size:.76rem}
 @media (max-width:760px){ #camPrev{max-height:18vh} .lp-cam{padding:.4rem} }
+/* v3.8 · pizarra táctica */
+.tac{position:fixed;inset:0;z-index:72;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;gap:.45rem;padding:max(8px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));overflow:hidden}
+.tac[hidden]{display:none}
+body.tac-open{overflow:hidden}
+.tac-top,.tac-tools,.tac-bot{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;min-width:0}
+.tac-top select,.tac-top input{max-width:100%;min-width:0}
+#tacName{width:12rem;font-weight:700}
+#tacSys{max-width:15rem}
+.tac-sp{flex:1 1 0}
+.tac-tools button{padding:.32rem .55rem;font-size:.82rem;white-space:nowrap}
+.tac-tools button.on{background:color-mix(in srgb,var(--accent-hi) 26%,var(--panel2));border-color:var(--accent-hi)}
+.tac-tools .t-a i,.tac-tools .t-b i{display:inline-block;width:.8em;height:.8em;border-radius:50%;border:1.5px solid #fff;vertical-align:-.05em;background:var(--accent)}
+.tac-tools .t-b i{background:#2f8cff}
+.tac-colors{display:inline-flex;gap:.3rem;padding:0 .2rem}
+.tac-colors .sw{width:24px;height:24px;padding:0;min-width:0;border-radius:50%;background:var(--sw);border:2px solid var(--line2)}
+.tac-colors .sw.on{border-color:#fff;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--sw)}
+.tac-stage{position:relative;flex:1 1 auto;min-height:0;border-radius:10px;overflow:hidden;background:#1b4f29}
+#tacCv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
+.tac-edit{position:absolute;z-index:5;display:flex;gap:.3rem;background:rgba(14,13,16,.92);border:1.5px solid var(--accent-hi);border-radius:8px;padding:.3rem}
+.tac-edit[hidden]{display:none}
+.tac-edit input{width:5.2rem}
+#tacEdN{width:4rem}
+.tac-prog{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(14,13,16,.9);color:#fff;padding:.7rem 1.1rem;border-radius:10px;font-weight:700}
+.tac-prog[hidden]{display:none}
+.tac.busy .tac-top,.tac.busy .tac-tools,.tac.busy .tac-bot{pointer-events:none;opacity:.55}
+.tac-hint{margin:0;font-size:.78rem;color:var(--muted);min-height:1.1em}
+.tac-lbl{font-weight:700;font-size:.82rem;color:var(--muted)}
+.tac-steps{display:inline-flex;flex-wrap:wrap;gap:.25rem}
+.tac-step{min-width:2rem;padding:.25rem .4rem;font-weight:800}
+.tac-step.on{background:var(--accent);color:var(--accent-ink,#fff);border-color:var(--accent)}
+#tacDur{width:4.2rem}
+.tac-bot label{display:inline-flex;align-items:center;gap:.3rem;font-size:.84rem}
+.rp-tac{break-inside:avoid;margin:.5rem 0 1rem}
+.rp-tac img{width:100%;max-width:640px;display:block;border-radius:6px}
+.rp-tac .ct{font-weight:800;margin-top:.3rem}
+.rp-tac .cm{font-size:.8rem;color:#6b6570}
+@media (max-width:760px){
+  .tac{gap:.3rem}
+  .tac-tools{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+  .tac-tools button{padding:.3rem .45rem;font-size:.78rem}
+  #tacName{width:8rem}
+  #tacSys{max-width:9rem}
+  .tac-hint{display:none}
+  .tac-bot label{font-size:.78rem}
+}
+
+/* cabecera: cabe un botón más (Pizarra táctica) sin pasar a dos filas en 1366 px */
+.hbtns{gap:.15rem}
+.hbtns button:not(.primary){padding-left:.5rem;padding-right:.5rem}
 </style>
 </head>
 <body>
@@ -803,6 +852,7 @@ main > .tagcard{min-width:0}
     <button id="btnOpen" class="primary">+ Añadir partidos</button>
     <button id="btnCfg" title="Nombre del club, escudo, color y plantilla">⚙ Configurar</button>
     <button id="btnCats">Editar etiquetas</button>
+    <button id="btnTac" title="Pizarra táctica en un campo 2D, sin vídeo: fichas, material, flechas y jugadas animadas por pasos">Pizarra táctica</button>
     <button id="btnSave">Guardar proyecto</button>
     <button id="btnLoad">Cargar proyecto</button>
     <button id="btnImportEv" title="Traer acciones registradas en otra herramienta o en una hoja (Excel o CSV)">Importar eventos</button>
@@ -1125,6 +1175,7 @@ main > .tagcard{min-width:0}
   <div class="rp-bar">
     <b>Informe</b><span class="rp-scope" id="rpScope"></span>
     <label><input type="checkbox" id="rpShots"> Incluir captura del primer fotograma</label>
+    <label><input type="checkbox" id="rpTac"> Incluir pizarras tácticas</label>
     <span class="rp-prog" id="rpProg" aria-live="polite"></span>
     <span class="sp"></span>
     <button id="rpPrint" class="primary">🖨 Imprimir / Guardar PDF</button>
@@ -1147,6 +1198,61 @@ main > .tagcard{min-width:0}
     <span class="vz-grp" role="group" aria-label="Zoom"><button id="prZoomOut" aria-label="Alejar">−</button><button id="prZoomReset" aria-label="Zoom 1×">1×</button><button id="prZoomIn" aria-label="Ampliar">+</button></span>
     <span class="mono pr-count" id="prCount"></span>
     <button id="prExit" title="Salir (Esc)">✕ Salir</button>
+  </div>
+</div>
+
+
+<div class="tac" id="tac" hidden role="dialog" aria-modal="true" aria-label="Pizarra táctica">
+  <div class="tac-top">
+    <select id="tacSel" aria-label="Pizarra"></select>
+    <input id="tacName" maxlength="60" aria-label="Nombre de la pizarra">
+    <button id="tacNew" title="Nueva pizarra">+ Nueva</button>
+    <button id="tacDup" title="Duplicar esta pizarra">⧉ Duplicar</button>
+    <button id="tacDel" class="danger" title="Borrar esta pizarra">🗑</button>
+    <select id="tacField" aria-label="Campo"><option value="f11">Fútbol 11</option><option value="f7">Fútbol 7</option><option value="sala">Fútbol sala</option><option value="half">Medio campo (F11)</option><option value="area">Último tercio y área (F11)</option></select>
+    <button id="tacRot" aria-pressed="false" title="Girar el campo">⇅ Vertical</button>
+    <select id="tacSys" aria-label="Colocar un sistema"></select>
+    <span class="tac-sp"></span>
+    <button id="tacUndo" title="Deshacer (Ctrl+Z)">↶</button><button id="tacRedo" title="Rehacer (Ctrl+Y)">↷</button>
+    <button id="tacClose" title="Cerrar (Esc)">✕ Cerrar</button>
+  </div>
+  <div class="tac-tools" id="tacTools" role="toolbar" aria-label="Herramientas">
+    <button data-tool="move" title="Mover y seleccionar">✥ Mover</button>
+    <button data-tool="A" title="Jugador propio" class="t-a"><i></i> Propio</button>
+    <button data-tool="B" title="Jugador rival" class="t-b"><i></i> Rival</button>
+    <button data-tool="ball" title="Balón">⚽ Balón</button>
+    <button data-tool="cone" title="Cono">▲ Cono</button>
+    <button data-tool="pole" title="Pica">│ Pica</button>
+    <button data-tool="hurdle" title="Valla">⊓ Valla</button>
+    <button data-tool="mini" title="Miniportería">⊐ Mini</button>
+    <button data-tool="goal" title="Portería">⊏ Portería</button>
+    <button data-tool="arrow" title="Flecha (pase o desplazamiento)">➝ Flecha</button>
+    <button data-tool="curve" title="Flecha curva">↷ Curva</button>
+    <button data-tool="line" title="Línea">／ Línea</button>
+    <button data-tool="ellipse" title="Zona (elipse)">◯ Zona</button>
+    <button data-tool="poly" title="Zona libre (polígono)">⬠ Zona libre</button>
+    <button data-tool="free" title="Trazo libre">✎ Libre</button>
+    <button data-tool="text" title="Texto">T Texto</button>
+    <button data-tool="erase" title="Borrar al hacer clic">⌫ Borrar</button>
+    <span class="tac-colors" id="tacColors" aria-label="Color de los dibujos"></span>
+    <button id="tacDelSel" title="Borrar lo seleccionado (Supr)">🗑 Selección</button>
+  </div>
+  <div class="tac-stage" id="tacStage"><canvas id="tacCv" aria-label="Campo de la pizarra táctica"></canvas>
+    <div class="tac-edit" id="tacEdit" hidden><input id="tacEdN" inputmode="numeric" maxlength="3" placeholder="Dorsal" aria-label="Dorsal"><input id="tacEdName" maxlength="20" placeholder="Nombre" aria-label="Nombre"><button id="tacEdOk" class="primary">OK</button></div>
+    <div class="tac-prog" id="tacProg" hidden aria-live="polite"></div>
+  </div>
+  <p class="tac-hint" id="tacHint"></p>
+  <div class="tac-bot">
+    <span class="tac-lbl">Pasos</span><span class="tac-steps" id="tacSteps"></span>
+    <button id="tacAddStep" title="Nuevo paso a partir del actual">+ Paso</button>
+    <button id="tacDelStep" title="Borrar este paso">− Paso</button>
+    <label>Transición <input id="tacDur" type="number" min="0.5" max="10" step="0.5" value="2" aria-label="Duración de la transición hasta este paso (segundos)"> s</label>
+    <button id="tacPlay" class="primary">▶ Reproducir</button>
+    <span class="tac-sp"></span>
+    <label><input type="checkbox" id="tacTitle" checked> Portada</label>
+    <label><input type="checkbox" id="tacCrest" checked> Escudo</label>
+    <button id="tacPng" title="Descargar el paso actual como imagen PNG">⤓ PNG</button>
+    <button id="tacVid" title="Descargar la jugada animada como vídeo">⤓ Vídeo</button>
   </div>
 </div>
 
@@ -1191,8 +1297,13 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.7';
+const APP_VERSION = '3.8';
 const CHANGELOG = [
+  {v:'3.8', date:'Octubre 2026', items:[
+    '<b>Pizarra táctica:</b> nuevo botón «Pizarra táctica» con un campo 2D sin vídeo (fútbol 11, fútbol 7, fútbol sala, medio campo o último tercio, en horizontal o vertical) para preparar charlas y tareas.',
+    'Coloca jugadores propios y rivales con dorsal (doble clic para cambiar dorsal y nombre), balón, conos, picas, vallas, miniporterías y porterías; dibuja flechas, curvas, líneas, zonas y texto. «Colocar un sistema» pone de golpe 1-4-3-3, 1-4-4-2, 1-4-2-3-1, 1-3-5-2, 1-5-3-2 (y los de F7 y sala) con los dorsales de tu plantilla.',
+    '<b>Jugadas por pasos:</b> «+ Paso» copia el paso actual para mover las fichas; «▶ Reproducir» anima el movimiento entre pasos. Se descarga como imagen PNG o como vídeo con portada y escudo. Las pizarras se guardan en el proyecto y pueden ir en el Informe.'
+  ]},
   {v:'3.7', date:'Octubre 2026', items:[
     '<b>Grabar desde la cámara mientras etiquetas:</b> en «Registro en directo», «🎥 Grabar desde la cámara» graba el partido con una cámara web, una capturadora o la cámara del móvil. La grabación empieza con «Iniciar 1.ª parte», se pausa en el descanso y termina con «Fin del partido».',
     'Al terminar, el vídeo queda vinculado al partido y las acciones ya son cortes normales: no hace falta sincronizar. Las partes quedan marcadas para el minuto real.',
@@ -1287,7 +1398,7 @@ const DEFAULT_CATS = [
   {name:'Finalización', color:'#ee8e6c'}
 ];
 const uid = () => Math.random().toString(36).slice(2,9);
-let state = {cats: DEFAULT_CATS.map(c => ({...c, id: uid(), desc: [], mode: 'manual', pre: 6, post: 4})), matches: [], clips: [], playlists: [], cur: null};
+let state = {cats: DEFAULT_CATS.map(c => ({...c, id: uid(), desc: [], mode: 'manual', pre: 6, post: 4})), matches: [], clips: [], playlists: [], cur: null, boards: []};
 const urls = {};            // matchId -> URL del vídeo (solo en esta sesión)
 const fileCache = new Map();// nombre de archivo -> File ya elegido en esta sesión (para vincular proyectos importados)
 let curMatch = null;        // partido abierto
@@ -1366,6 +1477,35 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const CREST_RX = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
 const SHAPE_TYPES = new Set(['arrow','curve','line','ellipse','rect','text','spot','free','poly','num']);
 const PTS_MAX = {free:60, poly:24};   // v3.4: trazo libre (≤ 60 puntos) y zona libre (≤ 24 vértices)
+/* v3.8: pizarra táctica 2D (se definen aquí porque loadStore los usa al arrancar) */
+const TAC_BASE = {f11: {L:105, W:68}, f7: {L:65, W:45}, sala: {L:40, W:20}};
+const TAC_FIELDS = {
+  f11: {label:'Fútbol 11', base:'f11', L:105, W:68, x0:0},
+  f7:  {label:'Fútbol 7', base:'f7', L:65, W:45, x0:0},
+  sala:{label:'Fútbol sala', base:'sala', L:40, W:20, x0:0},
+  half:{label:'Medio campo (F11)', base:'f11', L:52.5, W:68, x0:52.5},
+  area:{label:'Último tercio y área (F11)', base:'f11', L:30, W:68, x0:75}
+};
+const TAC_ITEMS = {
+  A:{label:'Jugador propio', icon:'●'}, B:{label:'Jugador rival', icon:'●'}, ball:{label:'Balón', icon:'⚽'},
+  cone:{label:'Cono', icon:'▲'}, pole:{label:'Pica', icon:'│'}, hurdle:{label:'Valla', icon:'⊓'}, mini:{label:'Miniportería', icon:'⊐'}, goal:{label:'Portería', icon:'⊏'}
+};
+function sanitizeBoards(arr){
+  const ids = new Set();
+  return (Array.isArray(arr) ? arr : []).slice(0, 50).filter(b => b && typeof b === 'object').map(b => {
+    let id = cleanId(b.id); while (ids.has(id)) id = uid(); ids.add(id);
+    const steps = (Array.isArray(b.steps) ? b.steps : []).slice(0, 40).map(st => ({
+      items: (Array.isArray(st && st.items) ? st.items : []).slice(0, 60).filter(it => it && TAC_ITEMS[it.k]).map(it => {
+        const o = {id: cleanId(it.id), k: it.k, x: +clamp(+it.x || 0, -0.1, 1.1).toFixed(4), y: +clamp(+it.y || 0, -0.1, 1.1).toFixed(4)};
+        if (it.k === 'A' || it.k === 'B'){ const n = String(it.n ?? '').replace(/[^\d]/g, '').slice(0, 3); if (n) o.n = n; const nm = cleanStr(it.name, 20).trim(); if (nm) o.name = nm; }
+        return o;
+      }),
+      shapes: sanitizeShapes(st && st.shapes),
+      dur: +clamp(+(st && st.dur) || 2, .5, 10).toFixed(1)
+    }));
+    return {id, name: cleanStr(b.name, 60).trim() || 'Pizarra', field: TAC_FIELDS[b.field] ? b.field : 'f11', vertical: b.vertical === true, steps: steps.length ? steps : [{items: [], shapes: [], dur: 2}]};
+  });
+}
 const holdOf = d => d && d.hold ? d.hold : 3;   // v3.4: segundos que dura un dibujo (por defecto se congela 3 s)
 function sanitizeCats(arr){
   const map = {}, out = [];
@@ -1527,7 +1667,7 @@ const FIXED_KEYS = new Set(Object.values(KEY));
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
 function save(){
   try{ localStorage.setItem(KEY.cats, JSON.stringify(state.cats)); }catch(e){}
-  try{ localStorage.setItem(KEY.project, JSON.stringify({version:9, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur})); }
+  try{ localStorage.setItem(KEY.project, JSON.stringify({version:10, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
   catch(e){ flash('No se pudo guardar en este navegador (almacenamiento lleno). Usa «Guardar proyecto» para no perder el trabajo.', 5000); }
 }
 function saveBrand(){ try{ localStorage.setItem(KEY.brand, JSON.stringify(brand)); }catch(e){ flash('No se pudo guardar el escudo en este navegador (imagen demasiado grande)', 3500); } }
@@ -1546,6 +1686,7 @@ function loadStore(){
     const playlists = sanitizePlaylists(p.playlists, clips);
     state.matches = matches; state.clips = clips; state.playlists = playlists;
     state.cur = playlists.some(x => x.id === p.cur) ? p.cur : null;
+    state.boards = sanitizeBoards(p.boards);
   }
   let migratedNow = 0;
   try{
@@ -2819,7 +2960,7 @@ function seekTo(t){
 }
 function setBusy(on){
   $('aside').inert = on; $('#lib').inert = on;
-  ['btnOpen','btnOpen2','btnLoad','btnCfg','btnCats','bBoard','btnReport','btnXlsx','plPresent','bCompare','btnImportEv','bWin','camBtn'].forEach(id => { const b = $('#'+id); if (b) b.disabled = on; });
+  ['btnOpen','btnOpen2','btnLoad','btnCfg','btnCats','bBoard','btnReport','btnXlsx','plPresent','bCompare','btnImportEv','bWin','camBtn','btnTac'].forEach(id => { const b = $('#'+id); if (b) b.disabled = on; });
 }
 async function exportClips(list, opts){
   if (exporting) return;
@@ -3159,7 +3300,7 @@ $('#catReset').onclick = async () => {
    GUARDAR / CARGAR PROYECTO (v5 con partidos y registro en directo; abre también v4 y proyectos v1–v3 de un solo vídeo)
    ========================================================= */
 $('#btnSave').onclick = () => {
-  const data = {app:'TacticaLab', version:9, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur};
+  const data = {app:'TacticaLab', version:10, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const one = state.matches.length === 1 ? baseFile(state.matches[0].fileName) : 'tactica-lab';
   download(`${slug(one)}_analisis_${stamp}.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
@@ -3175,7 +3316,7 @@ function parseProject(d){
   const clips = d.clips.map(c => sanitizeClip(fallback ? Object.assign({}, c, {matchId:null}) : c, catMap, matchMap, fallback)).filter(c => c && ids.has(c.matchId));
   const playlists = sanitizePlaylists(d.playlists, clips);
   return {cats, matches, clips, playlists, cur: playlists.some(p => p.id === cleanId(d.cur)) ? cleanId(d.cur) : null,
-    brand: d.brand ? sanitizeBrand(d.brand) : null, players: Array.isArray(d.players) ? sanitizePlayers(d.players) : null, legacy: !!fallback};
+    boards: sanitizeBoards(d.boards), brand: d.brand ? sanitizeBrand(d.brand) : null, players: Array.isArray(d.players) ? sanitizePlayers(d.players) : null, legacy: !!fallback};
 }
 function mergeProject(pj){
   const takenM = new Set(state.matches.map(m => m.id)), takenC = new Set(state.clips.map(c => c.id)), takenP = new Set(state.playlists.map(p => p.id));
@@ -3185,12 +3326,14 @@ function mergeProject(pj){
   pj.clips.forEach(c => { const id = takenC.has(c.id) ? uid() : c.id; cMap[c.id] = id; state.clips.push(Object.assign({}, c, {id, matchId: mMap[c.matchId]})); });
   pj.playlists.forEach(p => state.playlists.push({id: takenP.has(p.id) ? uid() : p.id, name: p.name, ids: p.ids.map(i => cMap[i]).filter(Boolean)}));
   if (pj.players) pj.players.forEach(p => { if (!players.some(x => x.n === p.n)) players.push(p); });
+  const takenB = new Set((state.boards || []).map(b => b.id));
+  state.boards = (state.boards || []).concat(pj.boards.map(b => takenB.has(b.id) ? Object.assign(b, {id: uid()}) : b)).slice(0, 50);
 }
 function replaceProject(pj){
   Object.keys(urls).forEach(k => { if (!pj.matches.some(m => m.id === k)){ URL.revokeObjectURL(urls[k]); delete urls[k]; } });
   const used = new Set(pj.clips.map(c => c.cat)), cats = pj.cats.slice();
   state.cats.forEach(c => { if (used.has(c.id) && !cats.some(x => x.id === c.id)) cats.push(c); });
-  state = {cats, matches: pj.matches, clips: pj.clips, playlists: pj.playlists, cur: pj.cur};
+  state = {cats, matches: pj.matches, clips: pj.clips, playlists: pj.playlists, cur: pj.cur, boards: pj.boards.length ? pj.boards : (state.boards || [])};   // un proyecto sin pizarras (anterior a la v3.8) no borra las que ya tienes
   if (pj.players) players = pj.players;
   if (pj.brand){ brand = pj.brand; saveBrand(); applyBrand(); }
 }
@@ -3517,6 +3660,7 @@ function buildReport(){
     ${cs.map((c, i) => { const cat = catById(c.cat), img = reportShots[c.id];
       const meta = [matchTitle(matchById(c.matchId)), minuteText(c) || `vídeo ${fmtShort(c.start)}`, `${(c.end-c.start).toFixed(1)} s`, teamName(c), c.result === 'ok' ? '✓ éxito' : c.result === 'ko' ? '✗ fallo' : '', c.zone ? `zona ${c.zone}` : '', (c.players||[]).length ? playersText(c.players) : '', tagsText(c)].filter(Boolean).join(' · ');
       return `<div class="rp-clip ${img ? '' : 'noimg'}">${img ? `<img src="${img}" alt="Primer fotograma del corte ${i+1}">` : ''}<div><div class="ct"><span class="dot" style="--c:${esc(cat.color)}"></span>${i+1}. ${esc(cat.name)}</div><div class="cm">${esc(meta)}</div>${c.note ? `<div class="cn">${esc(c.note)}</div>` : ''}</div></div>`; }).join('')}
+    ${tacReportHTML()}
     <div class="rp-foot">Generado con Táctica Lab v${APP_VERSION} · ${esc(today)}</div>`;
   page.querySelectorAll('img[data-optional]').forEach(i => i.onerror = () => i.remove());
   $('#rpScope').textContent = `${nCortes(cs.length)} · ${filtersText()}`;
@@ -3555,6 +3699,7 @@ async function captureShots(){
   buildReport();
 }
 $('#btnReport').onclick = openReport;
+$('#rpTac').onchange = () => buildReport();
 $('#rpShots').onchange = e => { if (e.target.checked) captureShots(); else { reportShots = {}; buildReport(); } };
 $('#rpPrint').onclick = () => { if (!reportBusy) window.print(); };
 $('#rpClose').onclick = () => { $('#report').hidden = true; $('#btnReport').focus(); };
@@ -3777,6 +3922,7 @@ $('#cmRate').onchange = e => cmV.forEach(v => v.playbackRate = +e.target.value);
    v3.0 · TECLAS DE LAS VISTAS A PANTALLA COMPLETA
    ========================================================= */
 function overlayKeys(e){
+  if (tacKeys(e)) return true;
   if (!$('#present').hidden){
     if (e.target.matches('input,select') && e.key !== 'Escape') return true;
     const k = e.key;
@@ -4981,6 +5127,453 @@ document.addEventListener('visibilitychange', () => {
     flash(tr && tr.readyState === 'ended' ? '⚠ La cámara se detuvo mientras la app estaba en segundo plano' : 'Has salido de la app: en algunos móviles la cámara se detiene en segundo plano. Comprueba que el contador sigue avanzando.', 5000); }
 });
 window.addEventListener('beforeunload', e => { if (camRecording()){ e.preventDefault(); e.returnValue = ''; } });
+
+
+/* =========================================================
+   v3.8 · PIZARRA TÁCTICA 2D (independiente del vídeo)
+   state.boards = [{id, name, field, vertical, steps:[{items:[{id, k, x, y, n?, name?}], shapes:[…], dur}]}]
+   · x, y relativos (0–1) al campo mostrado en horizontal; las formas usan el mismo formato que la pizarra del vídeo.
+   ========================================================= */
+/* sistemas (equipo propio atacando hacia la derecha; x a lo largo del campo, y a lo ancho) */
+const TAC_SYSTEMS = {
+  f11: {
+    '1-4-3-3':   [[.05,.5],[.22,.14],[.2,.38],[.2,.62],[.22,.86],[.36,.5],[.42,.28],[.42,.72],[.6,.16],[.64,.5],[.6,.84]],
+    '1-4-4-2':   [[.05,.5],[.22,.14],[.2,.38],[.2,.62],[.22,.86],[.4,.15],[.38,.4],[.38,.6],[.4,.85],[.6,.38],[.6,.62]],
+    '1-4-2-3-1': [[.05,.5],[.22,.14],[.2,.38],[.2,.62],[.22,.86],[.34,.38],[.34,.62],[.5,.18],[.5,.5],[.5,.82],[.64,.5]],
+    '1-3-5-2':   [[.05,.5],[.2,.25],[.18,.5],[.2,.75],[.38,.1],[.36,.32],[.34,.5],[.36,.68],[.38,.9],[.58,.38],[.58,.62]],
+    '1-5-3-2':   [[.05,.5],[.24,.1],[.2,.3],[.18,.5],[.2,.7],[.24,.9],[.38,.3],[.36,.5],[.38,.7],[.56,.38],[.56,.62]]
+  },
+  f7: {
+    '1-3-3': [[.06,.5],[.25,.2],[.22,.5],[.25,.8],[.5,.2],[.46,.5],[.5,.8]],
+    '1-2-3-1': [[.06,.5],[.24,.3],[.24,.7],[.45,.18],[.42,.5],[.45,.82],[.64,.5]]
+  },
+  sala: {
+    '1-3-1': [[.05,.5],[.25,.5],[.42,.18],[.42,.82],[.62,.5]],
+    '1-2-2': [[.05,.5],[.3,.28],[.3,.72],[.58,.28],[.58,.72]],
+    '1-4-0': [[.05,.5],[.3,.2],[.3,.8],[.52,.35],[.52,.65]]
+  }
+};
+const TAC_NUMS = {11:[1,2,4,5,3,6,8,10,7,9,11], 7:[1,2,4,3,6,8,9], 5:[1,4,7,10,9]};
+const TAC_COLORS = {A: () => hexToRgb(brand.accent) ? brand.accent : '#ff3550', B: () => '#2f8cff'};
+let tac = {open:false, bid:null, step:0, tool:'move', color:'#ffffff', sel:null, drag:null, cur:null, poly:null, play:null, undo:[], redo:[], view:null, exporting:false};
+
+/* ---------- datos ---------- */
+const tacBoard = () => (state.boards || []).find(b => b.id === tac.bid);
+const tacStep = () => { const b = tacBoard(); return b ? b.steps[clamp(tac.step, 0, b.steps.length - 1)] : null; };
+function tacPush(){ const b = tacBoard(); if (!b) return; tac.undo.push(JSON.stringify(b)); if (tac.undo.length > 40) tac.undo.shift(); tac.redo = []; }
+function tacRestore(json){ const b = tacBoard(); if (!b) return; const o = sanitizeBoards([JSON.parse(json)])[0]; Object.assign(b, o, {id: b.id}); tac.step = clamp(tac.step, 0, b.steps.length - 1); tac.sel = null; save(); renderTac(); }
+function tacUndo(){ const e = tac.undo.pop(); if (!e) return; tac.redo.push(JSON.stringify(tacBoard())); tacRestore(e); }
+function tacRedo(){ const e = tac.redo.pop(); if (!e) return; tac.undo.push(JSON.stringify(tacBoard())); tacRestore(e); }
+
+/* ---------- geometría de la vista ---------- */
+function tacLayout(cw, ch, f, vertical, pad){
+  const L = f.L, W = f.W, dw = vertical ? W : L, dh = vertical ? L : W;
+  const s = Math.min((cw - 2*pad)/dw, (ch - 2*pad)/dh), ox = (cw - dw*s)/2, oy = (ch - dh*s)/2;
+  return {s, ox, oy, L, W, vertical, f};
+}
+/* relativo del campo (0–1) → píxeles de la pantalla, y al revés */
+const tacToPx = (v, x, y) => v.vertical ? [v.ox + y*v.W*v.s, v.oy + (1 - x)*v.L*v.s] : [v.ox + x*v.L*v.s, v.oy + y*v.W*v.s];
+const tacFromPx = (v, X, Y) => v.vertical ? [1 - (Y - v.oy)/(v.L*v.s), (X - v.ox)/(v.W*v.s)] : [(X - v.ox)/(v.L*v.s), (Y - v.oy)/(v.W*v.s)];
+/* contexto en «píxeles horizontales del campo» (u, v): origen en la esquina del campo, girado si es vertical */
+function tacFieldTransform(ctx, v, dpr){
+  if (v.vertical) ctx.setTransform(0, -dpr, dpr, 0, v.ox*dpr, (v.oy + v.L*v.s)*dpr);
+  else ctx.setTransform(dpr, 0, 0, dpr, v.ox*dpr, v.oy*dpr);
+}
+/* ---------- dibujo del campo (en metros × s) ---------- */
+function drawPitch(ctx, v){
+  const f = v.f, base = TAC_BASE[f.base], s = v.s, L = f.L*s, W = f.W*s, X = m => (m - f.x0)*s, Y = m => m*s;
+  ctx.save();
+  const pad = 2.2*s;
+  ctx.fillStyle = '#2d7a3e'; ctx.fillRect(-pad, -pad, L + 2*pad, W + 2*pad);
+  const stripes = f.base === 'sala' ? 8 : 12, sw = base.L*s/stripes;
+  ctx.fillStyle = 'rgba(255,255,255,.045)';
+  for (let i = 0; i < stripes; i += 2){ const x = X(i*base.L/stripes); ctx.fillRect(x, 0, sw, W); }
+  ctx.beginPath(); ctx.rect(-pad*.6, -pad*.6, L + pad*1.2, W + pad*1.2); ctx.clip();
+  ctx.strokeStyle = 'rgba(255,255,255,.88)'; ctx.fillStyle = 'rgba(255,255,255,.88)'; ctx.lineWidth = Math.max(1.4, s*.12); ctx.lineJoin = 'round';
+  const BL = base.L, BW = base.W, cy = BW/2;
+  ctx.strokeRect(X(0), Y(0), BL*s, BW*s);
+  ctx.beginPath(); ctx.moveTo(X(BL/2), Y(0)); ctx.lineTo(X(BL/2), Y(BW)); ctx.stroke();
+  const dot = (mx, my) => { ctx.beginPath(); ctx.arc(X(mx), Y(my), Math.max(1.6, s*.22), 0, Math.PI*2); ctx.fill(); };
+  const P = f.base === 'f11' ? {cr:9.15, pd:16.5, pw:40.3, gd:5.5, gw:18.32, spot:11, goal:7.32, arc:9.15}
+          : f.base === 'f7' ? {cr:6, pd:13, pw:30, gd:5, gw:12, spot:9, goal:6, arc:0}
+          : {cr:3, pd:6, pw:0, gd:0, gw:0, spot:6, goal:3, arc:0};
+  ctx.beginPath(); ctx.arc(X(BL/2), Y(cy), P.cr*s, 0, Math.PI*2); ctx.stroke(); dot(BL/2, cy);
+  [0, 1].forEach(side => {
+    const d = side ? -1 : 1, x0 = side ? BL : 0;
+    if (f.base === 'sala'){
+      // área de fútbol sala: dos cuartos de círculo de 6 m desde los postes unidos por una recta
+      const p1 = cy - P.goal/2, p2 = cy + P.goal/2;
+      ctx.beginPath();
+      ctx.arc(X(x0), Y(p1), 6*s, side ? Math.PI*1.5 : -Math.PI/2, side ? Math.PI : 0, !!side);
+      ctx.lineTo(X(x0 + d*6), Y(p2));
+      ctx.arc(X(x0), Y(p2), 6*s, side ? Math.PI : 0, Math.PI/2, !!side);
+      ctx.stroke();
+      dot(x0 + d*6, cy); dot(x0 + d*10, cy);
+    } else {
+      ctx.strokeRect(Math.min(X(x0), X(x0 + d*P.pd)), Y(cy - P.pw/2), P.pd*s, P.pw*s);
+      ctx.strokeRect(Math.min(X(x0), X(x0 + d*P.gd)), Y(cy - P.gw/2), P.gd*s, P.gw*s);
+      dot(x0 + d*P.spot, cy);
+      if (P.arc){ const a = Math.acos((P.pd - P.spot)/P.arc); ctx.beginPath(); if (side) ctx.arc(X(x0 - P.spot), Y(cy), P.arc*s, Math.PI - a, Math.PI + a); else ctx.arc(X(P.spot), Y(cy), P.arc*s, -a, a); ctx.stroke(); }
+    }
+    ctx.save(); ctx.lineWidth = Math.max(2, s*.2); ctx.strokeRect(Math.min(X(x0), X(x0 - d*(f.base === 'sala' ? 1 : 2))), Y(cy - P.goal/2), (f.base === 'sala' ? 1 : 2)*s, P.goal*s); ctx.restore();
+  });
+  ctx.restore();
+}
+/* ---------- fichas y material (siempre derechos, en píxeles de pantalla) ---------- */
+function tacItemR(v){ return clamp(Math.min(v.W, v.L)*v.s*.028, 9, 24); }
+function drawTacItem(ctx, it, X, Y, r, alpha, selected){
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = r*.35; ctx.shadowOffsetY = r*.08;
+  if (it.k === 'A' || it.k === 'B'){
+    const col = TAC_COLORS[it.k]();
+    ctx.beginPath(); ctx.arc(X, Y, r, 0, Math.PI*2); ctx.fillStyle = col; ctx.fill();
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.lineWidth = Math.max(1.5, r*.12); ctx.strokeStyle = '#fff'; ctx.stroke();
+    if (it.n){ ctx.fillStyle = inkFor(col); ctx.font = `800 ${Math.round(r*(it.n.length > 2 ? .82 : 1))}px Manrope, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(it.n, X, Y + r*.05); }
+    if (it.name){ ctx.font = `700 ${Math.round(r*.62)}px Manrope, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; const tw = ctx.measureText(it.name).width; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(X - tw/2 - 3, Y + r + 2, tw + 6, r*.8); ctx.fillStyle = '#fff'; ctx.fillText(it.name, X, Y + r + 3); }
+  } else if (it.k === 'ball'){
+    const rb = r*.55; ctx.beginPath(); ctx.arc(X, Y, rb, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
+    ctx.lineWidth = Math.max(1, rb*.15); ctx.strokeStyle = '#111'; ctx.stroke();
+    ctx.beginPath(); for (let i = 0; i < 5; i++){ const a = -Math.PI/2 + i*2*Math.PI/5; ctx.lineTo(X + Math.cos(a)*rb*.42, Y + Math.sin(a)*rb*.42); } ctx.closePath(); ctx.fillStyle = '#111'; ctx.fill();
+  } else if (it.k === 'cone'){
+    ctx.beginPath(); ctx.moveTo(X, Y - r*.75); ctx.lineTo(X + r*.6, Y + r*.55); ctx.lineTo(X - r*.6, Y + r*.55); ctx.closePath(); ctx.fillStyle = '#ff8a1f'; ctx.fill();
+    ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.fillRect(X - r*.32, Y - r*.05, r*.64, r*.16);
+  } else if (it.k === 'pole'){
+    ctx.fillStyle = '#ffd400'; ctx.fillRect(X - r*.12, Y - r*.9, r*.24, r*1.8); ctx.shadowBlur = 0; ctx.fillStyle = '#111'; ctx.fillRect(X - r*.12, Y - r*.3, r*.24, r*.2); ctx.fillRect(X - r*.12, Y + r*.3, r*.24, r*.2);
+  } else if (it.k === 'hurdle'){
+    ctx.lineWidth = Math.max(2, r*.2); ctx.strokeStyle = '#f2f2f2'; ctx.beginPath(); ctx.moveTo(X - r*.8, Y + r*.45); ctx.lineTo(X - r*.8, Y - r*.35); ctx.lineTo(X + r*.8, Y - r*.35); ctx.lineTo(X + r*.8, Y + r*.45); ctx.stroke();
+  } else if (it.k === 'mini' || it.k === 'goal'){
+    const w = it.k === 'goal' ? r*2.6 : r*1.4, h = it.k === 'goal' ? r*1.1 : r*.8;
+    ctx.lineWidth = Math.max(2, r*.18); ctx.strokeStyle = '#fff'; ctx.fillStyle = 'rgba(255,255,255,.18)';
+    ctx.beginPath(); ctx.rect(X - w/2, Y - h/2, w, h); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,.55)';
+    for (let i = 1; i < 6; i++){ ctx.beginPath(); ctx.moveTo(X - w/2 + i*w/6, Y - h/2); ctx.lineTo(X - w/2 + i*w/6, Y + h/2); ctx.stroke(); }
+  }
+  if (selected){ ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff'; ctx.strokeRect(X - r*1.35, Y - r*1.35, r*2.7, r*2.7); }
+  ctx.restore();
+}
+/* ---------- escena completa (pantalla, PNG y vídeo) ---------- */
+function tacScene(b, stepIdx, tween){
+  // devuelve {items:[{it, x, y, a}], shapes} para un paso o una transición entre pasos
+  const A = b.steps[stepIdx];
+  if (!tween) return {items: A.items.map(it => ({it, x: it.x, y: it.y, a: 1})), shapes: A.shapes};
+  const B = b.steps[tween.to], k = tween.k, ek = k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
+  const out = [], seen = new Set();
+  A.items.forEach(it => { const j = B.items.find(x => x.id === it.id); seen.add(it.id);
+    out.push(j ? {it: Object.assign({}, it, {n: j.n, name: j.name}), x: it.x + (j.x - it.x)*ek, y: it.y + (j.y - it.y)*ek, a: 1} : {it, x: it.x, y: it.y, a: 1 - k}); });
+  B.items.forEach(it => { if (!seen.has(it.id)) out.push({it, x: it.x, y: it.y, a: k}); });
+  return {items: out, shapes: k < .97 ? A.shapes : B.shapes};
+}
+function paintTac(ctx, cw, ch, dpr, b, stepIdx, tween, opts){
+  opts = opts || {};
+  const v = tacLayout(cw, ch, TAC_FIELDS[b.field], b.vertical, opts.pad != null ? opts.pad : Math.max(16, Math.min(cw, ch)*.04));
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = '#1b4f29'; ctx.fillRect(0, 0, cw, ch);
+  tacFieldTransform(ctx, v, dpr); drawPitch(ctx, v);
+  const sc = tacScene(b, stepIdx, tween), FW = v.L*v.s, FH = v.W*v.s;
+  const shapes = sc.shapes.concat(opts.preview ? [opts.preview] : []);
+  if (shapes.length){ tacFieldTransform(ctx, v, dpr); ctx.save(); drawShapes(ctx, FW, FH, shapes); ctx.restore(); }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const r = tacItemR(v);
+  sc.items.slice().sort((p, q) => (p.it.k === 'ball') - (q.it.k === 'ball')).forEach(o => { const [X, Y] = tacToPx(v, o.x, o.y); drawTacItem(ctx, o.it, X, Y, r, o.a, opts.sel && opts.sel.type === 'item' && opts.sel.id === o.it.id); });
+  if (opts.sel && opts.sel.type === 'shape' && sc.shapes[opts.sel.i]){
+    tacFieldTransform(ctx, v, dpr); const bx = shapeBox(sc.shapes[opts.sel.i], FW, FH), m = 6;
+    ctx.save(); ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff'; ctx.strokeRect(bx[0]-m, bx[1]-m, bx[2]-bx[0]+2*m, bx[3]-bx[1]+2*m); ctx.restore();
+  }
+  return v;
+}
+/* ---------- interfaz ---------- */
+function openTac(id){
+  if (exporting) return;
+  if (!state.boards) state.boards = [];
+  if (!state.boards.length){ state.boards.push(newBoard('Pizarra 1')); save(); }
+  tac.bid = id && state.boards.some(b => b.id === id) ? id : (tac.bid && tacBoard() ? tac.bid : state.boards[0].id);
+  tac.open = true; tac.step = 0; tac.sel = null; tac.undo = []; tac.redo = [];
+  video.pause(); closeBoard(true);
+  $('#tac').hidden = false; document.body.classList.add('tac-open');
+  renderTacUI(); requestAnimationFrame(renderTac);
+}
+function closeTac(){ tacStop(); tac.open = false; $('#tac').hidden = true; document.body.classList.remove('tac-open'); save(); $('#btnTac').focus(); }
+function newBoard(name){ return {id: uid(), name, field: 'f11', vertical: false, steps: [{items: [], shapes: [], dur: 2}]}; }
+function renderTacUI(){
+  const b = tacBoard(); if (!b) return;
+  $('#tacSel').innerHTML = state.boards.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join(''); $('#tacSel').value = b.id;
+  if (document.activeElement !== $('#tacName')) $('#tacName').value = b.name;
+  $('#tacField').value = b.field; $('#tacRot').setAttribute('aria-pressed', b.vertical); $('#tacRot').textContent = b.vertical ? '⇆ Horizontal' : '⇅ Vertical';
+  const sys = TAC_SYSTEMS[TAC_FIELDS[b.field].base] || {};
+  $('#tacSys').innerHTML = '<option value="">Colocar un sistema…</option>' + Object.keys(sys).map(k => `<option value="A|${k}">${esc(brand.short || 'Propio')} · ${k}</option><option value="B|${k}">Rival · ${k}</option>`).join('');
+  $('#tacSteps').innerHTML = b.steps.map((st, i) => `<button type="button" class="tac-step ${i === tac.step ? 'on' : ''}" data-i="${i}" aria-pressed="${i === tac.step}" title="Paso ${i+1}">${i+1}</button>`).join('');
+  $('#tacSteps').querySelectorAll('.tac-step').forEach(x => x.onclick = () => { tacStop(); tac.step = +x.dataset.i; tac.sel = null; renderTacUI(); renderTac(); });
+  $('#tacDur').value = b.steps[tac.step] ? b.steps[tac.step].dur : 2; $('#tacDur').disabled = tac.step === 0;
+  $('#tacDelStep').disabled = b.steps.length < 2; $('#tacDel').disabled = state.boards.length < 2;
+  $('#tacPlay').textContent = tac.play ? '■ Parar' : '▶ Reproducir'; $('#tacPlay').disabled = b.steps.length < 2 && !tac.play;
+  $('#tacTools').querySelectorAll('[data-tool]').forEach(x => { x.classList.toggle('on', x.dataset.tool === tac.tool); x.setAttribute('aria-pressed', x.dataset.tool === tac.tool); });
+  $('#tacDelSel').disabled = !tac.sel;
+  $('#tacHint').textContent = tac.tool === 'move' ? 'Arrastra fichas y dibujos para moverlos · doble clic en un jugador para cambiar dorsal y nombre · Supr borra lo seleccionado'
+    : tac.tool === 'poly' ? 'Zona libre: clic en cada vértice y clic en el primero (o doble clic) para cerrar'
+    : TAC_ITEMS[tac.tool] ? `Clic en el campo para colocar: ${TAC_ITEMS[tac.tool].label.toLowerCase()}` : tac.tool === 'erase' ? 'Clic en una ficha o un dibujo para borrarlo' : 'Arrastra sobre el campo para dibujar';
+}
+function tacCanvasSize(){ const r = $('#tacCv').getBoundingClientRect(); return {cw: Math.max(10, r.width), ch: Math.max(10, r.height)}; }
+function renderTac(){
+  if (!tac.open) return;
+  const b = tacBoard(); if (!b) return;
+  const cv = $('#tacCv'), {cw, ch} = tacCanvasSize(), dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(cw*dpr) || cv.height !== Math.round(ch*dpr)){ cv.width = Math.round(cw*dpr); cv.height = Math.round(ch*dpr); }
+  const ctx = cv.getContext('2d');
+  const tw = tac.play ? tac.play.tween : null, stepIdx = tac.play ? tac.play.from : clamp(tac.step, 0, b.steps.length - 1);
+  tac.view = paintTac(ctx, cw, ch, dpr, b, stepIdx, tw, {sel: tac.play ? null : tac.sel, preview: tac.cur || (tac.poly ? Object.assign({}, tac.poly, {pts: tac.poly.pts.concat(tac.polyHover ? [tac.polyHover] : [])}) : null)});
+}
+function tacPoint(e){ const r = $('#tacCv').getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+function tacHit(X, Y){
+  const st = tacStep(), v = tac.view; if (!st || !v) return null;
+  const r = tacItemR(v);
+  for (let i = st.items.length - 1; i >= 0; i--){ const [px, py] = tacToPx(v, st.items[i].x, st.items[i].y); if (Math.hypot(px - X, py - Y) <= r*1.25) return {type: 'item', id: st.items[i].id}; }
+  const [rx, ry] = tacFromPx(v, X, Y), p = [rx*v.L*v.s, ry*v.W*v.s];
+  for (let i = st.shapes.length - 1; i >= 0; i--) if (shapeHit(st.shapes[i], p, v.L*v.s, v.W*v.s)) return {type: 'shape', i};
+  return null;
+}
+function tacNextNum(st, k){
+  const used = new Set(st.items.filter(x => x.k === k).map(x => x.n));
+  if (k === 'A'){ const p = players.find(x => !used.has(x.n)); if (p) return {n: p.n, name: p.name.split(' ')[0] || undefined}; }
+  for (let i = 1; i < 100; i++) if (!used.has(String(i))) return {n: String(i)};
+  return {};
+}
+function tacCommit(){ save(); renderTacUI(); renderTac(); }
+const tacRel = (X, Y) => { const [x, y] = tacFromPx(tac.view, X, Y); return [+x.toFixed(4), +y.toFixed(4)]; };
+function tacDown(e){
+  if (!tac.open || tac.play || tac.exporting) return;
+  const b = tacBoard(), st = tacStep(); if (!b || !st) return;
+  e.preventDefault();
+  const [X, Y] = tacPoint(e), [rx, ry] = tacRel(X, Y);
+  if (tac.tool === 'move' || tac.tool === 'erase'){
+    const h = tacHit(X, Y);
+    if (tac.tool === 'erase'){ if (h){ tacPush(); if (h.type === 'item') st.items = st.items.filter(x => x.id !== h.id); else st.shapes.splice(h.i, 1); tac.sel = null; tacCommit(); } return; }
+    tac.sel = h; if (h){ tac.drag = {X, Y, moved: false, orig: JSON.stringify(st)}; $('#tacCv').setPointerCapture(e.pointerId); }
+    renderTacUI(); renderTac(); return;
+  }
+  if (TAC_ITEMS[tac.tool]){
+    tacPush();
+    const it = {id: uid(), k: tac.tool, x: rx, y: ry};
+    if (tac.tool === 'A' || tac.tool === 'B') Object.assign(it, tacNextNum(st, tac.tool));
+    if (!it.name) delete it.name;
+    st.items.push(it); tac.sel = {type: 'item', id: it.id}; tacCommit(); return;
+  }
+  if (tac.tool === 'text'){ tacTextInput(X, Y, [rx, ry]); return; }
+  if (tac.tool === 'poly'){
+    const v = tac.view;
+    if (!tac.poly) tac.poly = {type: 'poly', color: tac.color, w: .007, pts: [[rx, ry]]};
+    else {
+      const f = tac.poly.pts[0], [fx, fy] = tacToPx(v, f[0], f[1]);
+      if (tac.poly.pts.length >= 3 && Math.hypot(fx - X, fy - Y) < 14){ tacClosePoly(); return; }
+      tac.poly.pts.push([rx, ry]); if (tac.poly.pts.length >= 24){ tacClosePoly(); return; }
+    }
+    renderTac(); return;
+  }
+  $('#tacCv').setPointerCapture(e.pointerId);
+  tac.cur = {type: tac.tool, color: tac.color, w: .007, pts: [[rx, ry], [rx, ry]]}; tac.path = [[rx, ry]];
+}
+function tacMove(e){
+  if (!tac.open) return;
+  const [X, Y] = tacPoint(e), [rx, ry] = tacRel(X, Y);
+  if (tac.poly){ tac.polyHover = [rx, ry]; renderTac(); return; }
+  if (tac.drag && tac.sel){
+    const st = tacStep(), d = tac.drag; if (!d.moved && Math.hypot(X - d.X, Y - d.Y) < 3) return;
+    if (!d.moved){ d.moved = true; tacPush(); }
+    const o = JSON.parse(d.orig), [x0, y0] = tacRel(d.X, d.Y), dx = rx - x0, dy = ry - y0;
+    if (tac.sel.type === 'item'){ const it = st.items.find(x => x.id === tac.sel.id), oi = o.items.find(x => x.id === tac.sel.id); if (it && oi){ it.x = +clamp(oi.x + dx, -0.05, 1.05).toFixed(4); it.y = +clamp(oi.y + dy, -0.05, 1.05).toFixed(4); } }
+    else { const sh = st.shapes[tac.sel.i], os = o.shapes[tac.sel.i]; if (sh && os) sh.pts = os.pts.map(p => [+(p[0] + dx).toFixed(4), +(p[1] + dy).toFixed(4)]); }
+    renderTac(); return;
+  }
+  if (!tac.cur) return;
+  const s = tac.cur;
+  if (s.type === 'free'){ tac.path.push([rx, ry]); s.pts = tac.path.slice(); }
+  else if (s.type === 'curve'){
+    tac.path.push([rx, ry]); const pts = tac.path, p0 = pts[0];
+    let len = 0; const seg = [0]; for (let i = 1; i < pts.length; i++){ len += Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); seg.push(len); }
+    let k = 0; while (k < seg.length - 1 && seg[k] < len/2) k++; const mid = pts[k];
+    s.pts = [p0, [+(2*mid[0] - (p0[0]+rx)/2).toFixed(4), +(2*mid[1] - (p0[1]+ry)/2).toFixed(4)], [rx, ry]];
+  } else s.pts = [s.pts[0], [rx, ry]];
+  renderTac();
+}
+function tacUp(){
+  if (tac.drag){ const moved = tac.drag.moved; tac.drag = null; if (moved) tacCommit(); return; }
+  if (!tac.cur) return;
+  const s = tac.cur; tac.cur = null; const st = tacStep();
+  const a = s.pts[0], b = s.pts[s.pts.length - 1], big = Math.hypot(b[0]-a[0], b[1]-a[1]) > .015;
+  if (big && st){ tacPush(); if (s.type === 'free') s.pts = simplifyPath(tac.path, PTS_MAX.free); st.shapes.push(s); tacCommit(); } else renderTac();
+}
+function tacClosePoly(){ const pg = tac.poly; tac.poly = null; tac.polyHover = null; const st = tacStep(); if (pg && pg.pts.length >= 3 && st){ tacPush(); st.shapes.push(pg); tacCommit(); } else renderTac(); }
+function tacTextInput(X, Y, rel){
+  const wrap = $('#tacStage'), ti = document.createElement('input');
+  ti.className = 'boardtxt'; ti.maxLength = 80; ti.placeholder = 'Escribe y pulsa Intro';
+  const r = $('#tacCv').getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+  ti.style.left = Math.min(X + r.left - wr.left, wr.width - 170) + 'px'; ti.style.top = Math.min(Y + r.top - wr.top, wr.height - 40) + 'px';
+  wrap.appendChild(ti);
+  let done = false;
+  const fin = ok => { if (done) return; done = true; const t = ti.value.trim(); ti.remove(); const st = tacStep(); if (ok && t && st){ tacPush(); st.shapes.push({type: 'text', color: tac.color, w: .007, pts: [rel], text: t.slice(0, 80)}); tacCommit(); } };
+  ti.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') fin(true); if (ev.key === 'Escape') fin(false); });
+  ti.addEventListener('blur', () => setTimeout(() => fin(true), 0));
+  setTimeout(() => ti.focus(), 0);
+}
+function tacEditPlayer(id){
+  const st = tacStep(), it = st && st.items.find(x => x.id === id); if (!it || (it.k !== 'A' && it.k !== 'B')) return;
+  const v = tac.view, [X, Y] = tacToPx(v, it.x, it.y), box = $('#tacEdit'), r = $('#tacCv').getBoundingClientRect(), wr = $('#tacStage').getBoundingClientRect();
+  box.hidden = false; box.style.left = Math.min(X + r.left - wr.left + 14, wr.width - 230) + 'px'; box.style.top = Math.min(Y + r.top - wr.top - 10, wr.height - 60) + 'px';
+  $('#tacEdN').value = it.n || ''; $('#tacEdName').value = it.name || ''; box.dataset.id = id; $('#tacEdN').focus(); $('#tacEdN').select();
+}
+function tacEditDone(ok){
+  const box = $('#tacEdit'); if (box.hidden) return; box.hidden = true;
+  if (!ok) return;
+  const b = tacBoard(), id = box.dataset.id, n = $('#tacEdN').value.replace(/[^\d]/g, '').slice(0, 3), nm = cleanStr($('#tacEdName').value, 20).trim();
+  tacPush();
+  // el cambio de dorsal o nombre se aplica a esa ficha en todos los pasos
+  b.steps.forEach(st => st.items.forEach(it => { if (it.id === id){ if (n) it.n = n; else delete it.n; if (nm) it.name = nm; else delete it.name; } }));
+  tacCommit();
+}
+function tacPlaceSystem(val){
+  const b = tacBoard(), st = tacStep(); if (!b || !st || !val) return;
+  const [team, key] = val.split('|'), f = TAC_FIELDS[b.field], pos = (TAC_SYSTEMS[f.base] || {})[key]; if (!pos) return;
+  if (f.x0){ flash('Los sistemas se colocan en el campo completo: cambia el campo a Fútbol 11 para usarlos', 3500); return; }
+  tacPush();
+  st.items = st.items.filter(x => x.k !== team);   // sustituye a los jugadores de ese equipo en este paso
+  const nums = TAC_NUMS[pos.length] || pos.map((_, i) => i + 1);
+  pos.forEach((p, i) => {
+    const it = {id: uid(), k: team, x: team === 'A' ? p[0] : +(1 - p[0]).toFixed(3), y: team === 'A' ? p[1] : +(1 - p[1]).toFixed(3)};
+    const pl = team === 'A' && players[i]; it.n = pl ? pl.n : String(nums[i]); if (pl && pl.name) it.name = pl.name.split(' ')[0];
+    st.items.push(it);
+  });
+  tacCommit(); flash(`${team === 'A' ? (brand.short || 'Propio') : 'Rival'}: ${key} colocado`);
+}
+/* ---------- animación ---------- */
+function tacTimeline(b, withTitle){
+  // tramos: [{kind:'title'|'hold'|'move', from, to, dur}]
+  const T = []; if (withTitle) T.push({kind: 'title', from: 0, dur: 2});
+  T.push({kind: 'hold', from: 0, dur: b.steps.length > 1 ? 1 : 2.5});
+  for (let i = 1; i < b.steps.length; i++){ T.push({kind: 'move', from: i - 1, to: i, dur: b.steps[i].dur}); T.push({kind: 'hold', from: i, dur: i === b.steps.length - 1 ? 1.5 : .8}); }
+  return T;
+}
+function tacAt(T, t){ let acc = 0; for (const seg of T){ if (t < acc + seg.dur) return {seg, k: (t - acc)/seg.dur}; acc += seg.dur; } return null; }
+function tacPlay(){
+  const b = tacBoard(); if (!b || b.steps.length < 2) return;
+  if (tac.play){ tacStop(); return; }
+  tac.sel = null; tac.play = {T: tacTimeline(b, false), t0: performance.now(), from: 0, tween: null};
+  renderTacUI();
+  const loop = () => {
+    if (!tac.play) return;
+    const r = tacAt(tac.play.T, (performance.now() - tac.play.t0)/1000);
+    if (!r){ tac.step = b.steps.length - 1; tacStop(); return; }
+    tac.play.from = r.seg.from; tac.play.tween = r.seg.kind === 'move' ? {to: r.seg.to, k: r.k} : null;
+    renderTac(); tac.play.raf = requestAnimationFrame(loop);
+  };
+  loop();
+}
+function tacStop(){ if (!tac.play) return; cancelAnimationFrame(tac.play.raf); tac.play = null; renderTacUI(); renderTac(); }
+/* ---------- exportar ---------- */
+function tacExportPNG(){
+  const b = tacBoard(); if (!b) return;
+  const H = 1080, W = b.vertical ? Math.round(H*.75) : 1920, c = document.createElement('canvas'); c.width = W; c.height = H;
+  paintTac(c.getContext('2d'), W, H, 1, b, tac.step, null, {pad: 40});
+  c.toBlob(bl => { download(`${slug(b.name)}_paso-${tac.step + 1}.png`, bl); flash('Imagen PNG de la pizarra descargada'); }, 'image/png');
+}
+function tacImage(b, stepIdx, w){
+  const h = Math.round(w*(b.vertical ? 4/3 : 9/16)), c = document.createElement('canvas'); c.width = w; c.height = h;
+  paintTac(c.getContext('2d'), w, h, 1, b, stepIdx, null, {pad: 14}); return c.toDataURL('image/jpeg', .85);
+}
+function drawTacTitle(ctx, W, H, b){
+  ctx.fillStyle = '#0e0d10'; ctx.fillRect(0, 0, W, H);
+  const u = H/720; let y = H*.38;
+  if ($('#tacCrest').checked && crestReady()){ const h = 130*u, w = h*CREST.naturalWidth/CREST.naturalHeight; ctx.drawImage(CREST, (W - w)/2, y - h - 20*u, w, h); }
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = `800 ${Math.round(64*u)}px ${dispFont()}`; ctx.fillText(b.name.toUpperCase(), W/2, y + 60*u);
+  ctx.fillStyle = brand.accent; ctx.fillRect(W/2 - 60*u, y + 84*u, 120*u, 6*u);
+  ctx.fillStyle = '#c9c3cb'; ctx.font = `600 ${Math.round(28*u)}px Manrope, system-ui, sans-serif`; ctx.fillText([brand.club, TAC_FIELDS[b.field].label, `${b.steps.length} paso${b.steps.length === 1 ? '' : 's'}`].filter(Boolean).join(' · '), W/2, y + 130*u);
+  ctx.textAlign = 'start';
+}
+async function tacExportVideo(){
+  const b = tacBoard(); if (!b || tac.exporting || exporting) return;
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){ flash('Este navegador no permite generar vídeo: usa Chrome, Edge o Safari actualizados'); return; }
+  tacStop();
+  const cap = Q_RES[quality.res].cap, H = cap - cap % 2, W = (b.vertical ? Math.round(H*.75) : Math.round(H*16/9)) & ~1, fps = quality.fps;
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const ctx = c.getContext('2d');
+  const withTitle = $('#tacTitle').checked, T = tacTimeline(b, withTitle), total = T.reduce((s, x) => s + x.dur, 0);
+  const f = camPickMime(false), st = c.captureStream(fps), chunks = [];
+  let rec; try{ rec = new MediaRecorder(st, Object.assign({videoBitsPerSecond: qualityBitrate(H, total)}, f.mime ? {mimeType: f.mime} : {})); }catch(e){ flash('No se pudo iniciar la grabación del vídeo'); return; }
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  tac.exporting = true; $('#tacProg').hidden = false; $('#tac').classList.add('busy');
+  const draw = t => {
+    const r = tacAt(T, t);
+    if (r && r.seg.kind === 'title') drawTacTitle(ctx, W, H, b);
+    else { const seg = r ? r.seg : null; paintTac(ctx, W, H, 1, b, seg ? seg.from : b.steps.length - 1, seg && seg.kind === 'move' ? {to: seg.to, k: r.k} : null, {pad: Math.round(H*.04)});
+      if ($('#tacCrest').checked && crestReady()){ const h = H*.11, w = h*CREST.naturalWidth/CREST.naturalHeight; ctx.globalAlpha = .6; ctx.drawImage(CREST, W - w - H*.03, H - h - H*.03, w, h); ctx.globalAlpha = 1; } }
+  };
+  draw(0); rec.start(500);
+  const t0 = performance.now();
+  await new Promise(res => { const loop = () => { const t = (performance.now() - t0)/1000; draw(Math.min(t, total - .001)); $('#tacProg').textContent = `Generando vídeo… ${Math.min(100, Math.round(t/total*100))}%`; if (t >= total || !tac.exporting) res(); else requestAnimationFrame(loop); }; loop(); });
+  await new Promise(res => { rec.onstop = res; rec.stop(); setTimeout(res, 4000); });
+  st.getTracks().forEach(t => t.stop());
+  tac.exporting = false; $('#tacProg').hidden = true; $('#tac').classList.remove('busy');
+  if (chunks.length){ download(`${slug(b.name)}.${f.ext}`, new Blob(chunks, {type: f.type})); flash(`Vídeo .${f.ext} de la pizarra descargado`, 3000); }
+}
+/* para el Informe */
+function tacReportHTML(){
+  const bs = (state.boards || []).filter(b => b.steps.some(st => st.items.length || st.shapes.length));
+  if (!bs.length || !$('#rpTac') || !$('#rpTac').checked) return '';
+  return `<h2>Pizarras tácticas (${bs.length})</h2>` + bs.map(b => `<div class="rp-tac"><img src="${tacImage(b, b.steps.length - 1, 760)}" alt="Pizarra ${esc(b.name)}"><div class="ct">${esc(b.name)}</div><div class="cm">${esc(TAC_FIELDS[b.field].label)} · ${b.steps.length} paso${b.steps.length === 1 ? '' : 's'}${b.steps.length > 1 ? ' · se muestra el último' : ''}</div></div>`).join('');
+}
+/* ---------- eventos ---------- */
+$('#btnTac').onclick = () => openTac();
+$('#tacClose').onclick = closeTac;
+$('#tacSel').onchange = e => { tacStop(); tac.bid = e.target.value; tac.step = 0; tac.sel = null; tac.undo = []; tac.redo = []; renderTacUI(); renderTac(); };
+$('#tacName').oninput = e => { const b = tacBoard(); if (!b) return; b.name = e.target.value.slice(0, 60) || 'Pizarra'; save(); const o = $('#tacSel').selectedOptions[0]; if (o) o.textContent = b.name; };
+$('#tacNew').onclick = () => { tacStop(); const b = newBoard(`Pizarra ${state.boards.length + 1}`); state.boards.push(b); tac.bid = b.id; tac.step = 0; tac.undo = []; tac.redo = []; tacCommit(); $('#tacName').focus(); $('#tacName').select(); };
+$('#tacDup').onclick = () => { const b = tacBoard(); if (!b) return; const c = sanitizeBoards([Object.assign(JSON.parse(JSON.stringify(b)), {id: uid(), name: (b.name + ' (copia)').slice(0, 60)})])[0]; state.boards.push(c); tac.bid = c.id; tacCommit(); flash('Pizarra duplicada'); };
+$('#tacDel').onclick = async () => {
+  const b = tacBoard(); if (!b || state.boards.length < 2) return;
+  const r = await ask({title: `Borrar «${b.name}»`, text: 'Se borrará esta pizarra con todos sus pasos. Los partidos y cortes no cambian.', buttons: [{label: 'Cancelar', value: null}, {label: 'Borrar pizarra', value: 'yes', kind: 'danger'}]});
+  if (r.value !== 'yes') return;
+  state.boards = state.boards.filter(x => x !== b); tac.bid = state.boards[0].id; tac.step = 0; tacCommit();
+};
+$('#tacField').onchange = e => { const b = tacBoard(); if (!b) return; tacPush(); b.field = TAC_FIELDS[e.target.value] ? e.target.value : 'f11'; tacCommit(); };
+$('#tacRot').onclick = () => { const b = tacBoard(); if (!b) return; b.vertical = !b.vertical; tacCommit(); };
+$('#tacSys').onchange = e => { tacPlaceSystem(e.target.value); e.target.value = ''; };
+$('#tacTools').querySelectorAll('[data-tool]').forEach(x => x.onclick = () => { if (tac.poly) tacClosePoly(); tac.tool = x.dataset.tool; if (tac.tool !== 'move') tac.sel = null; renderTacUI(); renderTac(); });
+$('#tacColors').innerHTML = BCOLORS.map(c => `<button type="button" class="sw ${c === tac.color ? 'on' : ''}" data-c="${c}" style="--sw:${c}" aria-label="Color ${c}"></button>`).join('');
+$('#tacColors').querySelectorAll('.sw').forEach(x => x.onclick = () => {
+  tac.color = x.dataset.c; $('#tacColors').querySelectorAll('.sw').forEach(y => y.classList.toggle('on', y === x));
+  const st = tacStep(); if (tac.sel && tac.sel.type === 'shape' && st && st.shapes[tac.sel.i]){ tacPush(); st.shapes[tac.sel.i].color = tac.color; tacCommit(); }
+});
+$('#tacAddStep').onclick = () => { const b = tacBoard(); if (!b) return; if (b.steps.length >= 40){ flash('Máximo 40 pasos'); return; } tacPush(); const cp = JSON.parse(JSON.stringify(b.steps[tac.step])); cp.shapes = []; cp.dur = 2; b.steps.splice(tac.step + 1, 0, cp); tac.step++; tac.sel = null; tacCommit(); flash(`Paso ${tac.step + 1}: mueve las fichas a su nueva posición`); };
+$('#tacDelStep').onclick = () => { const b = tacBoard(); if (!b || b.steps.length < 2) return; tacPush(); b.steps.splice(tac.step, 1); tac.step = Math.max(0, tac.step - 1); tac.sel = null; tacCommit(); };
+$('#tacDur').oninput = e => { const st = tacStep(); const v = +String(e.target.value).replace(',', '.'); if (st && tac.step > 0 && v >= .5 && v <= 10){ st.dur = +v.toFixed(1); save(); } };
+$('#tacDur').addEventListener('keydown', e => e.stopPropagation());
+$('#tacName').addEventListener('keydown', e => e.stopPropagation());
+$('#tacPlay').onclick = tacPlay;
+$('#tacPng').onclick = tacExportPNG;
+$('#tacVid').onclick = tacExportVideo;
+$('#tacDelSel').onclick = () => tacDeleteSel();
+$('#tacUndo').onclick = tacUndo; $('#tacRedo').onclick = tacRedo;
+function tacDeleteSel(){ const st = tacStep(); if (!tac.sel || !st) return; tacPush(); if (tac.sel.type === 'item') st.items = st.items.filter(x => x.id !== tac.sel.id); else st.shapes.splice(tac.sel.i, 1); tac.sel = null; tacCommit(); }
+const tcv = $('#tacCv');
+tcv.addEventListener('pointerdown', tacDown);
+tcv.addEventListener('pointermove', tacMove);
+tcv.addEventListener('pointerup', tacUp);
+tcv.addEventListener('pointercancel', tacUp);
+tcv.addEventListener('dblclick', e => { if (tac.poly){ e.preventDefault(); tacClosePoly(); return; } if (tac.tool !== 'move') return; const [X, Y] = tacPoint(e), h = tacHit(X, Y); if (h && h.type === 'item') tacEditPlayer(h.id); });
+$('#tacEdOk').onclick = () => tacEditDone(true);
+['tacEdN','tacEdName'].forEach(id => $('#'+id).addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') tacEditDone(true); if (e.key === 'Escape') tacEditDone(false); }));
+window.addEventListener('resize', () => { if (tac.open) renderTac(); });
+/* teclado de la pizarra táctica (se llama desde overlayKeys) */
+function tacKeys(e){
+  if (!tac.open) return false;
+  if (e.target.matches('input,select,textarea') && e.key !== 'Escape') return true;
+  const k = (e.key || '').toLowerCase();
+  if (e.key === 'Escape'){ e.preventDefault(); if (!$('#tacEdit').hidden) tacEditDone(false); else if (tac.poly){ tac.poly = null; renderTac(); } else if (tac.play) tacStop(); else closeTac(); }
+  else if ((e.ctrlKey || e.metaKey) && k === 'z'){ e.preventDefault(); e.shiftKey ? tacRedo() : tacUndo(); }
+  else if ((e.ctrlKey || e.metaKey) && k === 'y'){ e.preventDefault(); tacRedo(); }
+  else if (e.key === 'Delete' || e.key === 'Backspace'){ e.preventDefault(); tacDeleteSel(); }
+  else if (e.key === 'Enter' && tac.poly){ e.preventDefault(); tacClosePoly(); }
+  else if (e.code === 'Space'){ e.preventDefault(); tacPlay(); }
+  else if (e.key === 'ArrowRight'){ e.preventDefault(); const b = tacBoard(); if (b && tac.step < b.steps.length - 1){ tacStop(); tac.step++; tac.sel = null; renderTacUI(); renderTac(); } }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); if (tac.step > 0){ tacStop(); tac.step--; tac.sel = null; renderTacUI(); renderTac(); } }
+  return true;
+}
 
 /* =========================================================
    INICIO
