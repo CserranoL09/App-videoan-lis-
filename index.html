@@ -842,6 +842,64 @@ body.tac-open{overflow:hidden}
 .boardbar .bt-info{font-size:.76rem;color:var(--accent-hi);white-space:nowrap;padding:.15rem .4rem;border:1px solid color-mix(in srgb,var(--accent-hi) 50%,transparent);border-radius:6px}
 .boardbar .bt-info[hidden]{display:none}
 @media (max-width:760px){ .boardbar .bt-info{white-space:normal} }
+/* ===== v3.10 · Línea de tiempo de cortes por etiqueta ===== */
+.ctp{position:relative;margin-top:.6rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);--ctp-name:170px;user-select:none;-webkit-user-select:none}
+.ctp[hidden]{display:none}
+.ctp-resize{position:absolute;left:0;right:0;top:-5px;height:10px;cursor:ns-resize;z-index:3;touch-action:none}
+.ctp-resize::after{content:"";position:absolute;left:50%;top:3px;width:42px;height:4px;margin-left:-21px;border-radius:3px;background:var(--line2);opacity:.8}
+.ctp-resize:hover::after,.ctp-resize.on::after,.ctp-resize:focus-visible::after{background:var(--accent-hi)}
+.ctp.folded .ctp-resize{display:none}
+.ctp-top{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .7rem;padding:.4rem .6rem;min-width:0}
+.ctp-fold{background:transparent;border-color:transparent;font-weight:700;padding:.2rem .35rem}
+.ctp-count{font-size:.78rem;color:var(--muted)}
+.ctp-chk{display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem;color:var(--muted);white-space:nowrap}
+.ctp-sp{flex:1 1 0}
+.ctp-z{display:inline-flex;gap:.2rem}
+.ctp-z button{min-width:2rem;padding:.15rem .5rem}
+.ctp-hint{font-size:.72rem;color:var(--dim);white-space:nowrap}
+.ctp.folded .ctp-area,.ctp.folded .ctp-chk,.ctp.folded .ctp-z,.ctp.folded .ctp-hint{display:none}
+.ctp-area{position:relative;border-top:1px solid var(--line);overflow:hidden}
+.ctp-rul{display:flex;height:26px;background:var(--bg2)}
+.ctp-corner{flex:0 0 var(--ctp-name);border-right:1px solid var(--line)}
+#ctpRuler{display:block;flex:none}
+.ctp-body{display:flex;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;max-height:700px}
+.ctp-names{flex:0 0 var(--ctp-name);width:var(--ctp-name);border-right:1px solid var(--line);align-self:flex-start;min-height:100%}
+.ctp-row{display:flex;align-items:center;gap:.35rem;padding:0 .2rem 0 .45rem;box-sizing:border-box;border-bottom:1px solid var(--line);font-size:.76rem;position:relative;cursor:default;overflow:hidden}
+.ctp-row::before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:4px;border-radius:2px;background:var(--c)}
+.ctp-row.on{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.ctp-ini{display:none}
+.ctp-nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.ctp-n{font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.ctp-play{flex:none;min-width:0;min-height:0;width:20px;height:18px;padding:0;font-size:.62rem;line-height:1;border-radius:5px}
+.ctp-empty{padding:.5rem;font-size:.76rem;color:var(--muted)}
+#ctpCv{display:block;flex:none;touch-action:pan-y;outline:none}
+#ctpCv:focus-visible{box-shadow:inset 0 0 0 2px var(--accent-hi)}
+.ctp-headline{position:absolute;top:0;bottom:0;left:0;width:2px;margin-left:-1px;background:var(--accent-hi);pointer-events:none;z-index:2;box-shadow:0 0 8px color-mix(in srgb,var(--accent-hi) 70%,transparent)}
+.ctp-headline[hidden]{display:none}
+.ctp-tip{position:absolute;left:0;top:0;z-index:6;pointer-events:none;display:flex;flex-direction:column;gap:.1rem;max-width:280px;padding:.4rem .55rem;border-radius:8px;background:rgba(14,13,16,.94);color:#fff;font-size:.74rem;line-height:1.3;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.ctp-tip[hidden]{display:none}
+.ctp-tip b{display:flex;align-items:center;gap:.35rem}
+.ctp-tip b::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--c,#fff);flex:none}
+.ctp-tip i{color:#c9c3cb}
+.ctp-menu{position:absolute;left:0;top:0;z-index:7;display:flex;flex-direction:column;min-width:210px;padding:.3rem;border-radius:10px;background:var(--panel2);border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.ctp-menu[hidden]{display:none}
+.ctp-menu button{justify-content:flex-start;text-align:left;background:transparent;border-color:transparent;padding:.42rem .6rem;font-size:.84rem}
+.ctp-menu button:hover:not(:disabled),.ctp-menu button:focus-visible{background:var(--panel3)}
+.ctp-menu button.danger{color:#ff6b7f}
+/* móvil y paneles estrechos: la columna de nombres es solo una franja con la inicial */
+.ctp.narrow .ctp-row{padding:0;justify-content:center;cursor:pointer}
+.ctp.narrow .ctp-row::before{width:3px}
+.ctp.narrow .ctp-ini{display:block;font-weight:800;font-size:.72rem;color:var(--fg)}
+.ctp.narrow .ctp-nm,.ctp.narrow .ctp-n,.ctp.narrow .ctp-play{display:none}
+.ctp.narrow .ctp-hint{display:none}
+@media (max-width:760px){ .ctp-top{padding:.3rem .45rem} .ctp-hint{display:none} .ctp-menu button{padding:.6rem .7rem} }
+/* disposición mixta: el panel ocupa todo el ancho, debajo del vídeo y de las etiquetas */
+@media (min-width:1061px){
+  body.lay-mixed main{grid-template-areas:"lib lib" "vid tag" "ctl tag" "tlz tag" "tml tag" "syn syn" "ctp ctp" "asd asd" "hlp hlp"}
+  body.lay-mixed #ctp{grid-area:ctp;margin-top:.9rem}
+}
+/* disposición «todo debajo»: el panel va después de la franja de etiquetas (vídeo + controles + etiquetas siguen a la vista) */
+@media (min-width:1061px){ body.lay-below #ctp{order:2;margin-top:.9rem} }
 </style>
 </head>
 <body>
@@ -1006,8 +1064,36 @@ body.tac-open{overflow:hidden}
       <div class="sy-prev" id="syPrev" aria-label="Vista previa de los cortes"></div>
       <div class="sy-btns"><button type="button" id="syCancel" class="ghost">Ahora no</button><button type="button" id="syOk" class="primary">Confirmar y crear los cortes</button></div>
     </div>
+    <div class="ctp" id="ctp" hidden role="region" aria-label="Línea de tiempo de cortes por etiqueta">
+      <div class="ctp-resize" id="ctpResize" role="separator" aria-orientation="horizontal" tabindex="0" aria-label="Altura del panel: flechas arriba y abajo; doble clic para altura automática" title="Arrastra para cambiar la altura · doble clic: automática"></div>
+      <div class="ctp-top">
+        <button type="button" id="ctpFold" class="ctp-fold" aria-expanded="true" aria-controls="ctpArea">▾ Cortes por etiqueta</button>
+        <span class="ctp-count" id="ctpCount"></span>
+        <label class="ctp-chk"><input type="checkbox" id="ctpEmpty"> Ocultar filas vacías</label>
+        <span class="ctp-sp"></span>
+        <span class="ctp-z" role="group" aria-label="Zoom de la línea de tiempo"><button type="button" id="ctpOut" title="Alejar (ver más partido)" aria-label="Alejar">−</button><button type="button" id="ctpIn" title="Acercar (ver más detalle)" aria-label="Acercar">+</button></span>
+        <span class="ctp-hint">Arrastra los bordes para recortar · clic derecho o pulsación larga: más opciones</span>
+      </div>
+      <div class="ctp-area" id="ctpArea">
+        <div class="ctp-rul"><span class="ctp-corner" aria-hidden="true"></span><canvas id="ctpRuler" aria-hidden="true"></canvas></div>
+        <div class="ctp-body" id="ctpBody">
+          <div class="ctp-names" id="ctpNames"></div>
+          <canvas id="ctpCv" tabindex="0" role="application" aria-roledescription="línea de tiempo de cortes" aria-label="Línea de tiempo de cortes"></canvas>
+        </div>
+        <div class="ctp-headline" id="ctpHead" hidden></div>
+      </div>
+      <div class="ctp-tip" id="ctpTip" hidden></div>
+      <div class="ctp-menu" id="ctpMenu" hidden role="menu" aria-label="Opciones del corte">
+        <button type="button" role="menuitem" data-a="play">▶ Reproducir</button>
+        <button type="button" role="menuitem" data-a="list">＋ Añadir a la lista actual</button>
+        <button type="button" role="menuitem" data-a="split">✂ Dividir aquí</button>
+        <button type="button" role="menuitem" data-a="dup">⧉ Duplicar</button>
+        <button type="button" role="menuitem" data-a="del" class="danger">🗑 Borrar</button>
+      </div>
+      <span class="sr-only" id="ctpLive" aria-live="polite"></span>
+    </div>
     <p class="help">
-      <kbd>Espacio</kbd> o clic en el vídeo: play/pausa · <kbd>←</kbd><kbd>→</kbd> saltar <span id="jumpHelp">5</span> s · <kbd>Mayús</kbd>+<kbd>←</kbd><kbd>→</kbd> ±1 s · <kbd>,</kbd><kbd>.</kbd> fotograma · <kbd>1</kbd>–<kbd>9</kbd> etiquetar · <kbd>Esc</kbd> cancelar corte abierto · <kbd>D</kbd> pizarra (dentro: <kbd>Ctrl</kbd>+<kbd>Z</kbd> deshace el dibujo, <kbd>Supr</kbd> borra la forma seleccionada, <kbd>Intro</kbd> cierra la zona libre) · Corte seleccionado (▶ o clic en su tarjeta): <kbd>I</kbd> inicio aquí, <kbd>O</kbd> fin aquí, <kbd>S</kbd> dividir · <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> deshacer y rehacer la edición de cortes · Zoom de la línea de tiempo: <kbd>Ctrl</kbd>+rueda, pellizco o − / + · Mientras el vídeo pasa por un corte, abajo a la izquierda se ve su tiempo («0:03 / 0:08»). Disposición de las herramientas y rótulo del tiempo: ⚙ Configurar. · Zoom del vídeo: <kbd>Ctrl</kbd>+rueda o pellizco sobre el vídeo, <kbd>+</kbd> / <kbd>−</kbd> y <kbd>0</kbd> para volver a 1× (con zoom, arrastra para mover la imagen) · «⧉ Ventana»: vídeo en ventana flotante o en otra ventana (segundo monitor o proyector). · Clic en la línea de tiempo para saltar (o enfócala con <kbd>Tab</kbd> y usa las flechas, <kbd>Inicio</kbd> y <kbd>Fin</kbd>).
+      <kbd>Espacio</kbd> o clic en el vídeo: play/pausa · <kbd>←</kbd><kbd>→</kbd> saltar <span id="jumpHelp">5</span> s · <kbd>Mayús</kbd>+<kbd>←</kbd><kbd>→</kbd> ±1 s · <kbd>,</kbd><kbd>.</kbd> fotograma · <kbd>1</kbd>–<kbd>9</kbd> etiquetar · <kbd>Esc</kbd> cancelar corte abierto · <kbd>D</kbd> pizarra (dentro: <kbd>Ctrl</kbd>+<kbd>Z</kbd> deshace el dibujo, <kbd>Supr</kbd> borra la forma seleccionada, <kbd>Intro</kbd> cierra la zona libre) · Corte seleccionado (▶ o clic en su tarjeta): <kbd>I</kbd> inicio aquí, <kbd>O</kbd> fin aquí, <kbd>S</kbd> dividir · <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> deshacer y rehacer la edición de cortes · Zoom de la línea de tiempo: <kbd>Ctrl</kbd>+rueda, pellizco o − / + · Mientras el vídeo pasa por un corte, abajo a la izquierda se ve su tiempo («0:03 / 0:08»). Disposición de las herramientas y rótulo del tiempo: ⚙ Configurar. · Zoom del vídeo: <kbd>Ctrl</kbd>+rueda o pellizco sobre el vídeo, <kbd>+</kbd> / <kbd>−</kbd> y <kbd>0</kbd> para volver a 1× (con zoom, arrastra para mover la imagen) · «⧉ Ventana»: vídeo en ventana flotante o en otra ventana (segundo monitor o proyector). · Clic en la línea de tiempo para saltar (o enfócala con <kbd>Tab</kbd> y usa las flechas, <kbd>Inicio</kbd> y <kbd>Fin</kbd>). · <b>Cortes por etiqueta</b> (panel bajo el vídeo): clic = ir al corte, doble clic = verlo, arrastra los bordes para recortar o el centro para mover, clic derecho o pulsación larga = más opciones; con el panel enfocado <kbd>←</kbd><kbd>→</kbd> corte anterior/siguiente, <kbd>↑</kbd><kbd>↓</kbd> etiqueta, <kbd>Intro</kbd> ver (<kbd>Mayús</kbd>+<kbd>Intro</kbd> toda la fila), <kbd>Supr</kbd> borrar.
     </p>
   </section>
 
@@ -1310,8 +1396,13 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.9';
+const APP_VERSION = '3.10';
 const CHANGELOG = [
+  {v:'3.10', date:'Octubre 2026', items:[
+    '<b>Línea de tiempo de cortes:</b> debajo del vídeo, un panel con una fila por etiqueta (nombre, color y número de cortes) donde cada corte es un rectángulo de su color. Los del rival van rayados, ✓ / ✗ indica el resultado y un punto blanco marca cada dibujo. Usa el mismo zoom que la línea de tiempo y sigue al cabezal.',
+    'Clic en un hueco para saltar, clic en un corte para seleccionarlo e ir a su inicio, doble clic para verlo. Arrastra sus bordes para recortarlo o el centro para moverlo (Ctrl+Z lo deshace). Clic derecho o pulsación larga: reproducir, añadir a la lista, dividir, duplicar o borrar. ▶ junto a cada etiqueta reproduce todos sus cortes seguidos.',
+    'Respeta los filtros de Cortes (lo que no pasa el filtro se ve atenuado), muestra las acciones del registro en directo por su minuto de juego, se puede plegar y cambiar de alto arrastrando su borde superior. Con el panel enfocado: ←/→ corte anterior o siguiente, ↑/↓ etiqueta, Intro reproducir, Supr borrar.'
+  ]},
   {v:'3.9', date:'Octubre 2026', items:[
     '<b>Dibujos que siguen al jugador:</b> en la pizarra, selecciona una forma con «✥ Mover» (un foco, un dorsal, una zona…) y pulsa «🎯 Seguir al jugador». Avanza el vídeo con → , «.» o la línea de tiempo, arrastra la forma a la nueva posición del jugador y se guarda otro punto. Hasta 30 puntos por forma.',
     'Al reproducir, la forma se mueve entre los puntos (con «Suave» el movimiento es más natural) y solo se ve entre el primero y el último. Se ve igual en el reproductor, en la otra ventana, al presentar, en el vídeo generado, en el PNG y en el Informe.',
@@ -1431,6 +1522,7 @@ let selClip = null;
 let vzMain = null, vzPres = null;   // v3.6 · zoom del vídeo (reproductor y presentación)
 let mirror = null;                  // v3.6 · ventana emergente sincronizada
 let trackLastT = null, trackShown = false, overlayBase = null, paintedShapes = null;   // v3.9 · seguimiento de dibujos
+let ctl = null;                     // v3.10 · línea de tiempo de cortes (se crea en su módulo)
 let cam = null;                     // v3.7 · grabación desde la cámara (solo en memoria de esta pestaña)         // v3.3 · corte seleccionado (▶ o clic en su tarjeta)
 const tlv = {mid:null, span:0, v0:0}; // v3.3 · zoom de la línea de tiempo (span 0 = partido entero)     // v3.1 · fin de la vista previa de sincronización (lo consulta el bucle de reproducción)
 // estado de la pizarra (se declara aquí porque el bucle de reproducción lo consulta desde el inicio)
@@ -1806,6 +1898,7 @@ function applyBrand(){
   const bc = buttonColors(a); r.setProperty('--btn-hi', bc.hi); r.setProperty('--btn', bc.lo); r.setProperty('--btn-ink', bc.ink);
   document.querySelectorAll('#team option[value=Propio], #dcTeam option[value=Propio]').forEach(o => o.textContent = teamLabel('Propio'));
   document.title = `${name ? name + ' · ' : ''}Táctica Lab`;
+  if (ctl) ctlRender();   // v3.10: colores del tema en la línea de tiempo de cortes
 }
 const SWATCHES = ['#ff3550','#f8d858','#2f8cff','#1fbf75','#ff8a1f','#b678ff','#ffffff'];
 function renderCfg(){
@@ -2092,6 +2185,7 @@ function cancelFreeze(){ if (freeze){ clearTimeout(freeze.timer); freeze = null;
   if (previewStop != null && !video.paused && t >= previewStop){ video.pause(); previewStop = null; }
   lastT = video.paused ? (freeze ? t : null) : t;
   trackTick(t);
+  if (ctl) ctlHead(false);
   liveTick();
   updateClipTime(t);
   mirrorTick();
@@ -2144,6 +2238,7 @@ function renderTimeline(){
   const tl = $('#timeline'), d = video.duration;
   tl.querySelectorAll('.seg,.tick,.pmark,.pzone').forEach(n => n.remove());
   renderZoomUI();
+  if (ctl) ctlRender();   // v3.10 · línea de tiempo de cortes (también sin vídeo, en directo)
   if (!d || !curMatch) return;
   const V = tlView(), X = t => (t - V.v0)/V.span*100, inView = (a, b) => b >= V.v0 && a <= V.v0 + V.span;
   partMarks(tl, X, inView);
@@ -2359,7 +2454,7 @@ function markPlaying(){
   const cur = playback && playback.queue[playback.i];
   document.querySelectorAll('.clip,.pli').forEach(el => el.classList.toggle('playing', !!cur && el.dataset.id===cur.id));
 }
-['fMatch','fRival','fCat','fTeam','fPlayer','fDesc'].forEach(id => $('#'+id).onchange = () => { renderList(); renderStats(); });
+['fMatch','fRival','fCat','fTeam','fPlayer','fDesc'].forEach(id => $('#'+id).onchange = () => { renderList(); renderStats(); if (ctl) ctlRender(); });
 $('#bPlayFiltered').onclick = () => { const q = filtered(); if (!q.length) flash('No hay cortes que reproducir'); else { playQueue(q); flash(`Reproduciendo ${nCortes(q.length)}`); } };
 $('#bAddFiltered').onclick = () => {
   const p = curPL(); let n = 0;
@@ -4323,6 +4418,7 @@ function redoEdit(){
 /* ---------- selección y edición del corte seleccionado ---------- */
 function markSelected(){
   document.querySelectorAll('#list .clip').forEach(el => { const on = el.dataset.id === selClip; el.classList.toggle('sel', on); el.setAttribute('aria-current', on ? 'true' : 'false'); });
+  if (ctl) ctlDraw();
 }
 function editableSel(){
   const c = selClip && clipById(selClip);
@@ -5735,6 +5831,435 @@ function trackTick(t){
   const now = ds.some(d => d.shapes.some(s => trackActive(s, t)));
   if (now || trackShown){ trackShown = now; paintOverlay(overlayBase); }
 }
+
+
+/* =========================================================
+   v3.10 · LÍNEA DE TIEMPO DE CORTES (una fila por etiqueta)
+   · usa el mismo zoom que la línea de tiempo (tlView / setZoom) · no cambia el formato del proyecto
+   · las filas (nombre, número de cortes y ▶) son elementos HTML; los cortes se dibujan en un <canvas>
+   ========================================================= */
+const CTL_KEY_H = 'tacticalab:tlRows', CTL_KEY_FOLD = 'tacticalab:tlFold', CTL_KEY_EMPTY = 'tacticalab:tlEmpty';
+const CTL_ROW = 22, CTL_EDGE_MOUSE = 6, CTL_EDGE_TOUCH = 12;
+ctl = {rows: [], axis: null, nameW: 150, w: 0, h: 0, row: 0, drag: null, press: null, menuClip: null, menuT: null, headX: null, fset: null,
+  hBody: (() => { try{ const v = +localStorage.getItem(CTL_KEY_H); return v >= 60 && v <= 700 ? v : null; }catch(e){ return null; } })(),
+  fold: (() => { try{ return localStorage.getItem(CTL_KEY_FOLD) === '1'; }catch(e){ return false; } })(),
+  hideEmpty: (() => { try{ return localStorage.getItem(CTL_KEY_EMPTY) === '1'; }catch(e){ return false; } })()};
+const ctlSet = (k, v) => { try{ localStorage.setItem(k, v); }catch(e){} };
+const ctlCv = $('#ctpCv'), ctlRuler = $('#ctpRuler');
+
+/* ---------- eje de tiempo: vídeo (con zoom) o, en directo sin vídeo, minuto de juego ---------- */
+function ctlAxis(){
+  const m = matchById(curMatch); if (!m) return null;
+  if (ready() && video.duration){ const V = tlView(); return {live: false, v0: V.v0, span: V.span, d: V.d, zoomed: V.zoomed, map: t => t, m}; }
+  if (m.live && liveMode()){
+    // en directo los cortes son «virtuales»: la 2.ª parte empieza en PART_GAP; se dibujan una parte detrás de otra
+    const half = (m.half || 45)*60, cs = state.clips.filter(c => c.matchId === m.id);
+    const L1 = Math.max(half, ...cs.filter(c => c.start < PART_GAP).map(c => c.end + 30));
+    const L2 = Math.max(half, ...cs.filter(c => c.start >= PART_GAP).map(c => c.end - PART_GAP + 30));
+    return {live: true, v0: 0, span: L1 + L2, d: L1 + L2, zoomed: false, L1, half: m.half || 45, map: t => t >= PART_GAP ? L1 + (t - PART_GAP) : t, m};
+  }
+  return null;
+}
+const ctlX = (A, t) => (A.map(t) - A.v0)/A.span*ctl.w;
+const ctlT = (A, x) => A.v0 + x/ctl.w*A.span;          // solo con vídeo (en directo no se arrastra)
+
+/* ---------- datos: filas, subfilas para solapes ---------- */
+function ctlBuild(){
+  const A = ctl.axis = ctlAxis();
+  const all = A ? state.clips.filter(c => c.matchId === curMatch && (A.live ? isVirtual(c) : !isVirtual(c))) : [];
+  ctl.rows = state.cats.map((cat, i) => {
+    const cs = all.filter(c => c.cat === cat.id).sort((a, b) => a.start - b.start), ends = [];
+    const lanes = cs.map(c => { let l = ends.findIndex(e => e <= c.start + .001); if (l < 0){ l = ends.length; ends.push(0); } ends[l] = c.end; return l; });
+    return {cat, i, clips: cs, lane: new Map(cs.map((c, k) => [c.id, lanes[k]])), nl: Math.max(1, ends.length)};
+  }).filter(r => !ctl.hideEmpty || r.clips.length);
+  let y = 0; ctl.rows.forEach(r => { r.y = y; r.h = r.nl > 1 ? 4 + r.nl*11 : CTL_ROW; y += r.h; });
+  ctl.total = y;
+  ctl.fset = new Set(filtered().map(c => c.id));
+  ctl.row = clamp(ctl.row, 0, Math.max(0, ctl.rows.length - 1));
+}
+/* ---------- render completo (lo llama renderTimeline: cortes, zoom, filtros, partido) ---------- */
+function ctlRender(){
+  if (!ctl || !$('#ctp')) return;
+  const box = $('#ctp'), has = !!curMatch;
+  box.hidden = !has; if (!has) return;
+  box.classList.toggle('folded', ctl.fold);
+  $('#ctpFold').setAttribute('aria-expanded', String(!ctl.fold)); $('#ctpFold').textContent = (ctl.fold ? '▸' : '▾') + ' Cortes por etiqueta';
+  $('#ctpEmpty').checked = ctl.hideEmpty;
+  ctlBuild();
+  const A = ctl.axis, n = ctl.rows.reduce((s, r) => s + r.clips.length, 0);
+  $('#ctpCount').textContent = !A ? 'Añade el vídeo del partido para ver sus cortes' : `${n} corte${n === 1 ? '' : 's'}${A.live ? ' · en directo (minuto de juego)' : ''}`;
+  $('#ctpIn').disabled = !A || A.live || A.span <= Math.min(30, A.d) + .5; $('#ctpOut').disabled = !A || A.live || !A.zoomed;
+  if (ctl.fold) return;
+  // nombres de las filas (HTML: lectores de pantalla y botón ▶ real)
+  const names = $('#ctpNames');
+  names.innerHTML = ctl.rows.map((r, k) => `<div class="ctp-row ${k === ctl.row ? 'on' : ''}" style="--c:${esc(r.cat.color)};height:${r.h}px" role="group" aria-label="${esc(r.cat.name)}: ${r.clips.length} corte${r.clips.length === 1 ? '' : 's'}" data-k="${k}">
+      <span class="ctp-ini" aria-hidden="true">${esc((r.cat.name || '?').trim().charAt(0).toUpperCase())}</span><span class="ctp-nm" title="${esc(r.cat.name)}">${esc(r.cat.name)}</span><span class="ctp-n">${r.clips.length}</span>
+      <button type="button" class="ctp-play" data-k="${k}" ${r.clips.length ? '' : 'disabled'} aria-label="Reproducir los ${r.clips.length} cortes de ${esc(r.cat.name)}" title="Reproducir todos los cortes de esta fila">▶</button></div>`).join('')
+    || '<div class="ctp-empty">No hay etiquetas con cortes en este partido</div>';
+  names.querySelectorAll('.ctp-play').forEach(b => b.onclick = e => { e.stopPropagation(); ctlPlayRow(+b.dataset.k); });
+  names.querySelectorAll('.ctp-row').forEach(el => el.onclick = () => {
+    const k = +el.dataset.k; ctl.row = k; ctlDraw();
+    if (el.closest('.ctp.narrow')) ctlPlayRow(k);      // en el móvil la columna es solo la inicial: tocarla reproduce la fila
+  });
+  ctlLayout(); ctlDraw();
+}
+function ctlLayout(){
+  const area = $('#ctpArea'), body = $('#ctpBody'), narrow = area.clientWidth < 560;
+  $('#ctp').classList.toggle('narrow', narrow);
+  ctl.nameW = narrow ? 34 : 170;
+  $('#ctp').style.setProperty('--ctp-name', ctl.nameW + 'px');
+  const auto = Math.min(Math.max(ctl.total, CTL_ROW*2) + 2, 220);
+  body.style.height = (ctl.hBody || auto) + 'px';
+  ctl.w = Math.max(10, area.clientWidth - ctl.nameW - (body.offsetWidth - body.clientWidth));
+  ctl.h = Math.max(ctl.total, 10);
+}
+const ctlCss = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#888';
+function ctlPrep(cv, w, h){
+  const dpr = window.devicePixelRatio || 1, W = Math.round(w*dpr), H = Math.round(h*dpr);
+  if (cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h); return ctx;
+}
+let ctlStripe = null;
+function ctlPattern(ctx){
+  if (ctlStripe) return ctx.createPattern(ctlStripe, 'repeat');
+  const p = document.createElement('canvas'); p.width = p.height = 8; const c = p.getContext('2d');
+  c.strokeStyle = 'rgba(0,0,0,.42)'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-2, 10); c.lineTo(10, -2); c.moveTo(-2, 2); c.lineTo(2, -2); c.moveTo(6, 10); c.lineTo(10, 6); c.stroke();
+  ctlStripe = p; return ctx.createPattern(p, 'repeat');
+}
+/* rectángulo de un corte en el canvas */
+function ctlRect(r, c){
+  const A = ctl.axis, x0 = ctlX(A, c.start), x1 = ctlX(A, c.end), w = Math.max(4, x1 - x0);
+  const lane = r.lane.get(c.id), lh = (r.h - 4)/r.nl;
+  return {x: x1 - x0 < 4 ? x0 - (4 - (x1 - x0))/2 : x0, y: r.y + 2 + lane*lh, w, h: Math.max(3, lh - (r.nl > 1 ? 1 : 0))};
+}
+function ctlDraw(){
+  if (!ctl || ctl.fold || !$('#ctp') || $('#ctp').hidden) return;
+  const A = ctl.axis, ctx = ctlPrep(ctlCv, ctl.w, ctl.h), fg = ctlCss('--fg'), muted = ctlCss('--muted'), line = ctlCss('--line');
+  // fondo de filas
+  ctl.rows.forEach((r, k) => {
+    ctx.fillStyle = k === ctl.row ? 'rgba(127,127,127,.12)' : k % 2 ? 'rgba(127,127,127,.04)' : 'transparent';
+    ctx.fillRect(0, r.y, ctl.w, r.h);
+    ctx.fillStyle = line; ctx.fillRect(0, r.y + r.h - 1, ctl.w, 1);
+  });
+  if (A){
+    // partes del partido
+    const m = A.m, mark = (t, dash) => { if (t == null) return; const x = ctlX(A, t); if (x < -1 || x > ctl.w + 1) return; ctx.save(); ctx.strokeStyle = muted; ctx.globalAlpha = .55; ctx.setLineDash(dash ? [3, 3] : []); ctx.beginPath(); ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, ctl.h); ctx.stroke(); ctx.restore(); };
+    const shade = (a, b) => { if (a == null || b == null || b <= a) return; const x0 = ctlX(A, a), x1 = ctlX(A, b); ctx.fillStyle = 'rgba(127,127,127,.10)'; ctx.fillRect(x0, 0, x1 - x0, ctl.h); };
+    if (A.live) mark(PART_GAP, false);
+    else { shade(0, m.h1); shade(m.e1, m.h2); shade(m.e2, A.d); [m.h1, m.h2].forEach(t => mark(t, false)); [m.e1, m.e2].forEach(t => mark(t, true)); }
+    // cortes
+    const pat = ctlPattern(ctx);
+    ctl.rows.forEach(r => r.clips.forEach(c => {
+      const b = ctlRect(r, c); if (b.x > ctl.w || b.x + b.w < 0) return;
+      const dim = !ctl.fset.has(c.id), sel = c.id === selClip, vt = A.live;
+      ctx.save(); ctx.globalAlpha = dim ? .28 : 1;
+      ctx.fillStyle = r.cat.color; ctx.globalAlpha *= vt ? .55 : (c.team === 'Rival' ? .72 : 1);
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.globalAlpha = dim ? .28 : 1;
+      if (c.team === 'Rival'){ ctx.fillStyle = pat; ctx.fillRect(b.x, b.y, b.w, b.h); }
+      if (vt){ ctx.setLineDash([3, 2]); ctx.strokeStyle = fg; ctx.lineWidth = 1; ctx.strokeRect(b.x + .5, b.y + .5, b.w - 1, b.h - 1); ctx.setLineDash([]); }
+      // dibujos: punto blanco en su instante
+      (c.drawings || []).forEach(d => { if (d.t < c.start || d.t > c.end) return; const x = ctlX(A, d.t); ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, b.y + Math.min(4, b.h/2), 2.4, 0, Math.PI*2); ctx.fill(); ctx.stroke(); });
+      // resultado
+      if (c.result && b.w >= 13 && b.h >= 9){ ctx.font = `800 ${Math.min(11, b.h - 2)}px Manrope, system-ui, sans-serif`; ctx.textBaseline = 'middle'; ctx.textAlign = 'right'; ctx.fillStyle = inkFor(r.cat.color); ctx.fillText(c.result === 'ok' ? '✓' : '✗', b.x + b.w - 2, b.y + b.h/2 + .5); ctx.textAlign = 'start'; }
+      if (sel){ ctx.globalAlpha = 1; ctx.strokeStyle = fg; ctx.lineWidth = 2; ctx.strokeRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2); ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 1; ctx.strokeRect(b.x - 2.5, b.y - 2.5, b.w + 5, b.h + 5); }
+      ctx.restore();
+    }));
+  }
+  ctlDrawRuler(); ctlHead(true);
+  const r = ctl.rows[ctl.row];
+  $('#ctpNames').querySelectorAll('.ctp-row').forEach(el => el.classList.toggle('on', +el.dataset.k === ctl.row));
+  ctlCv.setAttribute('aria-label', r ? `Cortes de ${r.cat.name} (${r.clips.length}). Flechas izquierda y derecha: corte anterior o siguiente; arriba y abajo: cambiar de etiqueta; Intro: reproducir; Supr: borrar` : 'Línea de tiempo de cortes');
+}
+function ctlDrawRuler(){
+  const A = ctl.axis, w = ctl.w, h = 26, ctx = ctlPrep(ctlRuler, w, h), muted = ctlCss('--muted'), fg = ctlCss('--fg');
+  ctx.fillStyle = ctlCss('--line'); ctx.fillRect(0, h - 1, w, 1);
+  if (!A) return;
+  ctx.font = '500 10px "JetBrains Mono", ui-monospace, monospace'; ctx.textBaseline = 'top';
+  if (A.live){
+    // minutos de juego: 1.ª parte desde 0' y 2.ª desde el minuto «half»
+    const step = A.span/60 > 70 ? 10 : 5;
+    for (let p = 0; p < 2; p++){
+      const base = p ? A.L1 : 0, len = p ? A.span - A.L1 : A.L1, m0 = p ? A.half : 0;
+      for (let mn = 0; mn*60 <= len; mn += step){ const x = (base + mn*60)/A.span*w; ctx.fillStyle = muted; ctx.fillRect(x, h - 6, 1, 5); if (x < w - 20) ctx.fillText(`${m0 + mn}'`, x + 2, 3); }
+    }
+    ctx.fillStyle = fg; ctx.font = '700 10px Manrope, system-ui, sans-serif'; ctx.fillText('2.ª', A.L1/A.span*w + 2, 14);
+    return;
+  }
+  const sp = A.span, step = sp > 3600 ? 600 : sp > 1200 ? 300 : sp > 300 ? 60 : sp > 150 ? 30 : sp > 60 ? 10 : 5;
+  for (let t = Math.ceil(A.v0/step)*step; t <= A.v0 + sp; t += step){
+    const x = (t - A.v0)/sp*w; ctx.fillStyle = muted; ctx.fillRect(x, h - 6, 1, 5);
+    if (x > w - 34) continue;
+    ctx.fillText(fmtClock(t), x + 2, 2);
+    const gm = gameMinute(curMatch, t); if (gm && gm.min){ ctx.fillStyle = fg; ctx.fillText(`${gm.txt}'`, x + 2, 13); }
+  }
+  // partes
+  const m = A.m; ctx.font = '700 9px Manrope, system-ui, sans-serif';
+  [[m.h1, '▶1.ª'], [m.e1, 'fin 1.ª'], [m.h2, '▶2.ª'], [m.e2, 'final']].forEach(([t, l]) => { if (t == null) return; const x = (t - A.v0)/sp*w; if (x < 0 || x > w) return; ctx.fillStyle = ctlCss('--accent-hi'); ctx.fillRect(x, 0, 1.5, h); if (x < w - 30) ctx.fillText(l, x + 3, 14); });
+}
+/* cabezal: solo se mueve un elemento (no se redibuja todo) */
+function ctlHead(force){
+  if (!ctl || ctl.fold || !ctl.axis || ctl.axis.live) { const hd = $('#ctpHead'); if (hd && !hd.hidden) hd.hidden = true; return; }
+  const A = ctl.axis, x = ctlX(A, video.currentTime);
+  if (!force && ctl.headX === Math.round(x)) return;
+  ctl.headX = Math.round(x);
+  const hd = $('#ctpHead'), vis = x >= -1 && x <= ctl.w + 1;
+  hd.hidden = !vis; if (vis) hd.style.transform = `translateX(${ctl.nameW + x}px)`;
+}
+/* ---------- búsqueda bajo el puntero ---------- */
+function ctlPos(e){ const r = ctlCv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+function ctlHit(x, y, touch){
+  const k = ctl.rows.findIndex(r => y >= r.y && y < r.y + r.h); if (k < 0) return {k: -1};
+  const r = ctl.rows[k], tol = touch ? CTL_EDGE_TOUCH : CTL_EDGE_MOUSE;
+  for (let i = r.clips.length - 1; i >= 0; i--){
+    const c = r.clips[i], b = ctlRect(r, c);
+    if (y < b.y - 1 || y > b.y + b.h + 1 || x < b.x - (b.w < 14 ? 3 : tol/2) || x > b.x + b.w + (b.w < 14 ? 3 : tol/2)) continue;
+    let part = 'body';
+    if (b.w >= 14){ if (x <= b.x + tol/2 + 1) part = 'start'; else if (x >= b.x + b.w - tol/2 - 1) part = 'end'; }
+    return {k, c, part};
+  }
+  return {k};
+}
+const ctlBlocked = () => exporting || board.on;
+const ctlTip = $('#ctpTip');
+function ctlShowTip(e, html){
+  const box = $('#ctp').getBoundingClientRect();
+  ctlTip.innerHTML = html; ctlTip.hidden = false;
+  const tw = ctlTip.offsetWidth, th = ctlTip.offsetHeight;
+  let x = e.clientX - box.left + 12, y = e.clientY - box.top + 14;
+  if (x + tw > box.width - 4) x = Math.max(4, e.clientX - box.left - tw - 12);
+  if (y + th > box.height - 4) y = Math.max(4, e.clientY - box.top - th - 10);
+  ctlTip.style.transform = `translate(${x}px, ${y}px)`;
+}
+const ctlHideTip = () => { ctlTip.hidden = true; };
+function ctlTipHTML(c){
+  const cat = catById(c.cat), dur = (c.end - c.start).toFixed(1).replace('.', ',');
+  const when = isVirtual(c) ? (minuteText(c) || '') : `${fmtShort(c.start)} – ${fmtShort(c.end)}${minuteText(c) ? ' · ' + minuteText(c) : ''}`;
+  return `<b style="--c:${esc(cat.color)}">${esc(cat.name)}</b><span>${esc(when)} · ${dur} s</span><span>${esc(teamName(c))}${c.result === 'ok' ? ' · ✓ éxito' : c.result === 'ko' ? ' · ✗ fallo' : ''}${(c.players || []).length ? ' · ' + esc(playersText(c.players)) : ''}</span>${c.note ? `<i>${esc(c.note)}</i>` : ''}`;
+}
+/* ---------- acciones ---------- */
+function ctlSelect(c, seekTo){
+  selClip = c.id; markSelected();
+  const k = ctl.rows.findIndex(r => r.cat.id === c.cat); if (k >= 0) ctl.row = k;
+  if (seekTo && !isVirtual(c) && ready()){ cancelFreeze(); playback = null; markPlaying(); seek(c.start); }
+  ctlDraw(); ctlSay(c);
+}
+function ctlSay(c){
+  const r = ctl.rows[ctl.row], i = r ? r.clips.indexOf(c) : -1;
+  $('#ctpLive').textContent = c ? `${catById(c.cat).name}, corte ${i + 1} de ${r ? r.clips.length : 1}, ${isVirtual(c) ? (minuteText(c) || '') : `${fmtShort(c.start)} a ${fmtShort(c.end)}`}` : '';
+}
+function ctlPlayRow(k){
+  const r = ctl.rows[k]; if (!r || !r.clips.length || ctlBlocked()) return;
+  ctl.row = k; ctlDraw();
+  playQueue(r.clips.slice());
+  if (r.clips.some(c => !isVirtual(c))) flash(`▶ ${r.cat.name}: ${r.clips.length} corte${r.clips.length === 1 ? '' : 's'} seguidos`);
+}
+function ctlAddToList(c){
+  const p = curPL();
+  if (p.ids.includes(c.id)){ flash(`Ya está en «${p.name}»`); return; }
+  pushUndo('añadir a la lista'); p.ids.push(c.id); save(); renderAll(); flash(`Añadido a «${p.name}»`);
+}
+function ctlSplitAt(c, t){
+  if (isVirtual(c)){ flash('Esta acción en directo aún no tiene vídeo'); return; }
+  selClip = c.id; markSelected(); cancelFreeze(); playback = null;
+  if (t != null && t > c.start + .2 && t < c.end - .2) video.currentTime = +t.toFixed(2);
+  else if (!(video.currentTime > c.start + .2 && video.currentTime < c.end - .2)) video.currentTime = +((c.start + c.end)/2).toFixed(2);
+  splitClip();
+}
+function ctlDuplicate(c){
+  pushUndo('duplicar corte');
+  const b = JSON.parse(JSON.stringify(c)); b.id = uid();
+  state.clips.splice(state.clips.indexOf(c) + 1, 0, b);
+  selClip = b.id; save(); renderAll(); flash('Corte duplicado');
+}
+async function ctlDelete(c){
+  const cat = catById(c.cat);
+  const r = await ask({title: 'Borrar corte', text: `Se borrará el corte de <b>${esc(cat.name)}</b> (${esc(isVirtual(c) ? (minuteText(c) || '') : `${fmtShort(c.start)}–${fmtShort(c.end)}`)}) y se quitará de las listas. Puedes recuperarlo con Ctrl+Z.`, buttons: [{label: 'Cancelar', value: null}, {label: 'Borrar corte', value: 'yes', kind: 'danger'}]});
+  if (r.value !== 'yes') return;
+  pushUndo('borrar corte');
+  state.clips = state.clips.filter(x => x !== c); state.playlists.forEach(p => p.ids = p.ids.filter(id => id !== c.id));
+  if (selClip === c.id) selClip = null;
+  save(); renderAll(); flash('Corte borrado'); ctlCv.focus();
+}
+/* ---------- menú (clic derecho o pulsación larga) ---------- */
+const ctlMenu = $('#ctpMenu');
+function ctlOpenMenu(e, c, t){
+  ctlHideTip();
+  ctl.menuClip = c; ctl.menuT = t;
+  const vt = isVirtual(c);
+  ctlMenu.querySelector('[data-a=split]').disabled = vt || !(t != null && t > c.start + .2 && t < c.end - .2);
+  ctlMenu.querySelector('[data-a=play]').disabled = vt;
+  ctlMenu.hidden = false;
+  const box = $('#ctp').getBoundingClientRect(), mw = ctlMenu.offsetWidth, mh = ctlMenu.offsetHeight;
+  let x = e.clientX - box.left, y = e.clientY - box.top;
+  if (x + mw > box.width - 4) x = Math.max(4, box.width - mw - 4);
+  if (y + mh > box.height + 120) y = Math.max(4, y - mh);
+  ctlMenu.style.transform = `translate(${x}px, ${y}px)`;
+  ctlMenu.querySelector('button:not(:disabled)').focus();
+}
+function ctlCloseMenu(){ if (ctlMenu.hidden) return; ctlMenu.hidden = true; ctl.menuClip = null; }
+ctlMenu.querySelectorAll('button').forEach(b => b.onclick = () => {
+  const c = ctl.menuClip, t = ctl.menuT, a = b.dataset.a; ctlCloseMenu(); if (!c) return;
+  if (a === 'play') playQueue([c]);
+  else if (a === 'list') ctlAddToList(c);
+  else if (a === 'split') ctlSplitAt(c, t);
+  else if (a === 'dup') ctlDuplicate(c);
+  else if (a === 'del') ctlDelete(c);
+});
+ctlMenu.addEventListener('keydown', e => {
+  e.stopPropagation();
+  const bs = [...ctlMenu.querySelectorAll('button:not(:disabled)')], i = bs.indexOf(document.activeElement);
+  if (e.key === 'Escape'){ e.preventDefault(); ctlCloseMenu(); ctlCv.focus(); }
+  else if (e.key === 'ArrowDown'){ e.preventDefault(); bs[(i + 1) % bs.length].focus(); }
+  else if (e.key === 'ArrowUp'){ e.preventDefault(); bs[(i - 1 + bs.length) % bs.length].focus(); }
+});
+document.addEventListener('pointerdown', e => { if (!ctlMenu.hidden && !ctlMenu.contains(e.target)) ctlCloseMenu(); }, true);
+
+/* ---------- ratón y dedo ---------- */
+ctlCv.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if (ctlBlocked() || !ctl.axis) return;
+  const [x, y] = ctlPos(e), h = ctlHit(x, y, false);
+  if (h.c){ ctlSelect(h.c, false); ctlOpenMenu(e, h.c, ctl.axis.live ? null : ctlT(ctl.axis, x)); }
+});
+ctlCv.addEventListener('pointerdown', e => {
+  if (e.button > 0 || ctlBlocked() || !ctl.axis) return;
+  ctlCloseMenu();
+  const touch = e.pointerType !== 'mouse', [x, y] = ctlPos(e), h = ctlHit(x, y, touch);
+  if (h.k >= 0 && h.k !== ctl.row){ ctl.row = h.k; }
+  ctl.press = {id: e.pointerId, x0: e.clientX, y0: e.clientY, x, hit: h, moved: false, touch, t0: performance.now(), v0: ctl.axis.v0,
+    orig: h.c ? {start: h.c.start, end: h.c.end} : null};
+  if (touch && h.c) ctl.press.lp = setTimeout(() => { const p = ctl.press; if (p && !p.moved){ ctl.press = null; ctlSelect(h.c, false); ctlOpenMenu(e, h.c, ctl.axis.live ? null : ctlT(ctl.axis, x)); try{ navigator.vibrate && navigator.vibrate(15); }catch(er){} } }, 550);
+  try{ ctlCv.setPointerCapture(e.pointerId); }catch(er){}
+});
+ctlCv.addEventListener('pointermove', e => {
+  const A = ctl.axis; if (!A) return;
+  const [x, y] = ctlPos(e), p = ctl.press;
+  if (!p){
+    // ratón sin pulsar: tooltip y cursor
+    if (e.pointerType !== 'mouse' || ctlBlocked()) return;
+    const h = ctlHit(x, y, false);
+    ctlCv.style.cursor = !h.c ? (A.zoomed ? 'grab' : 'pointer') : A.live ? 'pointer' : h.part === 'body' ? 'move' : 'ew-resize';
+    if (h.c) ctlShowTip(e, ctlTipHTML(h.c)); else ctlHideTip();
+    return;
+  }
+  const dx = e.clientX - p.x0, dy = e.clientY - p.y0;
+  if (!p.moved && Math.hypot(dx, dy) < (p.touch ? 8 : 3)) return;
+  if (!p.moved){ p.moved = true; clearTimeout(p.lp); }
+  const c = p.hit.c;
+  if (c && !A.live && !isVirtual(c) && ready()){
+    // arrastrar bordes o el corte entero (con el historial de deshacer)
+    if (!p.undo){ pushUndo(p.hit.part === 'body' ? 'mover corte' : 'recortar', 'tl:' + c.id + ':' + p.t0); p.undo = true; selClip = c.id; markSelected(); }
+    const d = A.d || Infinity, dt = dx/ctl.w*A.span, o = p.orig;
+    if (p.hit.part === 'start') c.start = r2(clamp(o.start + dt, 0, c.end - .2));
+    else if (p.hit.part === 'end') c.end = r2(clamp(o.end + dt, c.start + .2, d));
+    else { const len = o.end - o.start, s = clamp(o.start + dt, 0, Math.max(0, d - len)); c.start = r2(s); c.end = r2(s + len); }
+    ctlDraw();
+    const lbl = p.hit.part === 'start' ? `Inicio ${fmtShort(c.start)}` : p.hit.part === 'end' ? `Fin ${fmtShort(c.end)}` : `${fmtShort(c.start)} – ${fmtShort(c.end)}`;
+    ctlShowTip(e, `<b style="--c:${esc(catById(c.cat).color)}">${lbl}</b><span>${(c.end - c.start).toFixed(1).replace('.', ',')} s</span>`);
+    if (video.paused){ cancelFreeze(); video.currentTime = p.hit.part === 'end' ? c.end : c.start; }
+    return;
+  }
+  if (!c && A.zoomed && Math.abs(dx) > Math.abs(dy)){
+    // con zoom, arrastrar en un hueco desplaza la vista
+    tlv.v0 = clamp(p.v0 - dx/ctl.w*A.span, 0, A.d - A.span); renderTimeline();
+  }
+});
+function ctlUp(e){
+  const p = ctl.press; if (!p || (e && e.pointerId !== p.id)) return;
+  ctl.press = null; clearTimeout(p.lp); ctlHideTip();
+  const A = ctl.axis; if (!A) return;
+  const c = p.hit.c;
+  if (p.moved){
+    if (p.undo){ save(); renderAll(); flash(`${catById(c.cat).name}: ${fmtShort(c.start)}–${fmtShort(c.end)} · ${(c.end - c.start).toFixed(1).replace('.', ',')} s`); }
+    return;
+  }
+  if (e && e.type === 'pointercancel') return;
+  if (c){
+    // doble clic / doble toque: reproducir
+    const now = performance.now(), dbl = ctl.lastTap && ctl.lastTap.id === c.id && now - ctl.lastTap.at < 350;
+    ctl.lastTap = {id: c.id, at: now};
+    if (dbl && !isVirtual(c)){ ctl.lastTap = null; playQueue([c]); ctlDraw(); return; }
+    ctlSelect(c, true);
+    if (isVirtual(c)) flash(`${catById(c.cat).name} · ${minuteText(c)} · se podrá ver al sincronizar el vídeo`);
+  } else if (!A.live && ready()){
+    cancelFreeze(); playback = null; markPlaying(); seek(ctlT(A, p.x)); ctlDraw();
+  } else ctlDraw();
+}
+ctlCv.addEventListener('pointerup', ctlUp);
+ctlCv.addEventListener('pointercancel', ctlUp);
+ctlCv.addEventListener('pointerleave', e => { if (!ctl.press) ctlHideTip(); });
+/* zoom: Ctrl + rueda, rueda horizontal / Mayús + rueda para desplazarse, pellizco */
+ctlCv.addEventListener('wheel', e => {
+  const A = ctl.axis; if (!A || A.live || !ready() || board.on) return;
+  const [x] = ctlPos(e), frac = clamp(x/ctl.w, 0, 1);
+  if (e.ctrlKey || e.metaKey){ e.preventDefault(); setZoom(A.span*Math.exp(clamp(e.deltaY, -100, 100)*.01), A.v0 + frac*A.span, frac); }
+  else if (A.zoomed && (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey)){ e.preventDefault(); const dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; tlv.v0 = clamp(A.v0 + dd/ctl.w*A.span, 0, A.d - A.span); renderTimeline(); }
+}, {passive: false});
+let ctlPinch = null;
+ctlCv.addEventListener('touchstart', e => {
+  const A = ctl.axis; if (e.touches.length !== 2 || !A || A.live || !ready()) return;
+  const r = ctlCv.getBoundingClientRect(), [a, b] = e.touches, frac = clamp(((a.clientX + b.clientX)/2 - r.left)/ctl.w, 0, 1);
+  ctlPinch = {d0: Math.abs(a.clientX - b.clientX) || 1, span: A.span, anchor: A.v0 + frac*A.span, frac};
+  if (ctl.press){ clearTimeout(ctl.press.lp); ctl.press = null; }
+}, {passive: true});
+ctlCv.addEventListener('touchmove', e => {
+  if (!ctlPinch || e.touches.length !== 2) return;
+  e.preventDefault(); const [a, b] = e.touches;
+  setZoom(ctlPinch.span*ctlPinch.d0/(Math.abs(a.clientX - b.clientX) || 1), ctlPinch.anchor, ctlPinch.frac);
+}, {passive: false});
+ctlCv.addEventListener('touchend', e => { if (e.touches.length < 2) ctlPinch = null; });
+/* ---------- teclado (con el panel enfocado) ---------- */
+ctlCv.addEventListener('keydown', e => {
+  if (ctlBlocked() || !ctl.axis || e.ctrlKey || e.metaKey || e.altKey) return;
+  const r = ctl.rows[ctl.row]; let handled = true;
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+    if (!ctl.rows.length) return;
+    ctl.row = clamp(ctl.row + (e.key === 'ArrowDown' ? 1 : -1), 0, ctl.rows.length - 1);
+    const nr = ctl.rows[ctl.row]; ctlDraw();
+    $('#ctpLive').textContent = `${nr.cat.name}: ${nr.clips.length} corte${nr.clips.length === 1 ? '' : 's'}`;
+    const sc = $('#ctpBody'); if (nr.y < sc.scrollTop) sc.scrollTop = nr.y; else if (nr.y + nr.h > sc.scrollTop + sc.clientHeight) sc.scrollTop = nr.y + nr.h - sc.clientHeight;
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+    if (!r || !r.clips.length) return;
+    const cur = r.clips.findIndex(c => c.id === selClip), t = ctl.axis.live ? null : video.currentTime;
+    let i;
+    if (cur >= 0) i = clamp(cur + (e.key === 'ArrowRight' ? 1 : -1), 0, r.clips.length - 1);
+    else if (e.key === 'ArrowRight'){ i = t == null ? 0 : r.clips.findIndex(c => c.start > t + .05); if (i < 0) i = r.clips.length - 1; }
+    else { i = t == null ? r.clips.length - 1 : r.clips.map(c => c.start < t - .05).lastIndexOf(true); if (i < 0) i = 0; }
+    ctlSelect(r.clips[i], true);
+  } else if (e.key === 'Enter'){
+    if (e.shiftKey){ ctlPlayRow(ctl.row); }
+    else { const c = selClip && clipById(selClip); if (c && c.matchId === curMatch) playQueue([c]); else if (r && r.clips.length) ctlPlayRow(ctl.row); }
+  } else if (e.key === 'Delete' || e.key === 'Backspace'){
+    const c = selClip && clipById(selClip); if (c && c.matchId === curMatch) ctlDelete(c);
+  } else if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')){
+    const c = selClip && clipById(selClip), row = ctl.rows.find(x => c && x.cat.id === c.cat);
+    if (c && row){ const b = ctlRect(row, c), cr = ctlCv.getBoundingClientRect(); ctlOpenMenu({clientX: cr.left + b.x + 4, clientY: cr.top + b.y + b.h}, c, null); }
+  } else handled = false;
+  if (handled){ e.preventDefault(); e.stopPropagation(); }
+});
+ctlCv.addEventListener('focus', () => { const c = selClip && clipById(selClip); if (c) ctlSay(c); });
+/* ---------- cabecera del panel: plegar, filas vacías, zoom, altura ---------- */
+$('#ctpFold').onclick = () => { ctl.fold = !ctl.fold; ctlSet(CTL_KEY_FOLD, ctl.fold ? '1' : '0'); ctlRender(); };
+$('#ctpEmpty').onchange = e => { ctl.hideEmpty = e.target.checked; ctlSet(CTL_KEY_EMPTY, ctl.hideEmpty ? '1' : '0'); ctlRender(); };
+$('#ctpIn').onclick = () => zoomBy(.5);
+$('#ctpOut').onclick = () => zoomBy(2);
+(() => {
+  const hdl = $('#ctpResize'); let st = null;
+  hdl.addEventListener('pointerdown', e => { if (ctl.fold) return; e.preventDefault(); st = {y: e.clientY, h: $('#ctpBody').offsetHeight}; hdl.setPointerCapture(e.pointerId); hdl.classList.add('on'); });
+  hdl.addEventListener('pointermove', e => { if (!st) return; ctl.hBody = clamp(Math.round(st.h - (e.clientY - st.y)), 60, 700); $('#ctpBody').style.height = ctl.hBody + 'px'; ctlLayout(); ctlDraw(); });
+  const end = () => { if (!st) return; st = null; hdl.classList.remove('on'); ctlSet(CTL_KEY_H, String(ctl.hBody)); };
+  hdl.addEventListener('pointerup', end); hdl.addEventListener('pointercancel', end);
+  hdl.addEventListener('dblclick', () => { ctl.hBody = null; try{ localStorage.removeItem(CTL_KEY_H); }catch(e){} ctlRender(); });
+  hdl.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault(); e.stopPropagation();
+    ctl.hBody = clamp(($('#ctpBody').offsetHeight) + (e.key === 'ArrowUp' ? 22 : -22), 60, 700); ctlSet(CTL_KEY_H, String(ctl.hBody)); ctlLayout(); ctlDraw();
+  });
+})();
+if (window.ResizeObserver){ let w0 = 0; new ResizeObserver(() => { const w = $('#ctpArea').clientWidth; if (w !== w0){ w0 = w; ctlRender(); } }).observe($('#ctpArea')); }
+else window.addEventListener('resize', () => ctlRender());
 
 /* =========================================================
    INICIO
