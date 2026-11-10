@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Táctica Lab · Videoanálisis</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0e0d10">
+<meta name="description" content="Videoanálisis de fútbol y fútbol sala: registro de acciones, cortes, pizarra y presentación. Gratis y sin servidor.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Táctica Lab">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Oswald:wght@500;600;700&family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
@@ -900,6 +909,14 @@ body.tac-open{overflow:hidden}
 }
 /* disposición «todo debajo»: el panel va después de la franja de etiquetas (vídeo + controles + etiquetas siguen a la vista) */
 @media (min-width:1061px){ body.lay-below #ctp{order:2;margin-top:.9rem} }
+/* v3.11 · instalar como app */
+.ver.off{background:color-mix(in srgb,#f5a623 22%,transparent);color:#f5c26b;border-color:color-mix(in srgb,#f5a623 55%,transparent)}
+.ver.off[hidden]{display:none}
+.pwa-box{margin:.8rem 0 .2rem;padding:.6rem .75rem;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);font-size:.86rem}
+.pwa-box:empty{display:none}
+.pwa-box p{margin:.15rem 0}
+.pwa-box .hint{font-size:.78rem;color:var(--muted)}
+.pwa-box button{margin-top:.45rem}
 </style>
 </head>
 <body>
@@ -909,7 +926,7 @@ body.tac-open{overflow:hidden}
     <div class="clubtxt"><span class="unitext" id="uniText">Universidad Europea</span><small class="season" id="seasonH" hidden></small></div>
   </div>
   <div class="vsep"></div>
-  <div class="brand"><b>Táctica <span>Lab</span></b><small>Videoanálisis · Modelo de juego <span class="ver" id="verPill" title="Versión de la app">v2.0</span></small></div>
+  <div class="brand"><b>Táctica <span>Lab</span></b><small>Videoanálisis · Modelo de juego <span class="ver" id="verPill" title="Versión de la app">v2.0</span> <span class="ver off" id="offPill" hidden title="Sin conexión a internet: la app funciona igual con los vídeos y datos de este dispositivo">Sin conexión</span></small></div>
   <div class="vname" id="vname">Ningún partido abierto</div>
   <div class="hbtns">
     <button id="btnOpen" class="primary">+ Añadir partidos</button>
@@ -1198,6 +1215,7 @@ body.tac-open{overflow:hidden}
   </div>
   <input type="file" id="fileCrest" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" hidden>
   <input type="file" id="fileCfg" accept=".json,application/json" hidden>
+  <div class="pwa-box" aria-live="polite"></div>
   <div class="drow">
     <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button id="cfgExport" title="Guarda nombre, escudo, colores, tipografía y plantilla para compartirlos con el cuerpo técnico">Exportar configuración</button><button id="cfgImport">Importar configuración</button></div>
   </div>
@@ -1260,6 +1278,7 @@ body.tac-open{overflow:hidden}
 <dialog id="dlgNews" aria-labelledby="newsTitle">
   <h3 id="newsTitle" style="font-family:var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0 0 .6rem">Novedades de Táctica Lab</h3>
   <div id="newsBody"></div>
+  <div class="pwa-box" aria-live="polite"></div>
   <div class="drow"><span class="hint">Estás usando la versión <b id="newsVer"></b></span><div><button id="newsDone" class="primary">Entendido</button></div></div>
 </dialog>
 
@@ -1396,8 +1415,13 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.10';
+const APP_VERSION = '3.11';
 const CHANGELOG = [
+  {v:'3.11', date:'Noviembre 2026', items:[
+    '<b>Instalar como app:</b> Táctica Lab se puede instalar en el ordenador, la tablet o el móvil y abrirse desde su icono, en su propia ventana. En Chrome y Edge pulsa «📲 Instalar app» (en ⚙ Configurar o aquí); en iPhone y iPad, en Safari: Compartir → «Añadir a pantalla de inicio».',
+    '<b>Sin conexión:</b> una vez abierta con internet, funciona sin conexión con tus vídeos y tus datos (también las fuentes y la exportación a Excel). Con conexión se actualiza sola al abrirla. Si no hay internet verás «Sin conexión» junto a la versión.',
+    'En el iPhone la app instalada guarda sus datos aparte de Safari: para pasar tus partidos usa «Guardar proyecto» y «Cargar proyecto». El index.html sigue funcionando solo, como siempre.'
+  ]},
   {v:'3.10', date:'Octubre 2026', items:[
     '<b>Línea de tiempo de cortes:</b> debajo del vídeo, un panel con una fila por etiqueta (nombre, color y número de cortes) donde cada corte es un rectángulo de su color. Los del rival van rayados, ✓ / ✗ indica el resultado y un punto blanco marca cada dibujo. Usa el mismo zoom que la línea de tiempo y sigue al cabezal.',
     'Clic en un hueco para saltar, clic en un corte para seleccionarlo e ir a su inicio, doble clic para verlo. Arrastra sus bordes para recortarlo o el centro para moverlo (Ctrl+Z lo deshace). Clic derecho o pulsación larga: reproducir, añadir a la lista, dividir, duplicar o borrar. ▶ junto a cada etiqueta reproduce todos sus cortes seguidos.',
@@ -6260,6 +6284,51 @@ $('#ctpOut').onclick = () => zoomBy(2);
 })();
 if (window.ResizeObserver){ let w0 = 0; new ResizeObserver(() => { const w = $('#ctpArea').clientWidth; if (w !== w0){ w0 = w; ctlRender(); } }).observe($('#ctpArea')); }
 else window.addEventListener('resize', () => ctlRender());
+
+/* =========================================================
+   v3.11 · INSTALAR COMO APP Y ABRIR SIN CONEXIÓN
+   · manifest.webmanifest, sw.js e iconos van junto al index.html en GitHub Pages
+   · abierto como archivo (file://) el index.html funciona igual, solo que no se puede instalar
+   ========================================================= */
+const pwa = {prompt: null, installed: false, sw: false};
+const pwaWeb = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const pwaStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const pwaIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function renderPwa(){
+  document.querySelectorAll('.pwa-box').forEach(box => {
+    let html;
+    if (pwaStandalone() || pwa.installed)
+      html = `<p><b>✓ Táctica Lab está instalada en este dispositivo.</b> Se abre desde su icono y funciona sin conexión. Con conexión se actualiza sola al abrirla.</p>`;
+    else if (!pwaWeb)
+      html = `<p><b>Instalar como app:</b> abre Táctica Lab desde su dirección web (GitHub Pages) para instalarla. Este archivo abierto desde tu ordenador funciona igual, pero no se puede instalar.</p>`;
+    else if (pwa.prompt)
+      html = `<p><b>Instalar como app:</b> ten Táctica Lab en el escritorio o en la pantalla de inicio, en su propia ventana y sin conexión.</p><button type="button" class="primary pwa-install">📲 Instalar app</button>`;
+    else if (pwaIOS())
+      html = `<p><b>Instalar en iPhone o iPad:</b> en Safari pulsa <b>Compartir</b> <span aria-hidden="true">⎋</span> y luego <b>«Añadir a pantalla de inicio»</b>.</p><p class="hint">En el iPhone la app instalada guarda sus datos aparte de Safari: para llevarte tus partidos usa «Guardar proyecto» aquí y «Cargar proyecto» en la app.</p>`;
+    else
+      html = `<p><b>Instalar como app:</b> en Chrome o Edge usa el icono de instalar de la barra de direcciones (o el menú ⋮ → «Instalar Táctica Lab»). En Android: menú ⋮ → «Añadir a pantalla de inicio».</p>`;
+    box.innerHTML = html;
+    box.querySelectorAll('.pwa-install').forEach(b => b.onclick = pwaInstall);
+  });
+}
+async function pwaInstall(){
+  const p = pwa.prompt; if (!p) return;
+  pwa.prompt = null;
+  try{ p.prompt(); const r = await p.userChoice; if (r && r.outcome === 'accepted'){ pwa.installed = true; flash('Táctica Lab se está instalando', 3000); } }catch(e){}
+  renderPwa();
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); pwa.prompt = e; renderPwa(); });
+window.addEventListener('appinstalled', () => { pwa.installed = true; pwa.prompt = null; renderPwa(); flash('✓ Táctica Lab instalada: ya puedes abrirla desde su icono', 4000); });
+/* indicador «Sin conexión» */
+function renderOnline(){ const p = $('#offPill'); if (p) p.hidden = navigator.onLine !== false; }
+window.addEventListener('online', () => { renderOnline(); flash('Conexión recuperada'); });
+window.addEventListener('offline', () => { renderOnline(); flash('Sin conexión: la app sigue funcionando con tus vídeos y datos de este dispositivo', 4000); });
+renderOnline(); renderPwa();
+if (pwaWeb && 'serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', {scope: './'}).then(() => { pwa.sw = true; }).catch(() => {});
+  });
+}
 
 /* =========================================================
    INICIO
