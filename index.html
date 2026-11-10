@@ -917,6 +917,71 @@ body.tac-open{overflow:hidden}
 .pwa-box p{margin:.15rem 0}
 .pwa-box .hint{font-size:.78rem;color:var(--muted)}
 .pwa-box button{margin-top:.45rem}
+/* ===== v3.12 · calibración del campo y posiciones ===== */
+.cal{position:fixed;inset:0;z-index:73;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;gap:.45rem;padding:max(8px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));overflow:auto}
+.cal[hidden]{display:none}
+body.cal-open{overflow:hidden}
+.cal-top,.cal-items{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .7rem;min-width:0}
+.cal-top label{display:inline-flex;align-items:center;gap:.3rem;font-size:.84rem;white-space:nowrap}
+.cal-top input{width:4.6rem}
+.cal-tt{font-family:var(--display);text-transform:uppercase;letter-spacing:.04em}
+.cal-sp{flex:1 1 0}
+.cal-items select{max-width:100%;min-width:0}
+.cal-time{display:inline-flex;align-items:center;gap:.25rem}
+.cal-time button{padding:.2rem .45rem;font-size:.8rem}
+.cal-time b{min-width:3.6rem;text-align:center;font-size:.85rem}
+.cal-main{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,330px);gap:.7rem}
+.cal-img{position:relative;min-height:280px;background:#000;border-radius:10px;overflow:hidden}
+#calImg{position:absolute;inset:0;touch-action:none;cursor:crosshair;display:block}
+.cal-side{display:flex;flex-direction:column;gap:.5rem;min-width:0;overflow:auto}
+.cal-msg{margin:0;font-size:.88rem;line-height:1.35;padding:.5rem .6rem;border-radius:8px;background:var(--panel2);border:1px solid var(--line2)}
+.cal-ref canvas{display:block;border-radius:8px}
+.cal-list{display:flex;flex-wrap:wrap;gap:.3rem}
+.cal-chip{display:inline-flex;align-items:center;gap:.3rem;font-size:.74rem;padding:.12rem .2rem .12rem .45rem;border-radius:999px;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);max-width:100%}
+.cal-chip.on{box-shadow:0 0 0 2px var(--c)}
+.cal-chip b{color:var(--c)}
+.cal-chip button{min-width:0;min-height:0;padding:0 .3rem;font-size:.7rem;line-height:1.4;border-radius:999px}
+.cal-q{margin:0;font-size:.82rem;min-height:1.2em}
+.cal-q.ok{color:#5fd38d}
+.cal-q.bad{color:#ff8f8f;font-weight:600}
+.cal-btns{display:flex;gap:.5rem;justify-content:flex-end}
+@media (max-width:760px){
+  .cal-main{grid-template-columns:1fr}
+  .cal-img{min-height:0;aspect-ratio:16/9}
+  .cal-top label{font-size:.78rem}
+}
+/* «📍 Posición» */
+#posBtn.on{background:color-mix(in srgb,var(--accent-hi) 30%,var(--panel2));border-color:var(--accent-hi)}
+.stage.pos-pick,.stage.pos-pick video{cursor:crosshair}
+.stage.pos-pick::after{content:"📍 Pulsa los pies del jugador · Esc cancela";position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:8;background:rgba(14,13,16,.88);color:#fff;font-size:.8rem;font-weight:700;padding:.3rem .7rem;border-radius:999px;pointer-events:none}
+.pos-pulse{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:3px solid #ffd400;z-index:9;pointer-events:none;animation:posp .9s ease-out forwards}
+@keyframes posp{from{transform:scale(.6);opacity:1}to{transform:scale(3);opacity:0}}
+.posrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.3rem .6rem;margin-top:.45rem;font-size:.84rem}
+.posrow button[hidden]{display:none}
+/* mapas */
+.fieldm .dir{fill:rgba(255,255,255,.55);font-weight:700}
+.fieldm .pdot{cursor:pointer}
+.fieldm .pdot.on{filter:drop-shadow(0 0 1.2px #fff)}
+.fieldm .pdot.sel{stroke:#fff}
+.posmaps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.6rem}
+.posmaps figure{margin:0}
+.posmaps figcaption{font-size:.74rem;color:var(--muted);margin-top:.2rem}
+.rp-pos .posmaps{grid-template-columns:1fr 1fr}
+.rp-pos figcaption,.rp-pos .fmtnote{color:#6b6570}
+/* «Campo 2D» junto al vídeo */
+.map2d{position:absolute;right:10px;bottom:56px;z-index:7;width:min(34%,280px);background:rgba(14,13,16,.82);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:.3rem .35rem .35rem;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.map2d[hidden]{display:none}
+.map2d-h{display:flex;align-items:center;justify-content:space-between;font-size:.7rem;color:#fff;font-weight:700;margin:0 .1rem .2rem}
+.map2d-x{min-width:0;min-height:0;padding:0 .35rem;font-size:.7rem;background:transparent;border-color:transparent;color:#fff}
+.map2d-e{margin:.25rem 0 0;font-size:.68rem;color:#ddd}
+#bMap.on{background:color-mix(in srgb,var(--accent-hi) 26%,var(--panel2));border-color:var(--accent-hi)}
+@media (max-width:760px){ .map2d{width:44%;bottom:44px;right:6px} }
+#posBtn{white-space:nowrap}
+/* con el botón «🗺 Campo», los controles siguen cabiendo en una línea: «Salto … s» se queda solo en la casilla */
+@media (min-width:1061px) and (max-width:1799px){
+  body.lay-mixed .controls .jl,body.lay-below .controls .jl{display:none}
+  body.lay-mixed .controls .jump input,body.lay-below .controls .jump input{width:3.2rem}
+}
 </style>
 </head>
 <body>
@@ -1001,6 +1066,7 @@ body.tac-open{overflow:hidden}
       </div>
       <div class="flash" id="flash" role="status" aria-live="polite" aria-atomic="true"></div>
       <div class="ppicon" id="ppIcon" aria-hidden="true">▶</div>
+      <div class="map2d" id="map2d" hidden role="region" aria-label="Campo 2D con las acciones del partido"></div>
     </div>
     <div class="descbar" id="descBar" hidden role="group" aria-label="Descriptores del último corte"></div>
     <div class="boardbar" id="boardBar" hidden role="toolbar" aria-label="Pizarra">
@@ -1028,6 +1094,7 @@ body.tac-open{overflow:hidden}
         <button id="bRedo" title="Rehacer (Ctrl+Y)" aria-label="Rehacer">↷</button>
         <button id="bDelShape" title="Borrar la forma seleccionada (Supr)" disabled>Borrar forma</button>
         <button id="bClear" title="Borrar todo el dibujo">Borrar todo</button>
+        <button id="bCalib" title="Calibrar el campo: relaciona el vídeo con las medidas reales del terreno">📐 Calibrar</button>
       </div>
       <span class="sep"></span>
       <div class="grp" id="bTrackBox" role="group" aria-label="Seguir al jugador">
@@ -1055,13 +1122,14 @@ body.tac-open{overflow:hidden}
       <button id="bPlay" class="primary">▶ Play</button>
       <button id="bFrameF" title="Fotograma siguiente" aria-label="Fotograma siguiente">|▸</button>
       <button id="bFwd5" title="Avanzar">+5 s</button>
-      <label class="jump" title="Segundos que avanzan o retroceden los botones y las flechas (1–60)">Salto <input type="number" id="jumpSec" min="1" max="60" step="1" value="5" inputmode="numeric" aria-label="Segundos de salto"> s</label>
+      <label class="jump" title="Segundos que avanzan o retroceden los botones y las flechas (1–60)"><span class="jl">Salto </span><input type="number" id="jumpSec" min="1" max="60" step="1" value="5" inputmode="numeric" aria-label="Segundos de salto"><span class="jl"> s</span></label>
       <select id="speed" title="Velocidad" aria-label="Velocidad de reproducción">
         <option value="0.25">0.25×</option><option value="0.5">0.5×</option>
         <option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="4">4×</option>
       </select>
       <button id="bBoard" title="Pizarra: dibujar sobre el vídeo pausado (tecla D)" aria-label="Pizarra"><span aria-hidden="true">✏️</span><span class="bl"> Pizarra</span></button>
       <button id="bShot" title="Guardar fotograma como imagen PNG (incluye el dibujo si lo hay)" aria-label="Captura"><span aria-hidden="true">📷</span><span class="bl"> Captura</span></button>
+      <button id="bMap" aria-pressed="false" title="Campo 2D junto al vídeo con la posición de las acciones del partido (necesita el campo calibrado)" aria-label="Campo 2D"><span aria-hidden="true">🗺</span><span class="bl"> Campo</span></button>
       <span class="vz-grp" role="group" aria-label="Zoom del vídeo"><button id="vzOut" title="Alejar el vídeo (tecla −)" aria-label="Alejar el vídeo">−</button><button id="vzReset" title="Ver el vídeo entero (tecla 0)" aria-label="Zoom 1×">1×</button><button id="vzIn" title="Ampliar el vídeo (tecla +; también Ctrl + rueda o pellizco sobre el vídeo)" aria-label="Ampliar el vídeo">+</button></span>
       <span class="winwrap"><button id="bWin" aria-haspopup="true" aria-expanded="false" title="Ver el vídeo en una ventana flotante o en otra ventana (segundo monitor o proyector)" aria-label="Ventana"><span aria-hidden="true">⧉</span><span class="bl"> Ventana</span></button>
         <div class="winmenu" id="winMenu" hidden role="menu">
@@ -1110,7 +1178,7 @@ body.tac-open{overflow:hidden}
       <span class="sr-only" id="ctpLive" aria-live="polite"></span>
     </div>
     <p class="help">
-      <kbd>Espacio</kbd> o clic en el vídeo: play/pausa · <kbd>←</kbd><kbd>→</kbd> saltar <span id="jumpHelp">5</span> s · <kbd>Mayús</kbd>+<kbd>←</kbd><kbd>→</kbd> ±1 s · <kbd>,</kbd><kbd>.</kbd> fotograma · <kbd>1</kbd>–<kbd>9</kbd> etiquetar · <kbd>Esc</kbd> cancelar corte abierto · <kbd>D</kbd> pizarra (dentro: <kbd>Ctrl</kbd>+<kbd>Z</kbd> deshace el dibujo, <kbd>Supr</kbd> borra la forma seleccionada, <kbd>Intro</kbd> cierra la zona libre) · Corte seleccionado (▶ o clic en su tarjeta): <kbd>I</kbd> inicio aquí, <kbd>O</kbd> fin aquí, <kbd>S</kbd> dividir · <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> deshacer y rehacer la edición de cortes · Zoom de la línea de tiempo: <kbd>Ctrl</kbd>+rueda, pellizco o − / + · Mientras el vídeo pasa por un corte, abajo a la izquierda se ve su tiempo («0:03 / 0:08»). Disposición de las herramientas y rótulo del tiempo: ⚙ Configurar. · Zoom del vídeo: <kbd>Ctrl</kbd>+rueda o pellizco sobre el vídeo, <kbd>+</kbd> / <kbd>−</kbd> y <kbd>0</kbd> para volver a 1× (con zoom, arrastra para mover la imagen) · «⧉ Ventana»: vídeo en ventana flotante o en otra ventana (segundo monitor o proyector). · Clic en la línea de tiempo para saltar (o enfócala con <kbd>Tab</kbd> y usa las flechas, <kbd>Inicio</kbd> y <kbd>Fin</kbd>). · <b>Cortes por etiqueta</b> (panel bajo el vídeo): clic = ir al corte, doble clic = verlo, arrastra los bordes para recortar o el centro para mover, clic derecho o pulsación larga = más opciones; con el panel enfocado <kbd>←</kbd><kbd>→</kbd> corte anterior/siguiente, <kbd>↑</kbd><kbd>↓</kbd> etiqueta, <kbd>Intro</kbd> ver (<kbd>Mayús</kbd>+<kbd>Intro</kbd> toda la fila), <kbd>Supr</kbd> borrar.
+      <kbd>Espacio</kbd> o clic en el vídeo: play/pausa · <kbd>←</kbd><kbd>→</kbd> saltar <span id="jumpHelp">5</span> s · <kbd>Mayús</kbd>+<kbd>←</kbd><kbd>→</kbd> ±1 s · <kbd>,</kbd><kbd>.</kbd> fotograma · <kbd>1</kbd>–<kbd>9</kbd> etiquetar · <kbd>Esc</kbd> cancelar corte abierto · <kbd>D</kbd> pizarra (dentro: <kbd>Ctrl</kbd>+<kbd>Z</kbd> deshace el dibujo, <kbd>Supr</kbd> borra la forma seleccionada, <kbd>Intro</kbd> cierra la zona libre) · Corte seleccionado (▶ o clic en su tarjeta): <kbd>I</kbd> inicio aquí, <kbd>O</kbd> fin aquí, <kbd>S</kbd> dividir · <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> deshacer y rehacer la edición de cortes · Zoom de la línea de tiempo: <kbd>Ctrl</kbd>+rueda, pellizco o − / + · Mientras el vídeo pasa por un corte, abajo a la izquierda se ve su tiempo («0:03 / 0:08»). Disposición de las herramientas y rótulo del tiempo: ⚙ Configurar. · Zoom del vídeo: <kbd>Ctrl</kbd>+rueda o pellizco sobre el vídeo, <kbd>+</kbd> / <kbd>−</kbd> y <kbd>0</kbd> para volver a 1× (con zoom, arrastra para mover la imagen) · «⧉ Ventana»: vídeo en ventana flotante o en otra ventana (segundo monitor o proyector). · Clic en la línea de tiempo para saltar (o enfócala con <kbd>Tab</kbd> y usa las flechas, <kbd>Inicio</kbd> y <kbd>Fin</kbd>). · <b>Campo calibrado</b>: ✎ del partido → «📐 Calibrar el campo»; al etiquetar, <kbd>P</kbd> o «📍 Posición» y pulsa los pies del jugador (<kbd>Esc</kbd> cancela); «🗺 Campo» muestra las acciones sobre un campo 2D. · <b>Cortes por etiqueta</b> (panel bajo el vídeo): clic = ir al corte, doble clic = verlo, arrastra los bordes para recortar o el centro para mover, clic derecho o pulsación larga = más opciones; con el panel enfocado <kbd>←</kbd><kbd>→</kbd> corte anterior/siguiente, <kbd>↑</kbd><kbd>↓</kbd> etiqueta, <kbd>Intro</kbd> ver (<kbd>Mayús</kbd>+<kbd>Intro</kbd> toda la fila), <kbd>Supr</kbd> borrar.
     </p>
   </section>
 
@@ -1126,7 +1194,7 @@ body.tac-open{overflow:hidden}
     <div class="plyhead"><span>Jugadores implicados <b id="plySel"></b></span><button id="plyClear" hidden>Quitar</button></div>
     <div class="chips" id="plyPick"></div>
     <div class="zonebox">
-      <div class="zonehead"><span>Zona donde empieza la acción: <b id="zoneLbl">sin marcar</b></span><span class="zh-b"><button id="zoneClear" hidden>Quitar</button><button id="zoneToggle" class="zonetoggle" type="button" aria-expanded="false" aria-controls="zonePick">Campo ▾</button></span></div>
+      <div class="zonehead"><span>Zona donde empieza la acción: <b id="zoneLbl">sin marcar</b></span><span class="zh-b"><button id="zoneClear" hidden>Quitar</button><button id="posBtn" type="button" aria-pressed="false">📍 Posición</button><button id="zoneToggle" class="zonetoggle" type="button" aria-expanded="false" aria-controls="zonePick">Campo ▾</button></span></div>
       <div id="zonePick"></div>
     </div>
   </div>
@@ -1241,7 +1309,7 @@ body.tac-open{overflow:hidden}
     <p class="hint full" id="dmMinHint">Con el inicio de cada parte, la app calcula el minuto real de juego de cada corte (p. ej. «2.ª parte · min 63»). Con el fin de cada parte, además, avisa de los cortes en el descanso o tras el final.</p>
   </div>
   <div class="drow">
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button id="dmSync" class="primary" hidden>🎬 Añadir el vídeo y sincronizar</button><button id="dmRelink">Vincular otro vídeo…</button><button id="dmDelete" class="danger">Borrar partido</button></div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button id="dmSync" class="primary" hidden>🎬 Añadir el vídeo y sincronizar</button><button id="dmRelink">Vincular otro vídeo…</button><button id="dmCalib" title="Marca 4 puntos conocidos del campo en el vídeo para guardar posiciones reales">📐 Calibrar el campo</button><button id="dmDelete" class="danger">Borrar partido</button></div>
     <div><button id="dmDone" class="primary">Hecho</button></div>
   </div>
 </dialog>
@@ -1271,7 +1339,7 @@ body.tac-open{overflow:hidden}
   <div class="plyhead"><span>Jugadores implicados</span></div>
   <div class="chips" id="dcPlayers"></div>
   <div id="dcTags"></div>
-  <div class="zonebox"><div class="zonehead"><span>Zona: <b id="dcZoneLbl"></b></span><button id="dcZoneClear">Quitar</button></div><div id="dcZone"></div></div>
+  <div class="zonebox"><div class="zonehead"><span>Zona: <b id="dcZoneLbl"></b></span><button id="dcZoneClear">Quitar</button></div><div id="dcZone"></div><div class="posrow"><span>Posición real: <b id="dcPosLbl">sin posición</b></span><span><button id="dcPosPick" type="button">📍 Marcar en el vídeo</button> <button id="dcPosClear" type="button">Quitar</button></span></div></div>
   <div class="drow"><span class="hint" id="dcDraw"></span><div><button id="dcDone" class="primary">Hecho</button></div></div>
 </dialog>
 
@@ -1319,6 +1387,35 @@ body.tac-open{overflow:hidden}
   </div>
 </div>
 
+
+<div class="cal" id="cal" hidden role="dialog" aria-modal="true" aria-label="Calibrar el campo">
+  <div class="cal-top">
+    <b class="cal-tt">📐 Calibrar el campo</b>
+    <label>Campo <select id="calType"><option value="f11">Fútbol 11</option><option value="f7">Fútbol 7</option><option value="sala">Fútbol sala</option></select></label>
+    <label>Largo <input id="calL" type="number" min="20" max="130" step="0.5" inputmode="decimal"> m</label>
+    <label>Ancho <input id="calW" type="number" min="10" max="100" step="0.5" inputmode="decimal"> m</label>
+    <label>1.ª parte: el propio ataca hacia <select id="calDir"><option value="R">la derecha →</option><option value="L">← la izquierda</option></select></label>
+    <span class="cal-sp"></span>
+    <button id="calClose" title="Cerrar sin guardar (Esc)">✕ Cerrar</button>
+  </div>
+  <div class="cal-items">
+    <select id="calItems" aria-label="Calibraciones del partido"></select>
+    <button id="calNew" title="Si la cámara se ha movido o ha hecho zoom: nueva calibración desde el instante en que estabas al abrir esta pantalla">＋ Nueva desde aquí</button>
+    <button id="calDel" class="danger" title="Borrar esta calibración">🗑</button>
+    <span class="cal-time" role="group" aria-label="Fotograma"><button id="calB5" title="5 s antes">−5 s</button><button id="calBF" title="Fotograma anterior (,)">◀|</button><b id="calTime" class="mono">0:00</b><button id="calFF" title="Fotograma siguiente (.)">|▶</button><button id="calF5" title="5 s después">+5 s</button></span>
+  </div>
+  <div class="cal-main">
+    <div class="cal-img" id="calImgWrap"><canvas id="calImg" aria-label="Fotograma del vídeo: pulsa aquí el punto elegido en el mini-campo"></canvas></div>
+    <div class="cal-side">
+      <p class="cal-msg" id="calMsg" aria-live="polite"></p>
+      <div class="cal-ref"><canvas id="calRef" aria-label="Mini-campo de referencia: elige un punto conocido"></canvas></div>
+      <div class="cal-list" id="calList"></div>
+      <p class="cal-q" id="calQ" aria-live="polite"></p>
+      <div class="cal-btns"><button id="calClear" title="Quitar todos los puntos y empezar de nuevo">Repetir</button><button id="calSave" class="primary" disabled>Guardar calibración</button></div>
+      <p class="hint">Consejo: elige puntos que se vean nítidos y repartidos (no los 4 en la misma línea). Si la cámara solo enseña medio campo, usa los del área y del círculo central. Con 5 o más puntos la app mide la precisión.</p>
+    </div>
+  </div>
+</div>
 
 <div class="tac" id="tac" hidden role="dialog" aria-modal="true" aria-label="Pizarra táctica">
   <div class="tac-top">
@@ -1415,8 +1512,13 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.11';
+const APP_VERSION = '3.12';
 const CHANGELOG = [
+  {v:'3.12', date:'Noviembre 2026', items:[
+    '<b>Calibrar el campo:</b> en ✎ del partido (o en la barra de la pizarra), «📐 Calibrar el campo». Elige en el mini-campo 4 puntos conocidos (esquinas del área, centro del campo, córners…) y púlsalos en el vídeo; las líneas verdes muestran si encaja. Si la cámara se mueve, añade otra calibración desde ese instante.',
+    '<b>📍 Posición real:</b> al etiquetar pulsa «📍 Posición» (tecla P) y luego los pies del jugador en el vídeo: el corte guarda su posición en metros y la zona 1–18 se rellena sola. En un corte ya hecho: ✎ del corte → «📍 Marcar en el vídeo».',
+    'El Resumen añade un mapa de puntos y un mapa de calor con las posiciones reales (con los mismos filtros); el Informe, el CSV y el Excel incluyen x e y. Nuevo botón «🗺 Campo» para ver junto al vídeo las acciones del partido sobre un campo 2D.'
+  ]},
   {v:'3.11', date:'Noviembre 2026', items:[
     '<b>Instalar como app:</b> Táctica Lab se puede instalar en el ordenador, la tablet o el móvil y abrirse desde su icono, en su propia ventana. En Chrome y Edge pulsa «📲 Instalar app» (en ⚙ Configurar o aquí); en iPhone y iPad, en Safari: Compartir → «Añadir a pantalla de inicio».',
     '<b>Sin conexión:</b> una vez abierta con internet, funciona sin conexión con tus vídeos y tus datos (también las fuentes y la exportación a Excel). Con conexión se actualiza sola al abrirla. Si no hay internet verás «Sin conexión» junto a la versión.',
@@ -1540,6 +1642,8 @@ let openCut = {};           // catId -> instante de inicio
 let playback = null;        // {queue, i, busy}
 let exporting = null;       // {abort}
 let pendZone = null;        // zona marcada para el próximo corte
+let pendPos = null;         // v3.12 · posición real (metros) marcada para el próximo corte
+let map2d = (() => { try{ return localStorage.getItem('tacticalab:map2d') === '1'; }catch(e){ return false; } })(), map2dKey = '', map2dT = 0;   // v3.12 · «Campo 2D»
 let pendPlayers = new Set();// jugadores marcados para el próximo corte
 let previewStop = null;
 let selClip = null;
@@ -1716,7 +1820,7 @@ function sanitizeClip(c, catMap, matchMap, fallbackMatch){
     zone: Number.isInteger(z) && z >= 1 && z <= 18 ? z : null,
     players: [...new Set((Array.isArray(c.players) ? c.players : []).map(p => String(p).replace(/[^\d]/g,'').slice(0,3)).filter(Boolean))].slice(0, 11),
     drawings: trimTracks(sanitizeDrawings(c.drawings), start, end),
-    tags: sanitizeTags(c.tags), ...sanitizeClipLive(c.live)};
+    tags: sanitizeTags(c.tags), ...sanitizeClipLive(c.live), ...(sanitizePos(c.pos) ? {pos: sanitizePos(c.pos)} : {})};
 }
 /* v3.1 · acción registrada en directo: {p, s, r, pre, post} */
 function sanitizeClipLive(L){
@@ -1757,6 +1861,7 @@ function sanitizeMatches(arr){
     out.push({id, rival: cleanStr(m.rival, 40), comp: cleanStr(m.comp, 40), date: /^\d{4}-\d{2}-\d{2}$/.test(m.date || '') ? m.date : '', fileName: cleanStr(m.fileName, 200), fileSize: cleanNum(m.fileSize) || 0,
       h1: m.h1 == null ? null : cleanNum(m.h1), h2: m.h2 == null ? null : cleanNum(m.h2), e1: m.e1 == null ? null : cleanNum(m.e1), e2: m.e2 == null ? null : cleanNum(m.e2), half: half >= 10 && half <= 60 ? half : 45, gOwn: goal(m.gOwn), gRiv: goal(m.gRiv)});
     const live = sanitizeMatchLive(m.live); if (live) out[out.length-1].live = live;
+    const calib = sanitizeCalib(m.calib); if (calib) out[out.length-1].calib = calib;   // v3.12
   });
   return {matches: out, map};
 }
@@ -1804,7 +1909,7 @@ const FIXED_KEYS = new Set(Object.values(KEY));
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
 function save(){
   try{ localStorage.setItem(KEY.cats, JSON.stringify(state.cats)); }catch(e){}
-  try{ localStorage.setItem(KEY.project, JSON.stringify({version:11, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
+  try{ localStorage.setItem(KEY.project, JSON.stringify({version:12, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
   catch(e){ flash('No se pudo guardar en este navegador (almacenamiento lleno). Usa «Guardar proyecto» para no perder el trabajo.', 5000); }
 }
 function saveBrand(){ try{ localStorage.setItem(KEY.brand, JSON.stringify(brand)); }catch(e){ flash('No se pudo guardar el escudo en este navegador (imagen demasiado grande)', 3500); } }
@@ -2210,6 +2315,7 @@ function cancelFreeze(){ if (freeze){ clearTimeout(freeze.timer); freeze = null;
   lastT = video.paused ? (freeze ? t : null) : t;
   trackTick(t);
   if (ctl) ctlHead(false);
+  mapTick();
   liveTick();
   updateClipTime(t);
   mirrorTick();
@@ -2263,6 +2369,7 @@ function renderTimeline(){
   tl.querySelectorAll('.seg,.tick,.pmark,.pzone').forEach(n => n.remove());
   renderZoomUI();
   if (ctl) ctlRender();   // v3.10 · línea de tiempo de cortes (también sin vídeo, en directo)
+  renderMap2d(true); renderPosUI();   // v3.12
   if (!d || !curMatch) return;
   const V = tlView(), X = t => (t - V.v0)/V.span*100, inView = (a, b) => b >= V.v0 && a <= V.v0 + V.span;
   partMarks(tl, X, inView);
@@ -2314,9 +2421,10 @@ function renderZonePick(){
   $('#zonePick').innerHTML = fieldSVG({pick:true, sel:pendZone});
   $('#zoneLbl').textContent = zoneName(pendZone);
   $('#zoneClear').hidden = !pendZone;
-  bindFieldPick($('#zonePick'), () => pendZone, z => { pendZone = z; renderZonePick(); });
+  $('#zoneLbl').textContent = zoneName(pendZone) + (pendPos ? ' · ' + posText(pendPos) : '');
+  bindFieldPick($('#zonePick'), () => pendZone, z => { pendZone = z; pendPos = null; renderZonePick(); });
 }
-$('#zoneClear').onclick = () => { pendZone = null; renderZonePick(); };
+$('#zoneClear').onclick = () => { pendZone = null; pendPos = null; renderZonePick(); };
 
 /* =========================================================
    JUGADORES (plantilla y selección)
@@ -2354,9 +2462,9 @@ function tagAction(catId){
 }
 function addClip(cat, start, end){
   pushUndo('crear corte');
-  const clip = {id:uid(), matchId:curMatch, cat, start:+start.toFixed(2), end:+end.toFixed(2), team:$('#team').value, result:$('#result').value, note:'', zone:pendZone, players:[...pendPlayers], drawings:[], tags:{}};
+  const clip = {id:uid(), matchId:curMatch, cat, start:+start.toFixed(2), end:+end.toFixed(2), team:$('#team').value, result:$('#result').value, note:'', zone:pendZone, players:[...pendPlayers], drawings:[], tags:{}, ...(pendPos ? {pos:pendPos} : {})};
   state.clips.push(clip);
-  $('#result').value = ''; pendZone = null; pendPlayers.clear();
+  $('#result').value = ''; pendZone = null; pendPos = null; pendPlayers.clear();
   const brk = (gameMinute(curMatch, clip.start) || {}).brk;
   flash(`✓ ${catById(cat).name} · ${fmt(start)} → ${fmt(end)}` + (brk === 'ht' ? ' · ⚠ cae en el descanso' : brk === 'post' ? ' · ⚠ cae tras el final del partido' : ''), brk ? 3200 : 1700);
   selClip = clip.id;
@@ -2510,6 +2618,7 @@ function renderClipDialog(){
   $('#dcZoneLbl').textContent = zoneName(c.zone);
   $('#dcZoneClear').hidden = !c.zone;
   bindFieldPick($('#dcZone'), () => c.zone, z => { c.zone = z; save(); renderClipDialog(); renderList(); renderStats(); });
+  renderDcPos(c);   // v3.12
 }
 $('#dcTeam').onchange = e => { if (dcClip){ dcClip.team = e.target.value; save(); renderList(); renderStats(); } };
 $('#dcResult').onchange = e => { if (dcClip){ dcClip.result = e.target.value; save(); renderList(); renderStats(); } };
@@ -2594,6 +2703,7 @@ function renderStats(){
   const counts = {}; let withZone = 0;
   cs.forEach(c => { if (c.zone){ counts[c.zone] = (counts[c.zone]||0) + 1; withZone++; } });
   html += `<h4>Mapa de calor · zona de inicio</h4>` + (withZone ? fieldSVG({counts}) + `<p class="fmtnote">${nCortes(withZone)} con zona de ${cs.length}. Filtra por etiqueta o equipo en Cortes para cambiar el mapa.</p>` : '<div class="empty">Ningún corte filtrado tiene zona. Márcala en el mini-campo al etiquetar o con ✎ en cada corte.</div>');
+  html += posMapsHTML(cs);   // v3.12 · posiciones reales
   const byP = {};
   cs.forEach(c => (c.players||[]).forEach(n => (byP[n] = byP[n] || []).push(c)));
   const pRows = Object.entries(byP).sort((a,b) => b[1].length - a[1].length || +a[0] - +b[0]);
@@ -2602,6 +2712,7 @@ function renderStats(){
       return `<tr><td>#${esc(playerName(n))}</td><td class="n">${arr.length}</td><td class="n">${effOf(arr)}</td><td><span class="dot" style="--c:${esc(cat.color)}"></span>${esc(cat.name)}</td></tr>`; }).join('')
   }</tbody></table>` : '<div class="empty">Ningún corte filtrado tiene jugadores asignados.</div>');
   $('#stats').innerHTML = html;
+  bindPosDots($('#stats'));
 }
 
 /* =========================================================
@@ -3454,7 +3565,7 @@ $('#catReset').onclick = async () => {
    GUARDAR / CARGAR PROYECTO (v5 con partidos y registro en directo; abre también v4 y proyectos v1–v3 de un solo vídeo)
    ========================================================= */
 $('#btnSave').onclick = () => {
-  const data = {app:'TacticaLab', version:11, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
+  const data = {app:'TacticaLab', version:12, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const one = state.matches.length === 1 ? baseFile(state.matches[0].fileName) : 'tactica-lab';
   download(`${slug(one)}_analisis_${stamp}.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
@@ -3524,12 +3635,12 @@ $('#btnCsv').onclick = () => {
   if (!state.clips.length){ flash('No hay cortes que exportar'); return; }
   const safe = v => { const s = String(v ?? ''); return /^[=+\-@\t\r]/.test(s) ? "'" + s : s; };
   const q = v => `"${safe(v).replace(/"/g,'""')}"`;
-  const lines = [['n','partido','rival','competicion','fecha','etiqueta','equipo','jugadores','zona','descriptores','resultado','parte','minuto_partido','inicio','fin','inicio_s','fin_s','duracion_s','dibujos','observacion','listas','archivo_video'].join(';')];
+  const lines = [['n','partido','rival','competicion','fecha','etiqueta','equipo','jugadores','zona','descriptores','resultado','parte','minuto_partido','inicio','fin','inicio_s','fin_s','duracion_s','dibujos','observacion','listas','archivo_video','x_m','y_m'].join(';')];
   const order = new Map(state.matches.map((m,i) => [m.id, i]));
   [...state.clips].sort((a,b) => (order.get(a.matchId)-order.get(b.matchId)) || (a.start-b.start)).forEach((c,i) => {
     const m = matchById(c.matchId) || {};
     const pls = state.playlists.filter(p => p.ids.includes(c.id)).map(p => p.name).join(' | ');
-    lines.push([i+1, q(matchTitle(m)), q(m.rival), q(m.comp), fmtDate(m.date), q(catById(c.cat).name), q(teamName(c)), q((c.players||[]).map(playerName).join(', ')), c.zone || '', q(Object.entries(c.tags||{}).map(([k,v]) => `${k}=${v}`).join('; ')), c.result==='ok'?'Éxito':c.result==='ko'?'Fallo':'', (clipMinute(c) || {}).p || '', q((clipMinute(c) || {}).txt || ''), ...(isVirtual(c) ? ['', '', '', ''] : [fmt(c.start), fmt(c.end), String(c.start).replace('.',','), String(c.end).replace('.',',')]), (c.end-c.start).toFixed(1).replace('.',','), (c.drawings||[]).length, q(c.note), q(pls), q(m.fileName)].join(';'));
+    lines.push([i+1, q(matchTitle(m)), q(m.rival), q(m.comp), fmtDate(m.date), q(catById(c.cat).name), q(teamName(c)), q((c.players||[]).map(playerName).join(', ')), c.zone || '', q(Object.entries(c.tags||{}).map(([k,v]) => `${k}=${v}`).join('; ')), c.result==='ok'?'Éxito':c.result==='ko'?'Fallo':'', (clipMinute(c) || {}).p || '', q((clipMinute(c) || {}).txt || ''), ...(isVirtual(c) ? ['', '', '', ''] : [fmt(c.start), fmt(c.end), String(c.start).replace('.',','), String(c.end).replace('.',',')]), (c.end-c.start).toFixed(1).replace('.',','), (c.drawings||[]).length, q(c.note), q(pls), q(m.fileName), c.pos ? String(c.pos.x).replace('.',',') : '', c.pos ? String(c.pos.y).replace('.',',') : ''].join(';'));
   });
   download(`tactica-lab_cortes.csv`, new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'}));
 };
@@ -3563,6 +3674,7 @@ document.addEventListener('keydown', e => {
   }
   if (inField) return;
   if (k === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); openBoard(); return; }
+  if (k === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); armPos(null); return; }   // v3.12 · posición real
   // v3.3 · deshacer/rehacer y edición del corte seleccionado
   if ((e.ctrlKey || e.metaKey) && !e.altKey && k === 'z'){ e.preventDefault(); e.shiftKey ? redoEdit() : undoEdit(); return; }
   if ((e.ctrlKey || e.metaKey) && !e.altKey && k === 'y'){ e.preventDefault(); redoEdit(); return; }
@@ -3817,9 +3929,10 @@ function buildReport(){
     <h2>${esc(own)} vs rival</h2>
     <div class="rp-chart">${barsSVG(rows)}</div>
     <p style="font-size:.78rem;color:#6b6570;margin:.2rem 0 0">Barra superior (color lleno): ${esc(own)} · barra inferior (color suave): rival.</p>
+    ${(() => { const h = posMapsHTML(cs); return h ? `<h2>Posiciones en el campo</h2><div class="rp-pos">${h.replace(/<h4>[^<]*<\/h4>/, '').replace('Pulsa un punto para ver el corte.', '')}</div>` : ''; })()}
     <h2>Cortes (${cs.length})</h2>
     ${cs.map((c, i) => { const cat = catById(c.cat), img = reportShots[c.id];
-      const meta = [matchTitle(matchById(c.matchId)), minuteText(c) || `vídeo ${fmtShort(c.start)}`, `${(c.end-c.start).toFixed(1)} s`, teamName(c), c.result === 'ok' ? '✓ éxito' : c.result === 'ko' ? '✗ fallo' : '', c.zone ? `zona ${c.zone}` : '', (c.players||[]).length ? playersText(c.players) : '', tagsText(c)].filter(Boolean).join(' · ');
+      const meta = [matchTitle(matchById(c.matchId)), minuteText(c) || `vídeo ${fmtShort(c.start)}`, `${(c.end-c.start).toFixed(1)} s`, teamName(c), c.result === 'ok' ? '✓ éxito' : c.result === 'ko' ? '✗ fallo' : '', c.zone ? `zona ${c.zone}` : '', c.pos ? posText(c.pos) : '', (c.players||[]).length ? playersText(c.players) : '', tagsText(c)].filter(Boolean).join(' · ');
       return `<div class="rp-clip ${img ? '' : 'noimg'}">${img ? `<img src="${img}" alt="Primer fotograma del corte ${i+1}">` : ''}<div><div class="ct"><span class="dot" style="--c:${esc(cat.color)}"></span>${i+1}. ${esc(cat.name)}</div><div class="cm">${esc(meta)}</div>${c.note ? `<div class="cn">${esc(c.note)}</div>` : ''}</div></div>`; }).join('')}
     ${tacReportHTML()}
     <div class="rp-foot">Generado con Táctica Lab v${APP_VERSION} · ${esc(today)}</div>`;
@@ -3902,11 +4015,11 @@ async function exportXlsx(){
     ws['!cols'] = widths.map(w => ({wch:w}));
     return ws;
   };
-  const cortes = [['Nº','Partido','Rival','Competición','Fecha','Etiqueta','Equipo','Jugadores','Zona','Descriptores','Resultado','Parte','Minuto','Inicio','Fin','Duración','Dibujos','Observación','Listas','Archivo de vídeo']];
+  const cortes = [['Nº','Partido','Rival','Competición','Fecha','Etiqueta','Equipo','Jugadores','Zona','Descriptores','Resultado','Parte','Minuto','Inicio','Fin','Duración','Dibujos','Observación','Listas','Archivo de vídeo','X (m)','Y (m)']];
   clips.forEach((c, i) => { const m = matchById(c.matchId) || {}, g = clipMinute(c), vt = isVirtual(c);
     cortes.push([i+1, matchTitle(m), m.rival || '', m.comp || '', fmtDate(m.date), catById(c.cat).name, teamName(c), (c.players||[]).map(playerName).join(', '), c.zone || '', Object.entries(c.tags||{}).map(([k,v]) => `${k}: ${v}`).join('; '),
       c.result === 'ok' ? 'Éxito' : c.result === 'ko' ? 'Fallo' : '', g && g.p ? `${g.p}.ª` : '', g ? g.txt : '', vt ? '' : c.start/DAY, vt ? '' : c.end/DAY, (c.end-c.start)/DAY, (c.drawings||[]).length, c.note || '',
-      state.playlists.filter(p => p.ids.includes(c.id)).map(p => p.name).join(' | '), m.fileName || '']); });
+      state.playlists.filter(p => p.ids.includes(c.id)).map(p => p.name).join(' | '), m.fileName || '', c.pos ? c.pos.x : '', c.pos ? c.pos.y : '']); });
   const resumen = [['Etiqueta', own, 'Rival', 'Total', 'Éxito (%)', 'Tiempo total']];
   statRows(state.clips).forEach(r => { const x = state.clips.filter(c => c.cat === r.cat.id), ok = x.filter(c=>c.result==='ok').length, ko = x.filter(c=>c.result==='ko').length;
     resumen.push([r.cat.name, r.prop, r.riv, r.n, ok+ko ? Math.round(ok/(ok+ko)*100) : '', r.dur/DAY]); });
@@ -3915,7 +4028,7 @@ async function exportXlsx(){
   const listas = [['Lista','Orden','Etiqueta','Partido','Minuto','Inicio','Fin','Duración','Observación']];
   state.playlists.forEach(p => p.ids.map(clipById).filter(Boolean).forEach((c, i) => listas.push([p.name, i+1, catById(c.cat).name, matchTitle(matchById(c.matchId)), minuteText(c), isVirtual(c) ? '' : c.start/DAY, isVirtual(c) ? '' : c.end/DAY, (c.end-c.start)/DAY, c.note || ''])));
   const wb = X.utils.book_new();
-  X.utils.book_append_sheet(wb, sheet(cortes, [13,14,15], [5,18,16,16,11,22,14,22,6,28,9,7,8,8,8,9,8,40,22,24]), 'Cortes');
+  X.utils.book_append_sheet(wb, sheet(cortes, [13,14,15], [5,18,16,16,11,22,14,22,6,28,9,7,8,8,8,9,8,40,22,24,7,7]), 'Cortes');
   X.utils.book_append_sheet(wb, sheet(resumen, [5], [30,10,10,8,10,12]), 'Resumen');
   X.utils.book_append_sheet(wb, sheet(listas, [5,6,7], [22,7,22,18,20,8,8,9,40]), 'Listas');
   const out = X.write(wb, {bookType:'xlsx', type:'array'});
@@ -4085,6 +4198,7 @@ $('#cmRate').onchange = e => cmV.forEach(v => v.playbackRate = +e.target.value);
    v3.0 · TECLAS DE LAS VISTAS A PANTALLA COMPLETA
    ========================================================= */
 function overlayKeys(e){
+  if (calKeys(e)) return true;
   if (tacKeys(e)) return true;
   if (!$('#present').hidden){
     if (e.target.matches('input,select') && e.key !== 'Escape') return true;
@@ -4230,7 +4344,7 @@ function addLiveClip(catId){
   if (camRecording(curMatch)) clip.live.v = +camSec().toFixed(2);   // v3.7: instante exacto en el vídeo que se está grabando
   pushUndo('registrar acción');
   state.clips.push(clip);
-  $('#result').value = ''; pendZone = null; pendPlayers.clear();
+  $('#result').value = ''; pendZone = null; pendPos = null; pendPlayers.clear();
   save();                                   // se guarda al instante: no se pierde nada si se cierra la pestaña
   try{ navigator.vibrate && navigator.vibrate(25); }catch(e){}
   flash(`✓ ${catById(catId).name} · ${liveMinuteText(clip)}`);
@@ -6329,6 +6443,543 @@ if (pwaWeb && 'serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js', {scope: './'}).then(() => { pwa.sw = true; }).catch(() => {});
   });
 }
+
+
+/* =========================================================
+   v3.12 · CALIBRACIÓN DEL CAMPO Y POSICIONES REALES
+   match.calib = {type:'f11'|'f7'|'sala', L, W (metros), dir:'R'|'L' (hacia dónde ataca el equipo propio en la 1.ª parte,
+                  según el mini-campo), list:[{t, pts:[{k, x, y, u, v}]}]}   · varias calibraciones por partido (cada una desde su instante)
+   clip.pos = {x, y} en metros, en el campo «el equipo propio ataca hacia la derecha» (como las zonas 1–18)
+   La homografía (vídeo → campo) se calcula aquí, sin librerías, con 4 o más puntos.
+   ========================================================= */
+const CAL_DEF = {f11: {L: 105, W: 68, label: 'Fútbol 11'}, f7: {L: 65, W: 45, label: 'Fútbol 7'}, sala: {L: 40, W: 20, label: 'Fútbol sala'}};
+const CAL_GEO = {
+  f11:  {pd: 16.5, pw: 40.32, gd: 5.5, gw: 18.32, spot: 11, circle: 9.15, goal: 7.32},
+  f7:   {pd: 13, pw: 30, gd: 5, gw: 12, spot: 9, circle: 6, goal: 6},
+  sala: {area: 6, spot: 6, spot2: 10, circle: 3, goal: 3}
+};
+/* puntos conocidos del campo (en metros, origen en la esquina superior izquierda del mini-campo) */
+function calRefs(type, L, W){
+  const g = CAL_GEO[type] || CAL_GEO.f11, cy = W/2, R = [];
+  const add = (k, x, y, label) => R.push({k, x: +x.toFixed(2), y: +y.toFixed(2), label});
+  add('c_tl', 0, 0, 'Córner superior izquierdo'); add('c_bl', 0, W, 'Córner inferior izquierdo');
+  add('c_tr', L, 0, 'Córner superior derecho'); add('c_br', L, W, 'Córner inferior derecho');
+  add('h_t', L/2, 0, 'Medio campo · banda superior'); add('h_b', L/2, W, 'Medio campo · banda inferior');
+  add('ctr', L/2, cy, 'Centro del campo');
+  add('cc_t', L/2, cy - g.circle, 'Círculo central · arriba'); add('cc_b', L/2, cy + g.circle, 'Círculo central · abajo');
+  [['l', 0, 1, 'izquierda'], ['r', L, -1, 'derecha']].forEach(([s, x0, d, nm]) => {
+    if (type === 'sala'){
+      add(`ar_${s}_to`, x0, cy - g.goal/2 - g.area, `Área ${nm} · arriba en la línea de fondo`);
+      add(`ar_${s}_ti`, x0 + d*g.area, cy - g.goal/2, `Área ${nm} · recta, extremo superior`);
+      add(`ar_${s}_bi`, x0 + d*g.area, cy + g.goal/2, `Área ${nm} · recta, extremo inferior`);
+      add(`ar_${s}_bo`, x0, cy + g.goal/2 + g.area, `Área ${nm} · abajo en la línea de fondo`);
+      add(`sp_${s}`, x0 + d*g.spot, cy, `Penalti ${nm} (6 m)`);
+      add(`sp2_${s}`, x0 + d*g.spot2, cy, `Doble penalti ${nm} (10 m)`);
+      add(`po_${s}_t`, x0, cy - g.goal/2, `Poste ${nm} · arriba`); add(`po_${s}_b`, x0, cy + g.goal/2, `Poste ${nm} · abajo`);
+    } else {
+      add(`pa_${s}_to`, x0, cy - g.pw/2, `Área grande ${nm} · arriba en la línea de fondo`);
+      add(`pa_${s}_ti`, x0 + d*g.pd, cy - g.pw/2, `Área grande ${nm} · esquina superior`);
+      add(`pa_${s}_bi`, x0 + d*g.pd, cy + g.pw/2, `Área grande ${nm} · esquina inferior`);
+      add(`pa_${s}_bo`, x0, cy + g.pw/2, `Área grande ${nm} · abajo en la línea de fondo`);
+      add(`ga_${s}_to`, x0, cy - g.gw/2, `Área pequeña ${nm} · arriba en la línea de fondo`);
+      add(`ga_${s}_ti`, x0 + d*g.gd, cy - g.gw/2, `Área pequeña ${nm} · esquina superior`);
+      add(`ga_${s}_bi`, x0 + d*g.gd, cy + g.gw/2, `Área pequeña ${nm} · esquina inferior`);
+      add(`ga_${s}_bo`, x0, cy + g.gw/2, `Área pequeña ${nm} · abajo en la línea de fondo`);
+      add(`sp_${s}`, x0 + d*g.spot, cy, `Punto de penalti ${nm}`);
+    }
+  });
+  return R;
+}
+/* líneas del campo como segmentos y arcos (para dibujar en canvas, SVG o proyectadas sobre el vídeo) */
+function calLines(type, L, W){
+  const g = CAL_GEO[type] || CAL_GEO.f11, cy = W/2, segs = [], arcs = [];
+  const rect = (x0, y0, x1, y1) => { segs.push([x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]); };
+  rect(0, 0, L, W); segs.push([L/2, 0, L/2, W]);
+  arcs.push([L/2, cy, g.circle, 0, Math.PI*2]);
+  [[0, 1], [L, -1]].forEach(([x0, d]) => {
+    if (type === 'sala'){
+      const p1 = cy - g.goal/2, p2 = cy + g.goal/2;
+      arcs.push(d > 0 ? [x0, p1, g.area, -Math.PI/2, 0] : [x0, p1, g.area, Math.PI, Math.PI*1.5]);
+      segs.push([x0 + d*g.area, p1, x0 + d*g.area, p2]);
+      arcs.push(d > 0 ? [x0, p2, g.area, 0, Math.PI/2] : [x0, p2, g.area, Math.PI/2, Math.PI]);
+    } else {
+      const xa = Math.min(x0, x0 + d*g.pd), xg = Math.min(x0, x0 + d*g.gd);
+      rect(xa, cy - g.pw/2, xa + g.pd, cy + g.pw/2); rect(xg, cy - g.gw/2, xg + g.gd, cy + g.gw/2);
+      if (type === 'f11'){ const a = Math.acos((g.pd - g.spot)/9.15); arcs.push(d > 0 ? [g.spot, cy, 9.15, -a, a] : [L - g.spot, cy, 9.15, Math.PI - a, Math.PI + a]); }
+    }
+  });
+  return {segs, arcs};
+}
+function fieldSVGm(type, L, W, inner, extra){
+  const {segs, arcs} = calLines(type, L, W), sw = Math.max(.2, L*.0045);
+  const path = segs.map(s => `M${s[0].toFixed(2)} ${s[1].toFixed(2)}L${s[2].toFixed(2)} ${s[3].toFixed(2)}`).join('') +
+    arcs.map(a => { const [cx, cy, r, a0, a1] = a, full = a1 - a0 >= Math.PI*2 - 1e-6;
+      if (full) return `M${(cx + r).toFixed(2)} ${cy}A${r} ${r} 0 1 1 ${(cx - r).toFixed(2)} ${cy}A${r} ${r} 0 1 1 ${(cx + r).toFixed(2)} ${cy}`;
+      return `M${(cx + r*Math.cos(a0)).toFixed(2)} ${(cy + r*Math.sin(a0)).toFixed(2)}A${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${(cx + r*Math.cos(a1)).toFixed(2)} ${(cy + r*Math.sin(a1)).toFixed(2)}`; }).join('');
+  const m = L*.03;
+  return `<svg class="field fieldm" viewBox="${-m} ${-m} ${L + 2*m} ${W + 2*m}" ${extra || ''}><rect x="${-m}" y="${-m}" width="${L + 2*m}" height="${W + 2*m}" fill="#163a26"/>${inner && inner.under ? inner.under : ''}<path class="ln" d="${path}" style="stroke-width:${sw}"/>${inner && inner.over ? inner.over : ''}<text class="dir" x="${L - L*.13}" y="${W + m*.75}" style="font-size:${(L*.03).toFixed(2)}px">ataque →</text></svg>`;
+}
+/* ---------- homografía (vídeo u,v en 0–1 → campo normalizado 0–1), mínimos cuadrados con 4 o más puntos ---------- */
+function solveLin(A, b){
+  const n = b.length, M = A.map((r, i) => r.concat([b[i]]));
+  for (let c = 0; c < n; c++){
+    let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    if (Math.abs(M[p][c]) < 1e-12) return null;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = 0; r < n; r++){ if (r === c) continue; const f = M[r][c]/M[c][c]; if (f) for (let k = c; k <= n; k++) M[r][k] -= f*M[c][k]; }
+  }
+  return M.map((r, i) => r[n]/r[i]);
+}
+function homFrom(pairs){
+  // pairs: [{u, v, X, Y}] (X, Y normalizados) · h = [h0..h7, 1]
+  if (pairs.length < 4) return null;
+  const AtA = Array.from({length: 8}, () => new Array(8).fill(0)), Atb = new Array(8).fill(0);
+  const row = (a, bv) => { for (let i = 0; i < 8; i++){ Atb[i] += a[i]*bv; for (let j = 0; j < 8; j++) AtA[i][j] += a[i]*a[j]; } };
+  pairs.forEach(({u, v, X, Y}) => { row([u, v, 1, 0, 0, 0, -u*X, -v*X], X); row([0, 0, 0, u, v, 1, -u*Y, -v*Y], Y); });
+  const h = solveLin(AtA, Atb); if (!h || h.some(x => !isFinite(x))) return null;
+  return h.concat([1]);
+}
+function homApply(h, u, v){ const d = h[6]*u + h[7]*v + h[8]; if (Math.abs(d) < 1e-9) return null; return [(h[0]*u + h[1]*v + h[2])/d, (h[3]*u + h[4]*v + h[5])/d, d]; }
+function homInv(h){
+  const [a, b, c, d, e, f, g, i, j] = h;
+  const A = e*j - f*i, B = -(d*j - f*g), C = d*i - e*g, det = a*A + b*B + c*C;
+  if (Math.abs(det) < 1e-12) return null;
+  const inv = [A, -(b*j - c*i), b*f - c*e, B, a*j - c*g, -(a*f - c*d), C, -(a*i - b*g), a*e - b*d].map(x => x/det);
+  return inv.map(x => x/inv[8]);
+}
+/* comprobaciones: puntos casi alineados, orden incoherente, error de ajuste */
+function calCheck(pts, L, W, aspect){
+  const n = pts.length, out = {ok: false, msg: '', err: null, h: null};
+  if (n < 4){ out.msg = `Faltan ${4 - n} punto${4 - n === 1 ? '' : 's'} (mínimo 4).`; return out; }
+  const F = pts.map(p => [p.x/L, p.y/W*W/L]), I = pts.map(p => [p.u, p.v/aspect]);
+  const area = (P, a, b, c) => ((P[b][0]-P[a][0])*(P[c][1]-P[a][1]) - (P[b][1]-P[a][1])*(P[c][0]-P[a][0]))/2;
+  const span = P => { let m = 0; P.forEach(p => P.forEach(q => { m = Math.max(m, Math.hypot(p[0]-q[0], p[1]-q[1])); })); return m || 1; };
+  const sF = span(F)**2, sI = span(I)**2;
+  let good = 0, bad = 0, flat = [];
+  for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) for (let c = b + 1; c < n; c++){
+    const af = area(F, a, b, c)/sF, ai = area(I, a, b, c)/sI;
+    if (Math.abs(af) < .012 || Math.abs(ai) < .004){ flat.push([a, b, c]); continue; }
+    if (Math.sign(af) === Math.sign(ai)) good++; else bad++;
+  }
+  if (n === 4 && flat.length){ out.msg = `Los puntos ${flat[0].map(i => i + 1).join(', ')} están casi en línea recta: elige puntos más repartidos (por ejemplo, dos esquinas del área y dos del círculo o de la otra línea).`; return out; }
+  if (good + bad === 0){ out.msg = 'Los puntos están casi en línea recta: elige puntos más repartidos por el campo.'; return out; }
+  // una homografía de una cámara real conserva (o invierte) el giro de todos los triángulos a la vez
+  if (good && bad && Math.min(good, bad)/(good + bad) > .15){ out.msg = 'Algún punto no coincide con su referencia (¿asignado al punto equivocado o en otro lado?). Revísalos en la lista.'; return out; }
+  const h = homFrom(pts.map(p => ({u: p.u, v: p.v, X: p.x/L, Y: p.y/W})));
+  if (!h){ out.msg = 'No se puede calcular con estos puntos: cambia alguno o añade otro.'; return out; }
+  const ds = pts.map(p => homApply(h, p.u, p.v)); if (ds.some(d => !d)){ out.msg = 'No se puede calcular con estos puntos.'; return out; }
+  if (ds.some(d => Math.sign(d[2]) !== Math.sign(ds[0][2]))){ out.msg = 'Algún punto parece estar fuera de lo que ve la cámara: revísalos.'; return out; }
+  const err = pts.map((p, i) => Math.hypot(ds[i][0]*L - p.x, ds[i][1]*W - p.y));
+  out.err = n > 4 ? err.reduce((s, x) => s + x, 0)/n : 0; out.max = Math.max(...err); out.h = h; out.ok = true;
+  if (n > 4 && out.max > Math.max(2.5, L*.03)){ out.ok = false; const k = err.indexOf(out.max); out.msg = `El punto ${k + 1} no encaja con los demás (desvío de ${out.max.toFixed(1).replace('.', ',')} m): recolócalo o quítalo.`; return out; }
+  out.msg = n === 4 ? 'Calibración calculada. Comprueba que las líneas verdes coinciden con las del vídeo (con 5 o más puntos se mide la precisión).' : `Calibración calculada · error medio ${out.err.toFixed(1).replace('.', ',')} m.`;
+  return out;
+}
+/* calibración que se aplica en un instante: la última que empieza antes (o la primera) */
+const calCache = new Map();
+function calibAt(m, t){
+  const c = m && m.calib; if (!c || !c.list || !c.list.length) return null;
+  let it = c.list[0]; c.list.forEach(x => { if (x.t <= t + .01) it = x; });
+  const key = JSON.stringify([c.L, c.W, it.pts]);
+  let h = calCache.get(key);
+  if (h === undefined){ const aspect = (video.videoHeight || 9)/(video.videoWidth || 16); const r = calCheck(it.pts, c.L, c.W, aspect); h = r.h && (r.ok || it.pts.length === 4) ? r.h : null; calCache.set(key, h); }
+  return h ? {item: it, h, L: c.L, W: c.W, type: c.type, dir: c.dir} : null;
+}
+function hasCalib(m){ return !!(m && m.calib && m.calib.list && m.calib.list.length); }
+function partAt(m, t){ if (m.h2 != null) return t >= m.h2 - .5 ? 2 : 1; if (m.e1 != null) return t > m.e1 ? 2 : 1; return 1; }
+/* vídeo → posición en metros en el campo «propio ataca hacia la derecha» */
+function posFromUV(m, u, v, t){
+  const C = calibAt(m, t); if (!C) return {err: 'nocal'};
+  const r = homApply(C.h, u, v); if (!r) return {err: 'out'};
+  let x = r[0]*C.L, y = r[1]*C.W;
+  const marg = Math.max(2, C.L*.04);
+  if (x < -marg || x > C.L + marg || y < -marg || y > C.W + marg) return {err: 'out'};
+  const right = (C.dir !== 'L') === (partAt(m, t) === 1);
+  if (!right){ x = C.L - x; y = C.W - y; }
+  return {pos: {x: +clamp(x, 0, C.L).toFixed(1), y: +clamp(y, 0, C.W).toFixed(1)}, L: C.L, W: C.W};
+}
+function fieldOf(m){ const c = m && m.calib; return c ? {type: c.type, L: c.L, W: c.W} : {type: 'f11', L: 105, W: 68}; }
+function zoneFromPos(p, L, W){ const f = clamp(Math.floor(p.x/L*6), 0, 5), c = clamp(Math.floor(p.y/W*3), 0, 2); return f*3 + c + 1; }
+function posText(p){ return p ? `📍 ${String(p.x).replace('.', ',')} × ${String(p.y).replace('.', ',')} m` : ''; }
+function sanitizeCalib(c){
+  if (!c || typeof c !== 'object') return null;
+  const type = ['f11', 'f7', 'sala'].includes(c.type) ? c.type : 'f11', D = {f11: [105, 68], f7: [65, 45], sala: [40, 20]}[type];
+  const L = +clamp(+c.L || D[0], 20, 130).toFixed(1), W = +clamp(+c.W || D[1], 10, 100).toFixed(1);
+  const list = (Array.isArray(c.list) ? c.list : []).slice(0, 30).map(it => {
+    const t = cleanNum(it && it.t), seen = new Set();
+    const pts = (Array.isArray(it && it.pts) ? it.pts : []).slice(0, 16).map(p => ({k: String((p && p.k) || '').replace(/[^\w-]/g, '').slice(0, 20), x: +(p && p.x), y: +(p && p.y), u: +(p && p.u), v: +(p && p.v)}))
+      .filter(p => p.k && [p.x, p.y, p.u, p.v].every(Number.isFinite) && p.x >= -5 && p.x <= L + 5 && p.y >= -5 && p.y <= W + 5 && p.u >= -1 && p.u <= 2 && p.v >= -1 && p.v <= 2 && !seen.has(p.k) && seen.add(p.k))
+      .map(p => ({k: p.k, x: +p.x.toFixed(2), y: +p.y.toFixed(2), u: +p.u.toFixed(4), v: +p.v.toFixed(4)}));
+    return t === null || pts.length < 4 ? null : {t, pts};
+  }).filter(Boolean).sort((a, b) => a.t - b.t);
+  return list.length ? {type, L, W, dir: c.dir === 'L' ? 'L' : 'R', list} : null;
+}
+function sanitizePos(p){
+  if (!p || typeof p !== 'object') return null;
+  const x = +p.x, y = +p.y;
+  return Number.isFinite(x) && Number.isFinite(y) && x >= -10 && x <= 140 && y >= -10 && y <= 110 ? {x: +x.toFixed(1), y: +y.toFixed(1)} : null;
+}
+
+/* =========================================================
+   Pantalla «Calibrar el campo»
+   ========================================================= */
+const cal = {open: false, m: null, idx: -1, t: 0, pts: [], type: 'f11', L: 105, W: 68, dir: 'R', active: null, sel: -1, snap: null, check: null, hover: null, drag: null, img: null, ref: null};
+const CAL_COL = ['#ffd400', '#22d3ee', '#ff7ab6', '#7cf06a', '#ffa24c', '#b39dff', '#ffffff', '#ff5a5a', '#5ad1ff', '#d4ff5a', '#ffb3e6', '#9bffcf', '#f0c674', '#a3a3ff', '#ff9e7a', '#7affd4'];
+async function openCalib(){
+  const m = matchById(curMatch);
+  if (!m || !ready() || !video.videoWidth){ flash('Abre el vídeo del partido para calibrar el campo', 3000); return; }
+  if (exporting) return;
+  closeBoard(true); cancelFreeze(); playback = null; video.pause(); markPlaying();
+  if ($('#dlgMatch').open) $('#dlgMatch').close();
+  cal.m = m; cal.open = true; cal.openT = +video.currentTime.toFixed(2);
+  const c = m.calib || {type: 'f11', L: 105, W: 68, dir: 'R', list: []};
+  cal.type = c.type; cal.L = c.L; cal.W = c.W; cal.dir = c.dir;
+  const t = video.currentTime;
+  if (c.list.length){ let i = 0; c.list.forEach((x, k) => { if (x.t <= t + .01) i = k; }); calLoad(i); }
+  else calNew(t);
+  $('#cal').hidden = false; document.body.classList.add('cal-open');
+  $('#calNew').textContent = `＋ Nueva desde ${fmtShort(cal.openT)}`;
+  calUI(); await calSnap(cal.t); calDraw();
+  $('#calClose').focus();
+}
+function calLoad(i){ const it = cal.m.calib.list[i]; cal.idx = i; cal.t = it.t; cal.pts = it.pts.map(p => Object.assign({}, p)); cal.active = null; cal.sel = -1; }
+function calNew(t){ cal.idx = -1; cal.t = +t.toFixed(2); cal.pts = []; cal.active = null; cal.sel = -1; }
+function closeCalib(){ cal.open = false; $('#cal').hidden = true; document.body.classList.remove('cal-open'); cal.snap = null; if (cal.openT != null && ready()) video.currentTime = cal.openT; renderAll(); }
+function calSeek(t){
+  return new Promise(res => {
+    t = clamp(t, 0, video.duration || 0);
+    if (Math.abs(video.currentTime - t) < .01 && video.readyState >= 2){ res(); return; }
+    const done = () => { video.removeEventListener('seeked', done); clearTimeout(to); res(); };
+    const to = setTimeout(done, 2500); video.addEventListener('seeked', done); video.currentTime = t;
+  });
+}
+async function calSnap(t){
+  await calSeek(t); cal.t = +video.currentTime.toFixed(2);
+  const vw = video.videoWidth, vh = video.videoHeight, s = Math.min(1, 1600/vw), c = document.createElement('canvas');
+  c.width = Math.round(vw*s); c.height = Math.round(vh*s);
+  try{ c.getContext('2d').drawImage(video, 0, 0, c.width, c.height); }catch(e){}
+  cal.snap = c; $('#calTime').textContent = fmtShort(cal.t);
+}
+function calRefsNow(){ return calRefs(cal.type, cal.L, cal.W); }
+function calRecompute(){
+  // si cambian las medidas, los puntos de referencia se recolocan
+  const R = new Map(calRefsNow().map(r => [r.k, r]));
+  cal.pts = cal.pts.filter(p => R.has(p.k)).map(p => Object.assign(p, {x: R.get(p.k).x, y: R.get(p.k).y}));
+}
+function calUI(){
+  const c = cal.m.calib, list = c ? c.list : [];
+  $('#calType').value = cal.type; $('#calL').value = cal.L; $('#calW').value = cal.W; $('#calDir').value = cal.dir;
+  $('#calItems').innerHTML = list.map((x, i) => `<option value="${i}">Calibración ${i + 1} · desde ${fmtShort(x.t)}</option>`).join('') + (cal.idx < 0 ? `<option value="-1">Nueva · desde ${fmtShort(cal.t)} (sin guardar)</option>` : '');
+  $('#calItems').value = String(cal.idx);
+  $('#calDel').disabled = cal.idx < 0;
+  const R = new Map(calRefsNow().map(r => [r.k, r]));
+  $('#calList').innerHTML = cal.pts.length ? cal.pts.map((p, i) => `<span class="cal-chip ${i === cal.sel ? 'on' : ''}" style="--c:${CAL_COL[i % CAL_COL.length]}"><b>${i + 1}</b> ${esc((R.get(p.k) || {}).label || p.k)}<button type="button" data-i="${i}" aria-label="Quitar el punto ${i + 1}" title="Quitar">✕</button></span>`).join('')
+    : '<span class="hint">Aún no hay puntos.</span>';
+  $('#calList').querySelectorAll('button').forEach(b => b.onclick = () => { cal.pts.splice(+b.dataset.i, 1); cal.sel = -1; calRefresh(); });
+  const aspect = (video.videoHeight || 9)/(video.videoWidth || 16);
+  cal.check = calCheck(cal.pts, cal.L, cal.W, aspect);
+  const a = cal.active && R.get(cal.active);
+  $('#calMsg').innerHTML = a ? `Ahora pulsa en el vídeo dónde está <b>${esc(a.label)}</b>.`
+    : cal.pts.length < 4 ? `<b>Paso ${cal.pts.length + 1}:</b> elige en el mini-campo un punto que se vea bien en el vídeo y luego púlsalo en la imagen. Usa puntos repartidos (no todos en la misma línea).`
+    : 'Puedes añadir más puntos para ganar precisión o arrastrar los puntos de la imagen para ajustarlos.';
+  const q = $('#calQ'); q.textContent = cal.check.msg; q.className = 'cal-q ' + (cal.check.ok ? 'ok' : cal.pts.length >= 4 ? 'bad' : '');
+  $('#calSave').disabled = !cal.check.ok;
+}
+function calRefresh(){ calUI(); calDraw(); }
+/* --- dibujo de la imagen del vídeo con los puntos y el campo proyectado --- */
+function calImgRect(){
+  const wrap = $('#calImgWrap'), W = wrap.clientWidth, H = wrap.clientHeight, sw = cal.snap ? cal.snap.width : 16, sh = cal.snap ? cal.snap.height : 9;
+  const s = Math.min(W/sw, H/sh); return {x: (W - sw*s)/2, y: (H - sh*s)/2, w: sw*s, h: sh*s, W, H};
+}
+function calDraw(){
+  if (!cal.open) return;
+  const cv = $('#calImg'), r = calImgRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(r.W*dpr); cv.height = Math.round(r.H*dpr); cv.style.width = r.W + 'px'; cv.style.height = r.H + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.W, r.H);
+  if (cal.snap) ctx.drawImage(cal.snap, r.x, r.y, r.w, r.h);
+  const P = (u, v) => [r.x + u*r.w, r.y + v*r.h];
+  // campo proyectado
+  if (cal.check && cal.check.h){
+    const inv = homInv(cal.check.h);
+    if (inv){
+      const {segs, arcs} = calLines(cal.type, cal.L, cal.W);
+      const proj = (x, y) => { const q = homApply(inv, x/cal.L, y/cal.W); return q && Math.sign(q[2]) === Math.sign(homApply(inv, .5, .5)[2] || 1) ? P(q[0], q[1]) : null; };
+      ctx.save(); ctx.strokeStyle = 'rgba(60,255,120,.9)'; ctx.lineWidth = 2; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 3;
+      const poly = pts => { ctx.beginPath(); let pen = false; pts.forEach(p => { if (!p){ pen = false; return; } if (pen) ctx.lineTo(p[0], p[1]); else { ctx.moveTo(p[0], p[1]); pen = true; } }); ctx.stroke(); };
+      segs.forEach(s => { const pts = []; for (let i = 0; i <= 16; i++){ const k = i/16; pts.push(proj(s[0] + (s[2]-s[0])*k, s[1] + (s[3]-s[1])*k)); } poly(pts); });
+      arcs.forEach(([cx, cy, rr, a0, a1]) => { const pts = []; for (let i = 0; i <= 48; i++){ const a = a0 + (a1 - a0)*i/48; pts.push(proj(cx + rr*Math.cos(a), cy + rr*Math.sin(a))); } poly(pts); });
+      ctx.restore();
+    }
+  }
+  // puntos
+  cal.pts.forEach((p, i) => {
+    const [x, y] = P(p.u, p.v), col = CAL_COL[i % CAL_COL.length];
+    ctx.save(); ctx.lineWidth = 2; ctx.strokeStyle = '#000'; ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(x, y, i === cal.sel ? 9 : 7, 0, Math.PI*2); ctx.globalAlpha = .35; ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = col; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 12, y); ctx.lineTo(x - 3, y); ctx.moveTo(x + 3, y); ctx.lineTo(x + 12, y); ctx.moveTo(x, y - 12); ctx.lineTo(x, y - 3); ctx.moveTo(x, y + 3); ctx.lineTo(x, y + 12); ctx.stroke();
+    ctx.font = '800 13px Manrope, system-ui, sans-serif'; ctx.fillStyle = '#000'; ctx.fillText(String(i + 1), x + 9, y - 7); ctx.fillStyle = col; ctx.fillText(String(i + 1), x + 8, y - 8);
+    ctx.restore();
+  });
+  // lupa
+  if (cal.hover && cal.snap){
+    const [hx, hy] = cal.hover, R = 62, Z = 3.5, sx = (hx - r.x)/r.w*cal.snap.width, sy = (hy - r.y)/r.h*cal.snap.height, src = R/Z*cal.snap.width/r.w;
+    const lx = hx + R + 24 > r.W ? hx - R - 24 : hx + R + 24, ly = clamp(hy - R - 24, R + 4, r.H - R - 4);
+    ctx.save(); ctx.beginPath(); ctx.arc(lx, ly, R, 0, Math.PI*2); ctx.clip();
+    ctx.fillStyle = '#000'; ctx.fillRect(lx - R, ly - R, 2*R, 2*R);
+    ctx.drawImage(cal.snap, sx - src, sy - src, 2*src, 2*src, lx - R, ly - R, 2*R, 2*R);
+    ctx.strokeStyle = cal.active ? '#ffd400' : '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(lx - R, ly); ctx.lineTo(lx + R, ly); ctx.moveTo(lx, ly - R); ctx.lineTo(lx, ly + R); ctx.stroke();
+    ctx.restore(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(lx, ly, R, 0, Math.PI*2); ctx.stroke();
+  }
+  calDrawRef();
+}
+/* --- mini-campo de referencia --- */
+function calRefRect(){
+  const cv = $('#calRef'), W = cv.parentElement.clientWidth, s = (W - 24)/cal.L, H = cal.W*s + 30;
+  return {W, H, s, ox: 12, oy: 12};
+}
+function calDrawRef(){
+  const cv = $('#calRef'), R = calRefRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(R.W*dpr); cv.height = Math.round(R.H*dpr); cv.style.width = R.W + 'px'; cv.style.height = R.H + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#1d5a33'; ctx.fillRect(0, 0, R.W, R.H);
+  const X = x => R.ox + x*R.s, Y = y => R.oy + y*R.s, {segs, arcs} = calLines(cal.type, cal.L, cal.W);
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.5;
+  segs.forEach(s => { ctx.beginPath(); ctx.moveTo(X(s[0]), Y(s[1])); ctx.lineTo(X(s[2]), Y(s[3])); ctx.stroke(); });
+  arcs.forEach(([cx, cy, r, a0, a1]) => { ctx.beginPath(); ctx.arc(X(cx), Y(cy), r*R.s, a0, a1); ctx.stroke(); });
+  const used = new Map(cal.pts.map((p, i) => [p.k, i]));
+  calRefsNow().forEach(p => {
+    const x = X(p.x), y = Y(p.y), i = used.get(p.k), on = cal.active === p.k;
+    ctx.beginPath(); ctx.arc(x, y, on ? 8 : i != null ? 7 : 5, 0, Math.PI*2);
+    ctx.fillStyle = i != null ? CAL_COL[i % CAL_COL.length] : on ? '#ffd400' : 'rgba(255,255,255,.25)'; ctx.fill();
+    ctx.lineWidth = on ? 3 : 1.5; ctx.strokeStyle = on ? '#ffd400' : '#fff'; ctx.stroke();
+    if (i != null){ ctx.fillStyle = '#000'; ctx.font = '800 10px Manrope, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i + 1), x, y + .5); ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic'; }
+  });
+  // dirección de ataque en la 1.ª parte
+  ctx.fillStyle = '#fff'; ctx.font = '700 11px Manrope, system-ui, sans-serif'; ctx.textAlign = cal.dir === 'L' ? 'left' : 'right';
+  ctx.fillText(cal.dir === 'L' ? '← ataca el propio (1.ª parte)' : 'ataca el propio (1.ª parte) →', cal.dir === 'L' ? R.ox : R.W - R.ox, R.H - 6); ctx.textAlign = 'start';
+}
+function calRefHit(e){
+  const cv = $('#calRef'), b = cv.getBoundingClientRect(), R = calRefRect(), x = e.clientX - b.left, y = e.clientY - b.top;
+  let best = null, bd = 18;
+  calRefsNow().forEach(p => { const d = Math.hypot(R.ox + p.x*R.s - x, R.oy + p.y*R.s - y); if (d < bd){ bd = d; best = p; } });
+  return best;
+}
+$('#calRef').addEventListener('click', e => {
+  const p = calRefHit(e); if (!p) return;
+  cal.active = cal.active === p.k ? null : p.k; cal.sel = cal.pts.findIndex(q => q.k === p.k);
+  calRefresh();
+});
+$('#calRef').addEventListener('mousemove', e => { const p = calRefHit(e); $('#calRef').title = p ? p.label : ''; $('#calRef').style.cursor = p ? 'pointer' : 'default'; });
+/* --- clics en la imagen --- */
+function calUV(e){ const cv = $('#calImg'), b = cv.getBoundingClientRect(), r = calImgRect(), x = e.clientX - b.left, y = e.clientY - b.top; return {x, y, u: (x - r.x)/r.w, v: (y - r.y)/r.h}; }
+$('#calImg').addEventListener('pointerdown', e => {
+  if (e.button > 0) return;
+  const q = calUV(e), r = calImgRect();
+  if (cal.active){
+    if (q.u < -.02 || q.u > 1.02 || q.v < -.02 || q.v > 1.02) return;
+    const ref = calRefsNow().find(x => x.k === cal.active), p = {k: ref.k, x: ref.x, y: ref.y, u: +clamp(q.u, 0, 1).toFixed(4), v: +clamp(q.v, 0, 1).toFixed(4)};
+    const i = cal.pts.findIndex(x => x.k === ref.k);
+    if (i >= 0) cal.pts[i] = p; else { if (cal.pts.length >= 16){ flash('Máximo 16 puntos'); return; } cal.pts.push(p); }
+    cal.sel = i >= 0 ? i : cal.pts.length - 1; cal.active = null;
+    calRefresh(); return;
+  }
+  // arrastrar un punto ya colocado
+  let best = -1, bd = e.pointerType === 'mouse' ? 14 : 24;
+  cal.pts.forEach((p, i) => { const d = Math.hypot(r.x + p.u*r.w - q.x, r.y + p.v*r.h - q.y); if (d < bd){ bd = d; best = i; } });
+  cal.sel = best;
+  if (best >= 0){ cal.drag = {i: best, id: e.pointerId}; $('#calImg').setPointerCapture(e.pointerId); }
+  calRefresh();
+});
+$('#calImg').addEventListener('pointermove', e => {
+  const q = calUV(e);
+  cal.hover = e.pointerType === 'mouse' || cal.drag ? [q.x, q.y] : null;
+  if (cal.drag){ const p = cal.pts[cal.drag.i]; p.u = +clamp(q.u, 0, 1).toFixed(4); p.v = +clamp(q.v, 0, 1).toFixed(4); const a = (video.videoHeight || 9)/(video.videoWidth || 16); cal.check = calCheck(cal.pts, cal.L, cal.W, a); }
+  calDraw();
+});
+const calUp = () => { if (cal.drag){ cal.drag = null; calRefresh(); } };
+$('#calImg').addEventListener('pointerup', calUp); $('#calImg').addEventListener('pointercancel', calUp);
+$('#calImg').addEventListener('pointerleave', () => { if (!cal.drag){ cal.hover = null; calDraw(); } });
+/* --- controles --- */
+$('#calType').onchange = e => { cal.type = e.target.value; cal.L = CAL_DEF[cal.type].L; cal.W = CAL_DEF[cal.type].W; calRecompute(); calRefresh(); };
+const calDim = () => { const L = +String($('#calL').value).replace(',', '.'), W = +String($('#calW').value).replace(',', '.'); if (L >= 20 && L <= 130 && W >= 10 && W <= 100 && W < L){ cal.L = +L.toFixed(1); cal.W = +W.toFixed(1); calRecompute(); calRefresh(); } };
+$('#calL').onchange = calDim; $('#calW').onchange = calDim;
+['calL', 'calW'].forEach(id => $('#' + id).addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') calDim(); }));
+$('#calDir').onchange = e => { cal.dir = e.target.value; calDraw(); };
+$('#calItems').onchange = async e => { const i = +e.target.value; if (i < 0) return; calLoad(i); calUI(); await calSnap(cal.t); calRefresh(); };
+$('#calNew').onclick = async () => { calNew(cal.openT); calUI(); await calSnap(cal.openT); calRefresh(); flash('Nueva calibración desde este instante: úsala si la cámara se ha movido o ha hecho zoom', 3500); };
+$('#calClear').onclick = () => { cal.pts = []; cal.active = null; cal.sel = -1; calRefresh(); };
+[['calB5', -5], ['calBF', -FRAME], ['calFF', FRAME], ['calF5', 5]].forEach(([id, d]) => $('#' + id).onclick = async () => { await calSnap(cal.t + d); calDraw(); });
+$('#calDel').onclick = async () => {
+  const c = cal.m.calib; if (!c || cal.idx < 0) return;
+  const r = await ask({title: 'Borrar calibración', text: `Se borrará la calibración ${cal.idx + 1} (desde ${fmtShort(c.list[cal.idx].t)}). Las posiciones ya guardadas en los cortes no cambian.`, buttons: [{label: 'Cancelar', value: null}, {label: 'Borrar', value: 'yes', kind: 'danger'}]});
+  if (r.value !== 'yes') return;
+  pushUndo('borrar calibración');
+  c.list.splice(cal.idx, 1); if (!c.list.length) delete cal.m.calib;
+  calCache.clear(); save();
+  if (cal.m.calib){ calLoad(0); await calSnap(cal.t); } else { calNew(cal.openT); await calSnap(cal.t); }
+  calRefresh(); flash('Calibración borrada');
+};
+$('#calSave').onclick = () => {
+  if (!cal.check || !cal.check.ok) return;
+  pushUndo('calibrar el campo');
+  const m = cal.m, c = m.calib || {list: []};
+  const item = {t: cal.t, pts: cal.pts.map(p => ({k: p.k, x: p.x, y: p.y, u: p.u, v: p.v}))};
+  if (cal.idx >= 0) c.list[cal.idx] = item; else c.list.push(item);
+  m.calib = sanitizeCalib({type: cal.type, L: cal.L, W: cal.W, dir: cal.dir, list: c.list});
+  calCache.clear(); save();
+  closeCalib();
+  flash(`✓ Campo calibrado${m.calib.list.length > 1 ? ` (${m.calib.list.length} calibraciones)` : ''}. Al etiquetar, pulsa «📍 Posición» (tecla P) y luego los pies del jugador en el vídeo.`, 5000);
+};
+$('#calClose').onclick = closeCalib;
+window.addEventListener('resize', () => { if (cal.open) calDraw(); });
+function calKeys(e){
+  if (!cal.open) return false;
+  if (e.target.matches('input,select') && e.key !== 'Escape') return true;
+  if (e.key === 'Escape'){ e.preventDefault(); if (cal.active){ cal.active = null; calRefresh(); } else closeCalib(); }
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && cal.sel >= 0){ e.preventDefault(); cal.pts.splice(cal.sel, 1); cal.sel = -1; calRefresh(); }
+  else if (e.key === ',' || e.key === '.'){ e.preventDefault(); calSnap(cal.t + (e.key === '.' ? FRAME : -FRAME)).then(calDraw); }
+  return true;
+}
+$('#dmCalib').onclick = () => { if (dmId !== curMatch || !ready()){ flash('Abre el vídeo de este partido para calibrar su campo', 3000); return; } openCalib(); };
+$('#bCalib').onclick = () => openCalib();
+
+/* =========================================================
+   «📍 Posición»: pulsar sobre el jugador en el vídeo
+   ========================================================= */
+let posMode = null;   // {target: clipId | null}
+function renderPosUI(){
+  const m = matchById(curMatch), on = !!posMode, b = $('#posBtn');
+  if (b){ b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); b.title = hasCalib(m) ? 'Pulsa y luego marca en el vídeo los pies del jugador: guarda la posición real y la zona (tecla P)' : 'Calibra el campo del partido para marcar posiciones reales'; }
+  stage.classList.toggle('pos-pick', on);
+}
+async function armPos(target){
+  const m = matchById(curMatch);
+  if (posMode){ posMode = null; renderPosUI(); flash('Posición cancelada'); return; }
+  if (!ready()){ flash('Abre el vídeo del partido para marcar posiciones'); return; }
+  if (!hasCalib(m)){
+    const r = await ask({title: 'Calibrar el campo', text: 'Para guardar la posición real, primero hay que calibrar el campo de este partido: marcas 4 puntos conocidos (esquinas del área, centro…) en el vídeo. Lleva un minuto y se hace una sola vez si la cámara no se mueve.', buttons: [{label: 'Ahora no', value: null}, {label: 'Calibrar el campo', value: 'yes', kind: 'primary'}]});
+    if (r.value === 'yes') openCalib();
+    return;
+  }
+  closeBoard(true); cancelFreeze(); video.pause();
+  posMode = {target: target || null}; renderPosUI();
+  flash('📍 Pulsa en el vídeo los pies del jugador (Esc cancela)', 4000);
+}
+stage.addEventListener('click', e => {
+  if (!posMode) return;
+  if (e.target.closest('.livepanel, .map2d, .vzbadge, button')) return;
+  e.preventDefault(); e.stopPropagation();
+  if (vzMain && vzMain.dragged) return;
+  const m = matchById(curMatch), [u, v] = relPoint(e);
+  if (u < 0 || u > 1 || v < 0 || v > 1){ flash('Pulsa dentro de la imagen del vídeo'); return; }
+  const r = posFromUV(m, u, v, video.currentTime);
+  if (r.err){ flash(r.err === 'out' ? 'Ese punto queda fuera del campo calibrado: pulsa sobre el césped (en los pies del jugador)' : 'Este partido no tiene el campo calibrado', 3500); return; }
+  const z = zoneFromPos(r.pos, r.L, r.W), tg = posMode.target && clipById(posMode.target);
+  posMode = null; renderPosUI();
+  if (tg){
+    pushUndo('posición del corte');
+    tg.pos = r.pos; tg.zone = z; save(); renderAll();
+    flash(`✓ ${catById(tg.cat).name}: ${posText(r.pos)} · zona ${z}`, 2600);
+    if (dcClip === tg){ renderClipDialog(); $('#dlgClip').showModal(); }
+  } else {
+    pendPos = r.pos; pendZone = z; renderZonePick();
+    flash(`${posText(r.pos)} · zona ${z} · se guardará en el próximo corte`, 2600);
+  }
+  posPulse(u, v);
+}, true);
+function posPulse(u, v){
+  const cr = contentRect(), d = document.createElement('div'); d.className = 'pos-pulse';
+  let x = cr.x + u*cr.w, y = cr.y + v*cr.h;
+  if (vzMain && vzMain.k > 1){ const sr = stage.getBoundingClientRect(); x = x*vzMain.k + vzMain.fx*sr.width; y = y*vzMain.k + vzMain.fy*sr.height; }
+  d.style.left = x + 'px'; d.style.top = y + 'px'; stage.appendChild(d); setTimeout(() => d.remove(), 900);
+}
+$('#posBtn').onclick = () => armPos(null);
+document.addEventListener('keydown', e => {
+  if (!posMode || e.key !== 'Escape') return;
+  e.preventDefault(); e.stopPropagation(); posMode = null; renderPosUI(); flash('Posición cancelada');
+}, true);
+/* en el diálogo del corte */
+function renderDcPos(c){
+  const lbl = $('#dcPosLbl'); if (!lbl) return;
+  lbl.textContent = c.pos ? posText(c.pos) : 'sin posición';
+  $('#dcPosClear').hidden = !c.pos;
+  $('#dcPosPick').disabled = isVirtual(c);
+}
+$('#dcPosPick').onclick = async () => {
+  const c = dcClip; if (!c) return;
+  if (c.matchId !== curMatch){ flash('Abre el partido de este corte para marcar la posición'); return; }
+  $('#dlgClip').close();
+  if (!(video.currentTime >= c.start - .05 && video.currentTime <= c.end + .05)){ cancelFreeze(); playback = null; seek(c.start); }
+  armPos(c.id);
+};
+$('#dcPosClear').onclick = () => { const c = dcClip; if (!c) return; pushUndo('quitar posición'); delete c.pos; save(); renderClipDialog(); renderList(); renderStats(); };
+
+/* =========================================================
+   Mapas con las posiciones reales (Resumen, Informe, «Campo 2D»)
+   ========================================================= */
+function posPoints(cs){
+  // normaliza al campo del primer partido con calibración (para mezclar partidos)
+  const withPos = cs.filter(c => c.pos);
+  if (!withPos.length) return null;
+  const F = fieldOf(matchById(withPos[0].matchId));
+  return {F, pts: withPos.map(c => { const f = fieldOf(matchById(c.matchId)); return {c, x: c.pos.x/f.L*F.L, y: c.pos.y/f.W*F.W}; })};
+}
+function heatURL(P){
+  const {F, pts} = P, k = 3, w = Math.round(F.L*k), h = Math.round(F.W*k), sig = Math.max(1.6, F.L*.055)*k, g = new Float32Array(w*h);
+  const rad = Math.ceil(sig*3);
+  pts.forEach(p => {
+    const cx = p.x*k, cy = p.y*k;
+    for (let y = Math.max(0, Math.floor(cy - rad)); y < Math.min(h, cy + rad); y++)
+      for (let x = Math.max(0, Math.floor(cx - rad)); x < Math.min(w, cx + rad); x++){ const d2 = (x - cx)**2 + (y - cy)**2; g[y*w + x] += Math.exp(-d2/(2*sig*sig)); }
+  });
+  let max = 0; for (let i = 0; i < g.length; i++) if (g[i] > max) max = g[i];
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const ctx = c.getContext('2d'), im = ctx.createImageData(w, h);
+  const stops = [[0, [40, 110, 255]], [.35, [40, 220, 160]], [.6, [255, 220, 40]], [.82, [255, 120, 40]], [1, [255, 40, 70]]];
+  for (let i = 0; i < g.length; i++){
+    const t = max ? g[i]/max : 0; if (t < .04) continue;
+    let a = stops[0], b = stops[stops.length - 1]; for (let s = 1; s < stops.length; s++) if (t <= stops[s][0]){ a = stops[s-1]; b = stops[s]; break; }
+    const f = (t - a[0])/((b[0] - a[0]) || 1), o = i*4;
+    for (let j = 0; j < 3; j++) im.data[o + j] = a[1][j] + (b[1][j] - a[1][j])*f;
+    im.data[o + 3] = Math.round(255*Math.min(.85, .15 + t*.8));
+  }
+  ctx.putImageData(im, 0, 0); return c.toDataURL('image/png');
+}
+function posDotsSVG(P, opts){
+  opts = opts || {};
+  const r = P.F.L*.012;
+  return P.pts.map(({c, x, y}) => { const cat = catById(c.cat), riv = c.team === 'Rival', on = opts.active && opts.active.has(c.id), sel = opts.sel === c.id;
+    return `<circle class="pdot${on ? ' on' : ''}${sel ? ' sel' : ''}" data-id="${esc(c.id)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(on || sel ? r*1.5 : r).toFixed(2)}" style="--c:${esc(cat.color)}" fill="${riv ? 'none' : esc(cat.color)}" stroke="${riv ? esc(cat.color) : '#fff'}" stroke-width="${(r*(riv ? .55 : .3)).toFixed(2)}"><title>${esc(cat.name)} · ${esc(teamName(c))} · ${esc(minuteText(c) || fmtShort(c.start))} · ${esc(posText(c.pos))}</title></circle>`; }).join('');
+}
+function posMapsHTML(cs){
+  const P = posPoints(cs); if (!P) return '';
+  const n = P.pts.length, F = P.F;
+  return `<h4>Posiciones reales · campo calibrado</h4>
+    <div class="posmaps"><figure>${fieldSVGm(F.type, F.L, F.W, {over: posDotsSVG(P)}, 'role="img" aria-label="Mapa de puntos de las acciones"')}<figcaption>Puntos · lleno: ${esc(brand.short || 'propio')} · hueco: rival</figcaption></figure>
+    <figure>${fieldSVGm(F.type, F.L, F.W, {under: `<image href="${heatURL(P)}" x="0" y="0" width="${F.L}" height="${F.W}" preserveAspectRatio="none"/>`}, 'role="img" aria-label="Mapa de calor de las posiciones"')}<figcaption>Mapa de calor</figcaption></figure></div>
+    <p class="fmtnote">${nCortes(n)} con posición de ${cs.length}. El equipo propio ataca siempre hacia la derecha. Pulsa un punto para ver el corte.</p>`;
+}
+function bindPosDots(box){
+  box.querySelectorAll('.pdot').forEach(d => d.addEventListener('click', () => { const c = clipById(d.dataset.id); if (c) playQueue([c]); }));
+}
+/* «Campo 2D» junto al vídeo */
+function renderMap2d(force){
+  const box = $('#map2d'), btn = $('#bMap'); if (!box) return;
+  const m = matchById(curMatch), show = map2d && !!m && ready();
+  btn.setAttribute('aria-pressed', String(map2d)); btn.classList.toggle('on', map2d);
+  box.hidden = !show; if (!show){ map2dKey = ''; return; }
+  const cs = state.clips.filter(c => c.matchId === curMatch && c.pos), t = video.currentTime;
+  const active = new Set(cs.filter(c => t >= c.start - .05 && t <= c.end + .05).map(c => c.id));
+  const key = JSON.stringify([cs.map(c => [c.id, c.pos.x, c.pos.y, c.cat, c.team]), [...active], selClip, m.calib && [m.calib.type, m.calib.L, m.calib.W]]);
+  if (!force && key === map2dKey) return;
+  map2dKey = key;
+  const F = fieldOf(m), P = {F, pts: cs.map(c => ({c, x: c.pos.x, y: c.pos.y}))};
+  box.innerHTML = `<div class="map2d-h"><span>Campo 2D · ${nCortes(cs.length)}</span><button type="button" class="map2d-x" aria-label="Ocultar el campo 2D" title="Ocultar">✕</button></div>${fieldSVGm(F.type, F.L, F.W, {over: posDotsSVG(P, {active, sel: selClip})}, 'role="img" aria-label="Campo 2D con las acciones del partido"')}${cs.length ? '' : `<p class="map2d-e">${hasCalib(m) ? 'Marca posiciones con «📍 Posición» al etiquetar.' : 'Calibra el campo (✎ del partido → «Calibrar el campo»).'}</p>`}`;
+  box.querySelector('.map2d-x').onclick = e => { e.stopPropagation(); map2d = false; try{ localStorage.setItem('tacticalab:map2d', '0'); }catch(er){} renderMap2d(); };
+  bindPosDots(box);
+}
+$('#bMap').onclick = () => { map2d = !map2d; try{ localStorage.setItem('tacticalab:map2d', map2d ? '1' : '0'); }catch(e){} renderMap2d(true); };
+$('#map2d').addEventListener('click', e => e.stopPropagation());
+function mapTick(){ const n = performance.now(); if (map2d && n - map2dT > 250){ map2dT = n; renderMap2d(); } }
 
 /* =========================================================
    INICIO
