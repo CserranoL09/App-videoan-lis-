@@ -1064,9 +1064,144 @@ body.trk-on .trkcv{pointer-events:auto;cursor:crosshair}
   body.lay-mixed .controls #speed,body.lay-below .controls #speed{width:4.4rem;padding-left:.45rem;padding-right:.2rem}
   body.lay-mixed .controls > button,body.lay-below .controls > button,body.lay-mixed .controls .winwrap > button,body.lay-below .controls .winwrap > button{padding-left:.55rem;padding-right:.55rem}
 }
+/* ===== v3.16 · iconos de línea ===== */
+.ic{width:1.15em;height:1.15em;flex:none;display:inline-block;vertical-align:-.2em;overflow:visible;pointer-events:none}
+.ic-t{width:1.05em;height:1.05em;vertical-align:-.17em;margin:0 .08em}
+:where(button:not([hidden]):has(> .ic),button > span:not([hidden]):has(> .ic)){display:inline-flex;align-items:center;justify-content:center;gap:.42em}
+button > span:has(> .ic){gap:0}
+.controls .ic,.vz-grp .ic{width:18px;height:18px}
+.hbtns .ic{width:18px;height:18px}
+.boardbar .ic,.tac-tools .ic,.tac-top .ic,.tac-bot .ic,.cal .ic,.pov-ctl .ic{width:17px;height:17px}
+.acts .ic,.tk-chip .ic,.cal-chip .ic,.ctp-play .ic,.map2d-x .ic,.pov-x .ic,.trim .ic{width:15px;height:15px}
+.tag .cm .ic{width:14px;height:14px;vertical-align:-.15em}
+.ppicon .ic{width:40%;height:40%;stroke-width:2.2}
+#bPlay .ic,.primary > .ic{stroke-width:2}
+.ctp-fold .ic{width:16px;height:16px}
+/* estados claros en las barras de herramientas */
+:is(.controls,.boardbar,.tac-tools,.tac-top,.tac-bot,.hbtns,.acts,.cal-items,.pov-ctl) button:not(.primary):not(.danger):hover:not(:disabled){border-color:color-mix(in srgb,var(--accent-hi) 55%,var(--line2))}
+:is(.controls,.boardbar,.tac-tools,.hbtns,.acts) button[aria-pressed="true"]:not(.primary){background:color-mix(in srgb,var(--accent-hi) 22%,var(--panel2));border-color:var(--accent-hi);color:var(--fg)}
+button:focus-visible{outline:2px solid var(--accent-hi);outline-offset:2px}
+button:disabled .ic{opacity:.55}
+/* cabecera: en pantallas de portátil los iconos opcionales se ocultan para que siga en una fila */
+@media (max-width:1599px){ .hbtns .ic.hi-opt{display:none} }
+/* tiempo del corte: icono de cronómetro */
+.cliptime::before{content:"";display:inline-block;width:1.05em;height:1.05em;margin-right:.4em;vertical-align:-.17em;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.9%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2213.5%22%20r%3D%227.5%22/%3E%3Cpath%20d%3D%22M12%2013.5V10M9.5%202.5h5M12%202.5V6M18.5%206.5l1.5-1.5%22/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.9%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2213.5%22%20r%3D%227.5%22/%3E%3Cpath%20d%3D%22M12%2013.5V10M9.5%202.5h5M12%202.5V6M18.5%206.5l1.5-1.5%22/%3E%3C/svg%3E") center/contain no-repeat}
+/* ⚙ Configurar → iconos */
+.icon-cat{margin:.8rem 0 .2rem;border:1px solid var(--line2);border-radius:10px;padding:.45rem .7rem;background:var(--panel2)}
+.icon-cat summary{cursor:pointer;font-weight:700;font-size:.86rem}
+.icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:.4rem;margin-top:.5rem}
+.icg{display:flex;flex-direction:column;align-items:center;gap:.25rem;padding:.45rem .2rem;border-radius:8px;border:1px solid var(--line);font-size:.62rem;color:var(--muted);text-align:center;word-break:break-all}
+.icg .ic{width:22px;height:22px;color:var(--fg)}
+
+/* compactar para no partir filas (1366 px) */
+#bBack5,#bFwd5{gap:.18em;font-variant-numeric:tabular-nums}
+@media (max-width:1599px){
+  .hbtns .ic{width:16px;height:16px}
+  .hbtns button:has(> .ic){gap:.3em}
+  .hbtns button:not(.primary){padding-left:.4rem;padding-right:.4rem}
+}
+body.lay-mixed .controls .winwrap > #bWin,body.lay-below .controls .winwrap > #bWin{padding-left:.4rem;padding-right:.4rem}
+.plact{flex-wrap:wrap}
+.plact button{min-width:0;justify-content:center}
+body.lay-mixed .controls > #bBack5,body.lay-mixed .controls > #bFwd5,body.lay-below .controls > #bBack5,body.lay-below .controls > #bFwd5{padding-left:.38rem;padding-right:.42rem}
+.boardbar button.tool{padding-left:.45rem;padding-right:.5rem}
+.boardbar button.tool:has(> .ic){gap:.32em}
+.boardbar button.tool .ic{width:16px;height:16px}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<!-- Iconos de Táctica Lab · línea 1,75 en rejilla de 24. Algunos trazados se basan en Lucide (https://lucide.dev), licencia ISC: Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022. Se permite usar, copiar, modificar y distribuir con o sin fines comerciales. -->
+<symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14M16 5v14"/></symbol>
+<symbol id="i-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/></symbol>
+<symbol id="i-skip-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 19 8 12l10-7zM6 5v14"/></symbol>
+<symbol id="i-skip-fwd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 5 10 7-10 7zM18 5v14"/></symbol>
+<symbol id="i-step-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5v14M18 6l-8 6 8 6z"/></symbol>
+<symbol id="i-step-fwd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 5v14M6 6l8 6-8 6z"/></symbol>
+<symbol id="i-back5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v4.5h4.5"/></symbol>
+<symbol id="i-fwd5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v4.5h-4.5"/></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/><path d="m14.5 5.5 3 3"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></symbol>
+<symbol id="i-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
+<symbol id="i-volume-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 6 6M22 9l-6 6"/></symbol>
+<symbol id="i-pip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1"/></symbol>
+<symbol id="i-windows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="11" rx="1.5"/><path d="M16 5H4.5A1.5 1.5 0 0 0 3 6.5V15"/></symbol>
+<symbol id="i-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+<symbol id="i-maximize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></symbol>
+<symbol id="i-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></symbol>
+<symbol id="i-printer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3M7 21v-7h10v7"/></symbol>
+<symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></symbol>
+<symbol id="i-clapper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="m3 10 1.2-5 16 2.4L20 10"/><path d="m8 5.6 2 4.4M13.5 6.4l2 3.6"/></symbol>
+<symbol id="i-record" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+<symbol id="i-install" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3M10.5 18.5h3"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5M4 20h16"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></symbol>
+<symbol id="i-scissors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></symbol>
+<symbol id="i-compare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+<symbol id="i-move-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8l4 4-4 4M6 8l-4 4 4 4M2 12h20"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+<symbol id="i-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol>
+<symbol id="i-curve" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19C6 9 14 6 19 7"/><path d="m15 4 4 3-3 4"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+<symbol id="i-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.5"/><circle cx="19" cy="5" r="1.5"/></symbol>
+<symbol id="i-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/></symbol>
+<symbol id="i-rect" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6" width="17" height="12" rx="1.5"/></symbol>
+<symbol id="i-spot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></symbol>
+<symbol id="i-triangle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 21 19H3z"/></symbol>
+<symbol id="i-polygon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 6.5-3.5 10.5h-11L3 9.5z"/></symbol>
+<symbol id="i-move" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3"/></symbol>
+<symbol id="i-eraser" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3a1.5 1.5 0 0 1 0-2.1L13.6 3.7a1.5 1.5 0 0 1 2.1 0l4.6 4.6a1.5 1.5 0 0 1 0 2.1L10 21z"/><path d="M22 21H7M5 12l7 7"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-ball" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m12 7.5 3.6 2.6-1.4 4.3H9.8l-1.4-4.3z"/><path d="M12 7.5V3.2M15.6 10.1l4.2-1.5M14.2 14.4l2.6 3.7M9.8 14.4l-2.6 3.7M8.4 10.1 4.2 8.6"/></symbol>
+<symbol id="i-cone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4h5l4 15h-13z"/><path d="M3.5 19h17M8.3 9h7.4M7 14h10"/></symbol>
+<symbol id="i-pole" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V3"/><path d="M12 4h6l-2 2.5 2 2.5h-6"/><path d="M9 21h6"/></symbol>
+<symbol id="i-hurdle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V8h14v12"/><path d="M5 11h14M3 20h4M17 20h4"/></symbol>
+<symbol id="i-minigoal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V7h16v11"/><path d="M4 7l3 4h10l3-4M7 11v7M17 11v7M10 11v7M14 11v7"/></symbol>
+<symbol id="i-goal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 19V6h20v13"/><path d="M2 6l3 3h14l3-3M5 9v10M19 9v10M8.5 9v10M12 9v10M15.5 9v10"/></symbol>
+<symbol id="i-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21 21 3"/><path d="M3 21h18V3"/><path d="M8 21v-2M12 21v-3M16 21v-2M21 8h-2M21 12h-3M21 16h-2"/></symbol>
+<symbol id="i-run" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="14.5" cy="4.5" r="2"/><path d="m7 21 3.5-6 3 2.5V22"/><path d="m4.5 11.5 4-3.5 4.5 1 3 3.5 3.5.5"/><path d="M8.5 8 11 14.5"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></symbol>
+<symbol id="i-type" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11.5a7 7 0 0 1 14 0C19 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+<symbol id="i-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 11-11M14 4v3M18 6l-2 2M20 10h-3M12.5 6.5l5 5"/><path d="M5 3v2M4 4h2M19 16v2M18 17h2"/></symbol>
+<symbol id="i-timer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V10M9.5 2.5h5M12 2.5V6M18.5 6.5l1.5-1.5"/></symbol>
+<symbol id="i-rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v14M3 7l4-4 4 4M17 21V7M13 17l4 4 4-4"/></symbol>
+<symbol id="i-swap-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4M8 3 4 7l4 4M4 17h16M16 13l4 4-4 4"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
+<symbol id="i-chevron-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></symbol>
+<symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4.5M12 17.5h.01"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></symbol>
+<symbol id="i-more-v" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></symbol>
+<symbol id="i-mark-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5H7v14h3"/><path d="M13 12h7M17 9l3 3-3 3"/></symbol>
+<symbol id="i-mark-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5h3v14h-3"/><path d="M11 12H4M7 9l-3 3 3 3"/></symbol>
+<symbol id="i-tags" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/></symbol>
+<symbol id="i-board" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 4v16"/><circle cx="12" cy="12" r="3"/><path d="M3 9h3v6H3M21 9h-3v6h3"/></symbol>
+<symbol id="i-folder-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V5a1 1 0 0 1 1-1h5l2 2h8a1 1 0 0 1 1 1v3"/><path d="M3 19 6 11h16l-3 8z"/></symbol>
+<symbol id="i-import" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M8 10l4 4 4-4"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></symbol>
+<symbol id="i-file-csv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8.5 13h7M8.5 17h7"/></symbol>
+<symbol id="i-sheet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 9v12"/></symbol>
+<symbol id="i-report" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 17v-3M12 17v-6M15 17v-4"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v4M17 17h4M5 3v3M3.5 4.5h3"/></symbol>
+<symbol id="i-film" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M3 12h18M3 16h4M17 8h4M17 16h4"/></symbol>
+<symbol id="i-list-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h12M3 12h8M3 18h8"/><path d="m15 13 6 3.5-6 3.5z"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></symbol>
+</defs></svg>
 <header>
   <div class="uni" id="uniBox" title="">
     <img class="crest" id="crestH" alt="Escudo" hidden>
@@ -1395,6 +1530,7 @@ body.trk-on .trkcv{pointer-events:auto;cursor:crosshair}
   </div>
   <input type="file" id="fileCrest" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" hidden>
   <input type="file" id="fileCfg" accept=".json,application/json" hidden>
+  <details class="icon-cat"><summary>Iconos de la app</summary><div class="icon-grid" id="iconGrid"></div></details>
   <div class="pwa-box" aria-live="polite"></div>
   <div class="drow">
     <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button id="cfgExport" title="Guarda nombre, escudo, colores, tipografía y plantilla para compartirlos con el cuerpo técnico">Exportar configuración</button><button id="cfgImport">Importar configuración</button></div>
@@ -1638,8 +1774,13 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.15';
+const APP_VERSION = '3.16';
 const CHANGELOG = [
+  {v:'3.16', date:'Noviembre 2026', items:[
+    '<b>Iconos nuevos:</b> todos los emojis y símbolos de los botones se han cambiado por un juego de iconos de línea propio, del mismo grosor y tamaño en toda la app: blancos sobre el tema oscuro y oscuros sobre el claro, y del color de acento cuando un botón está activo.',
+    'Afecta a los controles del vídeo, la cabecera, los cortes, el panel «Cortes por etiqueta», la pizarra, la pizarra táctica, el directo, la calibración y el seguimiento. Los atajos de teclado y el orden de los botones no cambian.',
+    'En ⚙ Configurar → «Iconos de la app» puedes ver el juego completo.'
+  ]},
   {v:'3.15', date:'Noviembre 2026', items:[
     '<b>Silenciar el vídeo:</b> nuevo botón 🔊/🔇 junto a la velocidad (tecla M, también en la presentación). Se recuerda al volver a abrir la app. Los MP4 generados conservan el sonido del vídeo aunque lo tengas silenciado.',
     '<b>Tiempo del corte más visible:</b> al reproducir un corte, la esquina del vídeo muestra «⏱ 0:03 / 0:08» más grande, con el color de la etiqueta y una barra que avanza hasta el final del corte. También en la presentación y en la otra ventana. Se puede ocultar en ⚙ Configurar.'
@@ -5120,7 +5261,6 @@ function clipTimeText(c, t){
 }
 function setClipTime(el, txt, v, box, c, t){
   if (!txt){ if (!el.hidden) el.hidden = true; return; }
-  txt = '⏱ ' + txt;
   if (el.textContent !== txt) el.textContent = txt;
   if (el.hidden) el.hidden = false;
   if (c){   // v3.15: color de la etiqueta y barra que avanza hasta el final del corte
@@ -7936,6 +8076,88 @@ $('#bMute').onclick = toggleMute;
 /* si el sonido se cambia desde los controles del sistema (pantalla completa del móvil…), lo seguimos */
 video.addEventListener('volumechange', () => { if (!(actx && outGain) && video.muted !== vMuted){ vMuted = video.muted; try{ localStorage.setItem('tacticalab:muted', vMuted ? '1' : '0'); }catch(e){} applyMute(); } });
 applyMute();
+
+
+/* =========================================================
+   v3.16 · ICONOS DE LÍNEA EN LUGAR DE EMOJIS
+   · el juego de iconos va en un sprite SVG al principio del <body> (<symbol id="i-…">)
+   · los textos de la interfaz siguen escribiéndose con su símbolo (▶, ✎, 🗑…) y aquí se cambian por el icono:
+     así funciona también con todo lo que se crea o se cambia desde el código (MutationObserver)
+   ========================================================= */
+const ICON_MAP = [
+  ['❚❚','pause'],['▶','play'],['■','stop'],['⏮','skip-back'],['⏭','skip-fwd'],['↺','repeat'],['✕','x'],['✏','pencil'],['✎','pencil'],
+  ['📷','camera'],['🗺','map'],['🔊','volume'],['🔇','volume-x'],['▣','pip'],['⧉','windows'],['⛶','expand'],['🖨','printer'],['💾','save'],
+  ['🎥','video'],['🎬','clapper'],['●','record'],['⚙','settings'],['📲','install'],['⤓','download'],['🗑','trash'],['✂','scissors'],['⇄','compare'],
+  ['⚡','zap'],['↔','move-h'],['↶','undo'],['↷','redo'],['➝','arrow-right'],['／','line'],['◯','circle'],['▭','rect'],['◉','spot'],['△','triangle'],
+  ['⬠','polygon'],['✥','move'],['⌫','eraser'],['👁','eye'],['⚽','ball'],['▲','cone'],['│','pole'],['⊓','hurdle'],['⊐','minigoal'],['⊏','goal'],
+  ['📐','ruler'],['🏃','run'],['🎯','target'],['📍','pin'],['🤖','wand'],['⏱','timer'],['⤢','maximize'],['⤳','curve'],['⑦','shirt'],['⤡','minimize'],['⇅','rotate'],['⇆','swap-h'],
+  ['▾','chevron-down'],['▸','chevron-right'],['▴','chevron-up'],['◂','chevron-left'],['◀','chevron-left'],['⚠','alert'],['✓','check'],['✔','check'],['✗','x-circle'],
+  ['🔆','sun'],['⎋','share'],['⋮','more-v']
+];
+const ICON_BY = new Map(ICON_MAP);
+const ICON_RE = new RegExp('(' + ICON_MAP.map(([k]) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).sort((a, b) => b.length - a.length).join('|') + ')\\uFE0F?', 'g');
+const ICON_TEST = new RegExp(ICON_RE.source);
+/* textos completos de botón que son un símbolo compuesto */
+const ICON_WHOLE = {'◂|': ['step-back', ''], '|▸': ['step-fwd', ''], '◀|': ['step-back', ''], '|▶': ['step-fwd', ''], '−5 s': ['back5', '5'], '+5 s': ['fwd5', '5'], '[': ['mark-in', ''], ']': ['mark-out', ''], '−': ['minus', ''], '+': ['plus', '']};
+const ICON_SKIP = 'script,style,textarea,select,option,svg,kbd,code,input,[data-noicon]';
+const SVGNS = 'http://www.w3.org/2000/svg';
+function icEl(name, cls){
+  const s = document.createElementNS(SVGNS, 'svg'); s.setAttribute('class', 'ic' + (cls ? ' ' + cls : '')); s.setAttribute('aria-hidden', 'true'); s.setAttribute('focusable', 'false');
+  const u = document.createElementNS(SVGNS, 'use'); u.setAttribute('href', '#i-' + name); s.appendChild(u); return s;
+}
+/* para las plantillas de texto (innerHTML) */
+const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`;
+function iconizeText(node){
+  const p = node.parentElement; if (!p || p.closest(ICON_SKIP)) return;
+  const raw = node.nodeValue; if (!raw) return;
+  const btn = p.closest('button');
+  // botones con un símbolo compuesto (fotograma, −5 s, [, ]…)
+  if (btn && p === btn && btn.childNodes.length === 1){
+    const w = ICON_WHOLE[raw.trim()];
+    if (w){ if (!btn.hasAttribute('aria-label')) btn.setAttribute('aria-label', raw.trim()); const f = document.createDocumentFragment(); f.appendChild(icEl(w[0])); if (w[1]) f.appendChild(document.createTextNode(w[1])); p.replaceChild(f, node); return; }
+  }
+  let txt = raw, lead = null;
+  if (btn && p.firstChild === node){ const m = /^\s*([+−—―]|T(?= Texto))\s+(?=\S)/.exec(txt); if (m){ lead = {'+':'plus','−':'minus','—':'line','―':'line','T':'type'}[m[1]]; txt = txt.slice(m[0].length); } }
+  if (!lead && !ICON_TEST.test(txt)) return;
+  const f = document.createDocumentFragment(); if (lead) f.appendChild(icEl(lead));
+  let last = 0; ICON_RE.lastIndex = 0; let m;
+  const inBtn = !!btn;
+  while ((m = ICON_RE.exec(txt))){
+    let before = txt.slice(last, m.index);
+    if (inBtn && !before.trim() && (f.childNodes.length === 0 || lead)) before = '';
+    if (before) f.appendChild(document.createTextNode(before));
+    f.appendChild(icEl(ICON_BY.get(m[1].replace('️', '')), inBtn ? '' : 'ic-t'));
+    last = m.index + m[0].length;
+    if (inBtn && txt[last] === ' ') last++;   // en los botones el hueco lo pone el estilo
+  }
+  const rest = txt.slice(last); if (rest) f.appendChild(document.createTextNode(rest));
+  p.replaceChild(f, node);
+}
+function iconizeTree(root){
+  if (!root) return;
+  if (root.nodeType === 3){ iconizeText(root); return; }
+  if (root.nodeType !== 1 || root.closest && root.closest(ICON_SKIP)) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), list = [];
+  for (let n = w.nextNode(); n; n = w.nextNode()) if (ICON_TEST.test(n.nodeValue) || /^\s*([+−—―]|T Texto)/.test(n.nodeValue) || ['[', ']', '◂|', '|▸', '◀|', '|▶'].includes(n.nodeValue.trim())) list.push(n);
+  list.forEach(iconizeText);
+}
+/* cabecera y botones de texto sin símbolo: icono delante */
+const ICON_IDS = {btnCats: 'tags', btnTac: 'board', btnSave: 'save', btnLoad: 'folder-open', btnImportEv: 'import', btnCsv: 'file-csv', btnXlsx: 'sheet', btnReport: 'report', btnNews: 'sparkles', plExport: 'film', bClose: 'check', trkToTac: 'board', tacNew: 'plus', calSave: 'check', calClear: 'repeat', dmDone: 'check', dcDone: 'check'};
+Object.entries(ICON_IDS).forEach(([id, name]) => { const b = document.getElementById(id); if (b && !b.querySelector('.ic')) b.insertBefore(icEl(name, id.startsWith('btn') ? 'hi-opt' : ''), b.firstChild); });
+iconizeTree(document.body);
+new MutationObserver(recs => {
+  for (const r of recs){
+    if (r.type === 'characterData'){ if (r.target.parentNode) iconizeText(r.target); }
+    else r.addedNodes.forEach(n => { if (n.nodeType === 3 || (n.nodeType === 1 && n.namespaceURI !== SVGNS)) iconizeTree(n); });
+  }
+}).observe(document.body, {childList: true, subtree: true, characterData: true});
+/* ⚙ Configurar → «Iconos de la app» (solo consulta) */
+(() => {
+  const g = $('#iconGrid'); if (!g) return;
+  const names = [...document.querySelectorAll('symbol[id^="i-"]')].map(s => s.id.slice(2));
+  const ES = {"play": "Reproducir", "pause": "Pausa", "stop": "Parar", "skip-back": "Anterior", "skip-fwd": "Siguiente", "step-back": "Fotograma atrás", "step-fwd": "Fotograma adelante", "back5": "Retroceder 5 s", "fwd5": "Avanzar 5 s", "repeat": "Repetir", "x": "Cerrar", "pencil": "Editar / dibujar", "camera": "Captura", "map": "Campo 2D", "volume": "Sonido", "volume-x": "Silencio", "pip": "Imagen en imagen", "windows": "Ventana", "expand": "Pantalla completa", "maximize": "Ampliar", "minimize": "Reducir", "printer": "Imprimir", "save": "Guardar", "video": "Cámara", "clapper": "Partido", "record": "Grabar", "settings": "Configurar", "install": "Instalar", "download": "Descargar", "upload": "Subir", "trash": "Borrar", "scissors": "Cortar", "compare": "Comparar", "zap": "Automático", "move-h": "Manual", "undo": "Deshacer", "redo": "Rehacer", "curve": "Curva", "arrow-right": "Flecha", "line": "Línea", "circle": "Zona", "rect": "Rectángulo", "spot": "Foco", "triangle": "Triángulo", "polygon": "Zona libre", "move": "Mover", "eraser": "Borrar forma", "eye": "Vista", "ball": "Balón", "cone": "Cono", "pole": "Pica", "hurdle": "Valla", "minigoal": "Miniportería", "goal": "Portería", "ruler": "Calibrar", "run": "Seguir jugadores", "target": "Objetivo", "shirt": "Dorsal", "type": "Texto", "pin": "Posición", "wand": "Automático (IA)", "timer": "Tiempo", "rotate": "Girar", "swap-h": "Cambiar lado", "chevron-down": "Abajo", "chevron-right": "Derecha", "chevron-up": "Arriba", "chevron-left": "Izquierda", "alert": "Aviso", "check": "Hecho", "x-circle": "Error", "sun": "Brillo", "share": "Compartir", "more-v": "Más", "plus": "Añadir", "minus": "Quitar", "mark-in": "Marcar inicio", "mark-out": "Marcar fin", "tags": "Etiquetas", "board": "Pizarra táctica", "folder-open": "Abrir", "import": "Importar", "file-csv": "CSV", "sheet": "Excel", "report": "Informe", "sparkles": "Novedades", "film": "Exportar vídeo", "list-play": "Lista", "layers": "Capas"};
+  g.innerHTML = names.map(n => `<span class="icg" title="${esc(ES[n] || n)}">${ic(n)}<small>${esc(ES[n] || n)}</small></span>`).join('');
+})();
 
 /* =========================================================
    INICIO
