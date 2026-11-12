@@ -1003,6 +1003,54 @@ body.cal-open{overflow:hidden}
   .tac-pov{flex:1 1 50%}
   .pov-ctl input[type=range]{width:5.5rem}
 }
+/* ===== v3.14 · seguir jugadores ===== */
+.trkcv{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;touch-action:none}
+body.trk-on .trkcv{pointer-events:auto;cursor:crosshair}
+.trkbar .tk-title{display:inline-flex;align-items:center;gap:.35rem;font-size:.84rem}
+.trkbar .tk-title i{width:10px;height:10px;border-radius:3px;background:var(--c)}
+.tk-list{flex-wrap:wrap}
+.tk-chip{display:inline-flex;align-items:center;gap:.25rem;padding:.12rem .2rem .12rem .45rem;border-radius:999px;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);font-size:.76rem;cursor:pointer}
+.tk-chip.on{box-shadow:0 0 0 2px var(--c);background:color-mix(in srgb,var(--c) 30%,transparent)}
+.tk-chip b{color:var(--c);font-weight:800}
+.tk-chip .nm{max-width:7rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-chip small{color:var(--muted);font-size:.68rem}
+.tk-chip button{min-width:0;min-height:0;padding:0 .3rem;font-size:.72rem;line-height:1.35;border-radius:999px}
+#trkAdd.on{background:color-mix(in srgb,var(--accent-hi) 30%,var(--panel2));border-color:var(--accent-hi)}
+.tk-d{display:inline-flex;align-items:center;gap:.25rem;font-size:.78rem}
+.tk-d select{max-width:6.5rem}
+.tk-form,.tk-prop{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;width:100%;padding:.35rem .4rem;border-radius:8px;background:color-mix(in srgb,var(--accent-hi) 12%,var(--panel2));border:1px solid var(--accent-hi)}
+.tk-form[hidden],.tk-prop[hidden],.tk-prog[hidden]{display:none}
+.tk-form input{width:6rem}
+#tkN{width:4.2rem}
+.tk-prog{background:#ffd400;color:#111;border-color:#ffd400;font-weight:700}
+.tk-hint{margin:0;width:100%;font-size:.76rem;color:var(--muted)}
+.fieldm .trk-g text,.fieldm .tk-p text{text-anchor:middle;font-weight:800;font-family:Manrope,system-ui,sans-serif}
+.fieldm .tk-dist{fill:#ffd400;text-anchor:middle;font-weight:800;font-family:Manrope,system-ui,sans-serif}
+.tk-stats{margin-top:.5rem;font-size:.78rem;overflow-x:auto}
+.tk-stats table{border-collapse:collapse;width:100%;min-width:360px}
+.tk-stats th,.tk-stats td{padding:.2rem .35rem;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.tk-stats th{color:var(--muted);font-weight:600}
+.tk-stats p{margin:.3rem 0 0;color:var(--muted)}
+.tk-stats.light th,.tk-stats.light p{color:#6b6570}
+.tk-stats.light th,.tk-stats.light td{border-color:#ddd}
+.tk-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:.3rem;vertical-align:-.05em}
+.pr-map{position:absolute;right:14px;bottom:64px;width:min(30%,300px);aspect-ratio:1.5;z-index:4;border-radius:10px;pointer-events:none}
+.pr-map[hidden]{display:none}
+/* Campo 2D ampliado: vídeo y campo lado a lado */
+@media (min-width:761px){
+  .vwrap.map-big{position:relative}
+  .vwrap.map-big .stage{width:50% !important;margin:0 !important}
+  .map2dbig{position:absolute;right:0;left:auto;bottom:auto;width:calc(50% - .5rem);display:flex;flex-direction:column;justify-content:center;padding:.5rem;border-radius:var(--r);background:var(--panel2);border:1px solid var(--line)}
+  .map2dbig .map2d-h{color:var(--ink)}
+  .map2dbig .map2d-x{color:var(--ink)}
+}
+.map2dbig[hidden]{display:none}
+@media (max-width:760px){
+  .map2d{width:40%}
+  .map2d .map2d-big,.map2d-e{display:none}
+  .map2d-h > span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .map2d-h{gap:.2rem}
+}
 </style>
 </head>
 <body>
@@ -1041,6 +1089,7 @@ body.cal-open{overflow:hidden}
     <div class="stage" id="stage">
       <video id="video" playsinline></video>
       <canvas class="board" id="board" aria-hidden="true"></canvas>
+      <canvas class="trkcv" id="trkCv" aria-label="Seguimiento de jugadores: arrastra cada marca a su nueva posición"></canvas>
       <div class="drop" id="drop">
         <div>
           <svg class="pitch" viewBox="0 0 140 90" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="136" height="86" rx="2"/><line x1="70" y1="2" x2="70" y2="88"/><circle cx="70" cy="45" r="13"/><rect x="2" y="25" width="20" height="40"/><rect x="118" y="25" width="20" height="40"/></svg>
@@ -1090,6 +1139,31 @@ body.cal-open{overflow:hidden}
       <div class="map2d" id="map2d" hidden role="region" aria-label="Campo 2D con las acciones del partido"></div>
     </div>
     <div class="descbar" id="descBar" hidden role="group" aria-label="Descriptores del último corte"></div>
+    <div class="map2d map2dbig" id="map2dBig" hidden role="region" aria-label="Campo 2D ampliado"></div>
+    <div class="boardbar trkbar" id="trkBar" hidden role="toolbar" aria-label="Seguir jugadores">
+      <div class="grp tk-head"><b class="tk-title" id="trkTitle"></b></div>
+      <div class="grp tk-list" id="trkList" aria-label="Jugadores seguidos"></div>
+      <div class="grp">
+        <button id="trkAdd" title="Añadir un jugador: luego pulsa sus pies en el vídeo">+ Jugador</button>
+        <button id="trkAuto" title="La app busca al jugador durante unos segundos y propone los puntos">🤖 Proponer</button>
+        <select id="trkDur" aria-label="Duración de la propuesta"><option value="2">2 s</option><option value="3" selected>3 s</option><option value="5">5 s</option></select>
+      </div>
+      <div class="grp">
+        <select id="trkLines" aria-label="Líneas entre compañeros"><option value="">Sin líneas</option><option value="hull">Bloque</option><option value="def">Línea defensiva</option></select>
+        <label class="tk-d">Distancia <select id="trkD1" aria-label="Primer jugador"></select>↔<select id="trkD2" aria-label="Segundo jugador"></select></label>
+      </div>
+      <div class="grp"><button id="trkToTac" title="Crear una pizarra táctica con estos jugadores y un paso cada 1–2 s">Enviar a la pizarra táctica</button><button id="trkClose" title="Terminar (Esc)">✕ Cerrar</button></div>
+      <div class="tk-form" id="trkForm" hidden>
+        <select id="tkTeam" aria-label="Equipo"><option value="A">Propio</option><option value="B">Rival</option></select>
+        <select id="tkPl" aria-label="Jugador de la plantilla"></select>
+        <input id="tkN" inputmode="numeric" maxlength="3" placeholder="Dorsal" aria-label="Dorsal">
+        <input id="tkName" maxlength="24" placeholder="Nombre (opcional)" aria-label="Nombre">
+        <button id="tkOk" class="primary">Seguir</button><button id="tkCancel">Cancelar</button>
+      </div>
+      <div class="tk-prop" id="trkPropBox" hidden><button id="trkApply" class="primary">Aplicar</button><button id="trkRetry">Volver a intentar</button><button id="trkDiscard">Descartar</button></div>
+      <button class="tk-prog" id="trkProg" hidden title="Cancelar la búsqueda">🤖 Siguiendo…</button>
+      <p class="tk-hint" id="trkHint" aria-live="polite"></p>
+    </div>
     <div class="boardbar" id="boardBar" hidden role="toolbar" aria-label="Pizarra">
       <div class="grp" id="bTools">
         <button class="tool on" data-tool="arrow" title="Flecha recta">➝ Flecha</button>
@@ -1116,6 +1190,7 @@ body.cal-open{overflow:hidden}
         <button id="bDelShape" title="Borrar la forma seleccionada (Supr)" disabled>Borrar forma</button>
         <button id="bClear" title="Borrar todo el dibujo">Borrar todo</button>
         <button id="bCalib" title="Calibrar el campo: relaciona el vídeo con las medidas reales del terreno">📐 Calibrar</button>
+        <button id="bTrk" title="Seguir jugadores de este corte sobre el campo calibrado (J)">🏃 Seguir jugadores</button>
       </div>
       <span class="sep"></span>
       <div class="grp" id="bTrackBox" role="group" aria-label="Seguir al jugador">
@@ -1194,6 +1269,7 @@ body.cal-open{overflow:hidden}
         <button type="button" role="menuitem" data-a="list">＋ Añadir a la lista actual</button>
         <button type="button" role="menuitem" data-a="split">✂ Dividir aquí</button>
         <button type="button" role="menuitem" data-a="dup">⧉ Duplicar</button>
+        <button type="button" role="menuitem" data-a="trk">🏃 Seguir jugadores</button>
         <button type="button" role="menuitem" data-a="del" class="danger">🗑 Borrar</button>
       </div>
       <span class="sr-only" id="ctpLive" aria-live="polite"></span>
@@ -1252,6 +1328,7 @@ body.cal-open{overflow:hidden}
       <div class="opts">
         <label><input type="checkbox" id="optTitles" checked> Rótulo de 2 s antes de cada corte (partido, etiqueta, jugadores, minuto y observación)</label>
         <label><input type="checkbox" id="optOverlay" checked> Etiqueta sobreimpresa durante el corte</label>
+        <label title="Solo en los cortes con jugadores seguidos (🏃)">Campo 2D en el vídeo <select id="optMap2d"><option value="">No</option><option value="corner">En una esquina</option><option value="split">Pantalla partida</option></select></label>
         <div class="qual">
           <label>Resolución <select id="optRes"><option value="orig">Original (hasta 1080p) · proyectar</option><option value="720">720p · clase, Drive, correo</option><option value="480">480p · WhatsApp y móvil</option></select></label>
           <label>Fotogramas <select id="optFps"><option value="30">30 fps · más fluido</option><option value="25">25 fps · estándar</option><option value="15">15 fps · más ligero</option></select></label>
@@ -1360,7 +1437,7 @@ body.cal-open{overflow:hidden}
   <div class="plyhead"><span>Jugadores implicados</span></div>
   <div class="chips" id="dcPlayers"></div>
   <div id="dcTags"></div>
-  <div class="zonebox"><div class="zonehead"><span>Zona: <b id="dcZoneLbl"></b></span><button id="dcZoneClear">Quitar</button></div><div id="dcZone"></div><div class="posrow"><span>Posición real: <b id="dcPosLbl">sin posición</b></span><span><button id="dcPosPick" type="button">📍 Marcar en el vídeo</button> <button id="dcPosClear" type="button">Quitar</button></span></div></div>
+  <div class="zonebox"><div class="zonehead"><span>Zona: <b id="dcZoneLbl"></b></span><button id="dcZoneClear">Quitar</button></div><div id="dcZone"></div><div class="posrow"><span>Posición real: <b id="dcPosLbl">sin posición</b></span><span><button id="dcPosPick" type="button">📍 Marcar en el vídeo</button> <button id="dcPosClear" type="button">Quitar</button></span></div><div class="posrow"><span>Jugadores seguidos</span><button id="dcTrk" type="button">🏃 Seguir jugadores</button></div><div id="dcTrkStats"></div></div>
   <div class="drow"><span class="hint" id="dcDraw"></span><div><button id="dcDone" class="primary">Hecho</button></div></div>
 </dialog>
 
@@ -1393,7 +1470,7 @@ body.cal-open{overflow:hidden}
 
 <div class="present" id="present" hidden role="dialog" aria-modal="true" aria-label="Modo presentación">
   <div class="pr-top" id="prTop"></div>
-  <div class="pr-stage" id="prStage"><video id="pVideo" playsinline></video><canvas class="pr-board" id="pBoard" aria-hidden="true"></canvas><div class="pr-end" id="prEnd" hidden>Fin de la lista</div><div class="vinfo" id="prInfo" aria-hidden="true"><span class="cliptime" id="prClipTime" hidden></span><span class="vzbadge" id="prZoomBadge" hidden>1×</span></div></div>
+  <div class="pr-stage" id="prStage"><video id="pVideo" playsinline></video><canvas class="pr-board" id="pBoard" aria-hidden="true"></canvas><canvas class="pr-map" id="pMap" hidden aria-hidden="true"></canvas><div class="pr-end" id="prEnd" hidden>Fin de la lista</div><div class="vinfo" id="prInfo" aria-hidden="true"><span class="cliptime" id="prClipTime" hidden></span><span class="vzbadge" id="prZoomBadge" hidden>1×</span></div></div>
   <div class="pr-note" id="prNote"></div>
   <div class="pr-ctrl">
     <button id="prPrev" title="Corte anterior (←)">⏮ Anterior</button>
@@ -1547,8 +1624,13 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.13';
+const APP_VERSION = '3.14';
 const CHANGELOG = [
+  {v:'3.14', date:'Noviembre 2026', items:[
+    '<b>Seguir jugadores:</b> con un corte seleccionado, «🏃 Seguir jugadores» (en la pizarra, en el menú del corte, en ✎ del corte o tecla J). Pulsa «+ Jugador», toca sus pies en el vídeo y elige equipo, dorsal y nombre (hasta 12 por corte). Avanza el vídeo (→ , . o la línea de tiempo) y arrastra su marca: cada vez se guarda un punto, en metros reales gracias a la calibración del campo.',
+    '«🤖 Proponer» busca al jugador solo durante 2–5 s comparando la imagen y te enseña el recorrido para aplicarlo, repetirlo o descartarlo; si lo pierde, avisa. Ayuda, no magia: revísalo siempre.',
+    'El «🗺 Campo 2D» muestra a los jugadores moviéndose con el vídeo, con estela de 3 s, el bloque o la línea defensiva y la distancia entre dos jugadores; «⤢» lo amplía junto al vídeo. También en la presentación, en la otra ventana y en el MP4 («Campo 2D en el vídeo»). Distancia, velocidad media y máxima y anchura y profundidad del bloque en ✎ del corte y en el Informe; los puntos van al Excel (hoja «Seguimiento») y se pueden «Enviar a la pizarra táctica».'
+  ]},
   {v:'3.13', date:'Noviembre 2026', items:[
     '<b>Vista del jugador</b> en la Pizarra táctica: selecciona un jugador con «✥ Mover» y pulsa «👁 Vista». Verás la jugada desde sus ojos (a 1,7 m): compañeros y rivales con su dorsal, balón, material, porterías, líneas del campo y las flechas y zonas del paso dibujadas en el suelo.',
     'Gira la mirada arrastrando en la vista o con el control de 0–360°, ajusta el campo de visión (60–110°) o pulsa «⚽ Mirar al balón»; con «Seguir el balón» la mirada lo acompaña sola. En el campo 2D un cono marca lo que ve. Al reproducir los pasos, la vista se anima con la jugada.',
@@ -1682,7 +1764,8 @@ let openCut = {};           // catId -> instante de inicio
 let playback = null;        // {queue, i, busy}
 let exporting = null;       // {abort}
 let pendZone = null;        // zona marcada para el próximo corte
-let pendPos = null;         // v3.12 · posición real (metros) marcada para el próximo corte
+let pendPos = null;
+let map2dBig = (() => { try{ return localStorage.getItem('tacticalab:map2dBig') === '1'; }catch(e){ return false; } })(), trkReady = false;   // v3.14         // v3.12 · posición real (metros) marcada para el próximo corte
 let map2d = (() => { try{ return localStorage.getItem('tacticalab:map2d') === '1'; }catch(e){ return false; } })(), map2dKey = '', map2dT = 0;   // v3.12 · «Campo 2D»
 let pendPlayers = new Set();// jugadores marcados para el próximo corte
 let previewStop = null;
@@ -1865,7 +1948,7 @@ function sanitizeClip(c, catMap, matchMap, fallbackMatch){
     zone: Number.isInteger(z) && z >= 1 && z <= 18 ? z : null,
     players: [...new Set((Array.isArray(c.players) ? c.players : []).map(p => String(p).replace(/[^\d]/g,'').slice(0,3)).filter(Boolean))].slice(0, 11),
     drawings: trimTracks(sanitizeDrawings(c.drawings), start, end),
-    tags: sanitizeTags(c.tags), ...sanitizeClipLive(c.live), ...(sanitizePos(c.pos) ? {pos: sanitizePos(c.pos)} : {})};
+    tags: sanitizeTags(c.tags), ...sanitizeClipLive(c.live), ...(sanitizePos(c.pos) ? {pos: sanitizePos(c.pos)} : {}), ...(sanitizeTracks(c.tracks, start, end) ? {tracks: sanitizeTracks(c.tracks, start, end)} : {})};
 }
 /* v3.1 · acción registrada en directo: {p, s, r, pre, post} */
 function sanitizeClipLive(L){
@@ -1954,7 +2037,7 @@ const FIXED_KEYS = new Set(Object.values(KEY));
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
 function save(){
   try{ localStorage.setItem(KEY.cats, JSON.stringify(state.cats)); }catch(e){}
-  try{ localStorage.setItem(KEY.project, JSON.stringify({version:13, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
+  try{ localStorage.setItem(KEY.project, JSON.stringify({version:14, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
   catch(e){ flash('No se pudo guardar en este navegador (almacenamiento lleno). Usa «Guardar proyecto» para no perder el trabajo.', 5000); }
 }
 function saveBrand(){ try{ localStorage.setItem(KEY.brand, JSON.stringify(brand)); }catch(e){ flash('No se pudo guardar el escudo en este navegador (imagen demasiado grande)', 3500); } }
@@ -2361,6 +2444,7 @@ function cancelFreeze(){ if (freeze){ clearTimeout(freeze.timer); freeze = null;
   trackTick(t);
   if (ctl) ctlHead(false);
   mapTick();
+  if (trkReady) trkTick();
   liveTick();
   updateClipTime(t);
   mirrorTick();
@@ -3329,6 +3413,7 @@ async function exportClips(list, opts){
   const introDur = (opts.titles && !opts.separate && list.length > 1) ? 2500 : 0;
   const total = playlistSeconds(list, opts.titles, opts.separate) * 1000;
   let doneMs = 0, scene = {type:'black'}, drawing = true, lastDraw = 0;
+  const mapMode = $('#optMap2d') ? $('#optMap2d').value : '';   // v3.14 · campo 2D con los jugadores seguidos
   (function draw(now){
     if (!drawing) return;
     // v3.3: se dibuja al ritmo de los fps elegidos (menos trabajo para el ordenador a 15 o 25 fps)
@@ -3337,12 +3422,15 @@ async function exportClips(list, opts){
     if (scene.type === 'intro') drawIntro(ctx, W, H, opts.name, list.length, nMatches, total/1000);
     else if (scene.type === 'title') drawTitle(ctx, W, H, scene.clip, scene.i, list.length);
     else if (scene.type === 'video' || scene.type === 'freeze'){
-      drawVideoFit(ctx, W, H);
+      const withMap = mapMode && scene.clip && scene.clip.tracks && scene.clip.tracks.length;
+      if (withMap && mapMode === 'split'){ ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); const b0 = videoBox(Math.round(W*.6), H); if (video.videoWidth) ctx.drawImage(video, b0.x, b0.y, b0.w, b0.h); }
+      else drawVideoFit(ctx, W, H);
       drawWatermark(ctx, W, H);
       // v3.4: congelado con su duración o, si el dibujo es «sin congelar», visible mientras pasa el vídeo
       const sh0 = scene.type === 'freeze' ? scene.shapes : (scene.clip ? (liveDrawingAt(clipDrawings(scene.clip), video.currentTime) || {}).shapes : null);
       const sh = scene.clip ? withTracks(sh0, clipDrawings(scene.clip), video.currentTime) : sh0;
-      if (sh){ const b = videoBox(W, H); ctx.save(); ctx.translate(b.x, b.y); ctx.beginPath(); ctx.rect(0,0,b.w,b.h); ctx.clip(); drawShapes(ctx, b.w, b.h, sh); ctx.restore(); }
+      if (sh){ const b = withMap && mapMode === 'split' ? videoBox(Math.round(W*.6), H) : videoBox(W, H); ctx.save(); ctx.translate(b.x, b.y); ctx.beginPath(); ctx.rect(0,0,b.w,b.h); ctx.clip(); drawShapes(ctx, b.w, b.h, sh); ctx.restore(); }
+      if (withMap){ if (mapMode === 'split') trkMapCanvas(ctx, Math.round(W*.6), 0, W - Math.round(W*.6), H, scene.clip, video.currentTime); else { const mw = Math.round(W*.3), mh = Math.round(mw*.7); trkMapCanvas(ctx, W - mw - Math.round(H*.03), H - mh - Math.round(H*.03), mw, mh, scene.clip, video.currentTime); } }
       if (opts.overlay) drawOverlay(ctx, W, H, scene.clip);
     }
     else { ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H); }
@@ -3610,7 +3698,7 @@ $('#catReset').onclick = async () => {
    GUARDAR / CARGAR PROYECTO (v5 con partidos y registro en directo; abre también v4 y proyectos v1–v3 de un solo vídeo)
    ========================================================= */
 $('#btnSave').onclick = () => {
-  const data = {app:'TacticaLab', version:13, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
+  const data = {app:'TacticaLab', version:14, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const one = state.matches.length === 1 ? baseFile(state.matches[0].fileName) : 'tactica-lab';
   download(`${slug(one)}_analisis_${stamp}.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
@@ -3720,6 +3808,7 @@ document.addEventListener('keydown', e => {
   if (inField) return;
   if (k === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); openBoard(); return; }
   if (k === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); armPos(null); return; }   // v3.12 · posición real
+  if (k === 'j' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); openTrk(null); return; }   // v3.14 · seguir jugadores
   // v3.3 · deshacer/rehacer y edición del corte seleccionado
   if ((e.ctrlKey || e.metaKey) && !e.altKey && k === 'z'){ e.preventDefault(); e.shiftKey ? redoEdit() : undoEdit(); return; }
   if ((e.ctrlKey || e.metaKey) && !e.altKey && k === 'y'){ e.preventDefault(); redoEdit(); return; }
@@ -3978,7 +4067,7 @@ function buildReport(){
     <h2>Cortes (${cs.length})</h2>
     ${cs.map((c, i) => { const cat = catById(c.cat), img = reportShots[c.id];
       const meta = [matchTitle(matchById(c.matchId)), minuteText(c) || `vídeo ${fmtShort(c.start)}`, `${(c.end-c.start).toFixed(1)} s`, teamName(c), c.result === 'ok' ? '✓ éxito' : c.result === 'ko' ? '✗ fallo' : '', c.zone ? `zona ${c.zone}` : '', c.pos ? posText(c.pos) : '', (c.players||[]).length ? playersText(c.players) : '', tagsText(c)].filter(Boolean).join(' · ');
-      return `<div class="rp-clip ${img ? '' : 'noimg'}">${img ? `<img src="${img}" alt="Primer fotograma del corte ${i+1}">` : ''}<div><div class="ct"><span class="dot" style="--c:${esc(cat.color)}"></span>${i+1}. ${esc(cat.name)}</div><div class="cm">${esc(meta)}</div>${c.note ? `<div class="cn">${esc(c.note)}</div>` : ''}</div></div>`; }).join('')}
+      return `<div class="rp-clip ${img ? '' : 'noimg'}">${img ? `<img src="${img}" alt="Primer fotograma del corte ${i+1}">` : ''}<div><div class="ct"><span class="dot" style="--c:${esc(cat.color)}"></span>${i+1}. ${esc(cat.name)}</div><div class="cm">${esc(meta)}</div>${c.note ? `<div class="cn">${esc(c.note)}</div>` : ''}${trkStatsHTML(c, true)}</div></div>`; }).join('')}
     ${tacReportHTML()}
     <div class="rp-foot">Generado con Táctica Lab v${APP_VERSION} · ${esc(today)}</div>`;
   page.querySelectorAll('img[data-optional]').forEach(i => i.onerror = () => i.remove());
@@ -4076,6 +4165,10 @@ async function exportXlsx(){
   X.utils.book_append_sheet(wb, sheet(cortes, [13,14,15], [5,18,16,16,11,22,14,22,6,28,9,7,8,8,8,9,8,40,22,24,7,7]), 'Cortes');
   X.utils.book_append_sheet(wb, sheet(resumen, [5], [30,10,10,8,10,12]), 'Resumen');
   X.utils.book_append_sheet(wb, sheet(listas, [5,6,7], [22,7,22,18,20,8,8,9,40]), 'Listas');
+  // v3.14 · seguimiento de jugadores
+  const seg = [['Corte','Etiqueta','Partido','Jugador','Equipo','t (s)','x (m)','y (m)']];
+  clips.forEach((c, i) => (c.tracks || []).forEach(tr => tr.pts.forEach(p => seg.push([i + 1, catById(c.cat).name, matchTitle(matchById(c.matchId)), trkLabel(tr), tr.team === 'B' ? 'Rival' : (brand.short || 'Propio'), p.t, p.x, p.y]))));
+  if (seg.length > 1) X.utils.book_append_sheet(wb, sheet(seg, [], [7,20,26,18,10,8,8,8]), 'Seguimiento');
   const out = X.write(wb, {bookType:'xlsx', type:'array'});
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   download(`tactica-lab_${stamp}.xlsx`, new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
@@ -4244,6 +4337,7 @@ $('#cmRate').onchange = e => cmV.forEach(v => v.playbackRate = +e.target.value);
    ========================================================= */
 function overlayKeys(e){
   if (calKeys(e)) return true;
+  if (trkKeys(e)) return true;
   if (tacKeys(e)) return true;
   if (!$('#present').hidden){
     if (e.target.matches('input,select') && e.key !== 'Escape') return true;
@@ -5114,7 +5208,7 @@ function makeZoom(o){
   window.addEventListener('resize', () => { if (z.k !== 1) z.apply(); });
   return z;
 }
-vzMain = makeZoom({stage, media: () => video, layers: () => [video, $('#board')], badge: $('#vzBadge'), enabled: () => ready() && !exporting, blocked: () => board.on,
+vzMain = makeZoom({stage, media: () => video, layers: () => [video, $('#board'), $('#trkCv')], badge: $('#vzBadge'), enabled: () => ready() && !exporting, blocked: () => board.on,
   onChange: () => { $('#vzReset').textContent = '1×'; $('#vzOut').disabled = vzMain && vzMain.k === 1; if (board.on) paintShapes(board.shapes); }});
 vzPres = makeZoom({stage: $('#prStage'), media: () => pv, layers: () => [pv, pBoard], badge: $('#prZoomBadge'), enabled: () => !$('#present').hidden});
 $('#vzIn').onclick = () => { if (ready()) vzMain.zoomBy(1.5); };
@@ -6304,6 +6398,7 @@ ctlMenu.querySelectorAll('button').forEach(b => b.onclick = () => {
   else if (a === 'list') ctlAddToList(c);
   else if (a === 'split') ctlSplitAt(c, t);
   else if (a === 'dup') ctlDuplicate(c);
+  else if (a === 'trk') openTrk(c.id);
   else if (a === 'del') ctlDelete(c);
 });
 ctlMenu.addEventListener('keydown', e => {
@@ -6962,6 +7057,7 @@ document.addEventListener('keydown', e => {
 /* en el diálogo del corte */
 function renderDcPos(c){
   const lbl = $('#dcPosLbl'); if (!lbl) return;
+  if (trkReady){ $('#dcTrkStats').innerHTML = trkStatsHTML(c); $('#dcTrk').disabled = isVirtual(c); }
   lbl.textContent = c.pos ? posText(c.pos) : 'sin posición';
   $('#dcPosClear').hidden = !c.pos;
   $('#dcPosPick').disabled = isVirtual(c);
@@ -7024,22 +7120,27 @@ function bindPosDots(box){
 }
 /* «Campo 2D» junto al vídeo */
 function renderMap2d(force){
-  const box = $('#map2d'), btn = $('#bMap'); if (!box) return;
+  const small = $('#map2d'), bigBox = $('#map2dBig'), btn = $('#bMap'); if (!small) return;
   const m = matchById(curMatch), show = map2d && !!m && ready();
   btn.setAttribute('aria-pressed', String(map2d)); btn.classList.toggle('on', map2d);
-  box.hidden = !show; if (!show){ map2dKey = ''; return; }
+  if (trkReady) trkBigApply();
+  const big = show && !bigBox.hidden, box = big ? bigBox : small;
+  small.hidden = !show || big; if (!show){ map2dKey = ''; return; }
   const cs = state.clips.filter(c => c.matchId === curMatch && c.pos), t = video.currentTime;
   const active = new Set(cs.filter(c => t >= c.start - .05 && t <= c.end + .05).map(c => c.id));
-  const key = JSON.stringify([cs.map(c => [c.id, c.pos.x, c.pos.y, c.cat, c.team]), [...active], selClip, m.calib && [m.calib.type, m.calib.L, m.calib.W]]);
+  const key = JSON.stringify([big, cs.map(c => [c.id, c.pos.x, c.pos.y, c.cat, c.team]), [...active], selClip, m.calib && [m.calib.type, m.calib.L, m.calib.W]]);
   if (!force && key === map2dKey) return;
   map2dKey = key;
   const F = fieldOf(m), P = {F, pts: cs.map(c => ({c, x: c.pos.x, y: c.pos.y}))};
-  box.innerHTML = `<div class="map2d-h"><span>Campo 2D · ${nCortes(cs.length)}</span><button type="button" class="map2d-x" aria-label="Ocultar el campo 2D" title="Ocultar">✕</button></div>${fieldSVGm(F.type, F.L, F.W, {over: posDotsSVG(P, {active, sel: selClip})}, 'role="img" aria-label="Campo 2D con las acciones del partido"')}${cs.length ? '' : `<p class="map2d-e">${hasCalib(m) ? 'Marca posiciones con «📍 Posición» al etiquetar.' : 'Calibra el campo (✎ del partido → «Calibrar el campo»).'}</p>`}`;
-  box.querySelector('.map2d-x').onclick = e => { e.stopPropagation(); map2d = false; try{ localStorage.setItem('tacticalab:map2d', '0'); }catch(er){} renderMap2d(); };
+  box.innerHTML = `<div class="map2d-h"><span>Campo 2D · ${nCortes(cs.length)}</span><span><button type="button" class="map2d-x map2d-big" aria-label="${big ? 'Reducir el campo 2D' : 'Ampliar el campo 2D: vídeo y campo lado a lado'}" title="${big ? 'Reducir' : 'Ampliar: vídeo y campo lado a lado'}">${big ? '⤡' : '⤢'}</button><button type="button" class="map2d-x" aria-label="Ocultar el campo 2D" title="Ocultar">✕</button></span></div>${fieldSVGm(F.type, F.L, F.W, {over: posDotsSVG(P, {active, sel: selClip}) + '<g class="trk-g"></g>'}, 'role="img" aria-label="Campo 2D con las acciones del partido"')}${cs.length ? '' : `<p class="map2d-e">${hasCalib(m) ? 'Marca posiciones con «📍 Posición» al etiquetar.' : 'Calibra el campo (✎ del partido → «Calibrar el campo»).'}</p>`}`;
+  box.querySelector('.map2d-x:not(.map2d-big)').onclick = e => { e.stopPropagation(); map2d = false; try{ localStorage.setItem('tacticalab:map2d', '0'); }catch(er){} renderMap2d(); window.dispatchEvent(new Event('resize')); };
+  box.querySelector('.map2d-big').onclick = e => { e.stopPropagation(); map2dBig = !map2dBig; try{ localStorage.setItem('tacticalab:map2dBig', map2dBig ? '1' : '0'); }catch(er){} renderMap2d(true); window.dispatchEvent(new Event('resize')); };
   bindPosDots(box);
+  if (trkReady) trkMapTick(true);
 }
-$('#bMap').onclick = () => { map2d = !map2d; try{ localStorage.setItem('tacticalab:map2d', map2d ? '1' : '0'); }catch(e){} renderMap2d(true); };
+$('#bMap').onclick = () => { map2d = !map2d; try{ localStorage.setItem('tacticalab:map2d', map2d ? '1' : '0'); }catch(e){} renderMap2d(true); window.dispatchEvent(new Event('resize')); };
 $('#map2d').addEventListener('click', e => e.stopPropagation());
+$('#map2dBig').addEventListener('click', e => e.stopPropagation());
 function mapTick(){ const n = performance.now(); if (map2d && n - map2dT > 250){ map2dT = n; renderMap2d(); } }
 
 
@@ -7326,6 +7427,462 @@ $('#povPng').onclick = () => {
   c.toBlob(bl => { download(`${slug(b.name)}_vista-${A.me.it.n || 'jugador'}_paso-${tac.step + 1}.png`, bl); flash('Imagen PNG de la vista del jugador descargada'); }, 'image/png');
 };
 window.addEventListener('resize', () => { if (pov.open) povDraw(); });
+
+
+/* =========================================================
+   v3.14 · SEGUIR JUGADORES SOBRE EL CAMPO CALIBRADO
+   clip.tracks = [{id, team:'A'|'B', n, name?, pts:[{t, x, y}]}]
+   · t en segundos del vídeo; x, y en metros, en el campo donde el propio ataca hacia la derecha (como clip.pos)
+   · la marca se pinta sobre el vídeo con la calibración de su instante (homografía inversa)
+   ========================================================= */
+const TRK_MAX = 12, TRK_PTS = 60, TRK_TRAIL = 3;
+const trk = {on: false, clipId: null, sel: null, adding: null, drag: null, auto: null, prop: null, lines: '', d1: '', d2: ''};
+const trkCv = $('#trkCv');
+function sanitizeTracks(arr, start, end){
+  const ids = new Set();
+  const out = (Array.isArray(arr) ? arr : []).slice(0, TRK_MAX).filter(t => t && typeof t === 'object').map(t => {
+    let id = String(t.id || '').replace(/[^\w-]/g, '').slice(0, 24) || uid(); while (ids.has(id)) id = uid(); ids.add(id);
+    const seen = new Set();
+    const pts = (Array.isArray(t.pts) ? t.pts : []).map(p => ({t: cleanNum(p && p.t), x: +(p && p.x), y: +(p && p.y)}))
+      .filter(p => p.t !== null && Number.isFinite(p.x) && Number.isFinite(p.y) && p.x >= -10 && p.x <= 140 && p.y >= -10 && p.y <= 110 && p.t >= start - .05 && p.t <= end + .05)
+      .sort((a, b) => a.t - b.t).filter(p => { const k = p.t.toFixed(2); if (seen.has(k)) return false; seen.add(k); return true; })
+      .slice(0, TRK_PTS).map(p => ({t: +p.t.toFixed(2), x: +p.x.toFixed(2), y: +p.y.toFixed(2)}));
+    const o = {id, team: t.team === 'B' ? 'B' : 'A', n: String(t.n ?? '').replace(/[^\d]/g, '').slice(0, 3), pts};
+    const nm = cleanStr(t.name, 24).trim(); if (nm) o.name = nm;
+    return o;
+  }).filter(t => t.pts.length);
+  return out.length ? out : null;
+}
+/* ---------- geometría ---------- */
+function trkAt(tr, t, clampEnds){
+  const p = tr.pts; if (!p.length) return null;
+  if (t < p[0].t - .02){ return clampEnds ? {x: p[0].x, y: p[0].y, out: true} : null; }
+  if (t > p[p.length - 1].t + .02){ return clampEnds ? {x: p[p.length - 1].x, y: p[p.length - 1].y, out: true} : null; }
+  let i = 0; while (i < p.length - 2 && t > p[i + 1].t) i++;
+  const a = p[i], b = p[i + 1] || a, u = b.t > a.t ? clamp((t - a.t)/(b.t - a.t), 0, 1) : 0;
+  return {x: a.x + (b.x - a.x)*u, y: a.y + (b.y - a.y)*u};
+}
+const invCache = new Map();
+function posToUV(m, pos, t){
+  const C = calibAt(m, t); if (!C) return null;
+  let inv = invCache.get(C.h); if (!inv){ inv = homInv(C.h); invCache.set(C.h, inv); }
+  if (!inv) return null;
+  let x = pos.x, y = pos.y;
+  if ((C.dir !== 'L') !== (partAt(m, t) === 1)){ x = C.L - x; y = C.W - y; }
+  const q = homApply(inv, x/C.L, y/C.W); if (!q) return null;
+  return [q[0], q[1]];
+}
+const trkColor = tr => tr.team === 'B' ? '#2f8cff' : (hexToRgb(brand.accent) ? brand.accent : '#ff3550');
+const trkLabel = tr => `${tr.n ? tr.n : '?'}${tr.name ? ' · ' + tr.name : ''}`;
+const trkClip = () => trk.clipId && clipById(trk.clipId);
+function trkSetKey(tr, t, x, y){
+  const k = tr.pts.filter(p => Math.abs(p.t - t) >= .04);
+  k.push({t: +t.toFixed(2), x: +x.toFixed(2), y: +y.toFixed(2)}); k.sort((a, b) => a.t - b.t); tr.pts = k;
+}
+/* datos del movimiento */
+function trkStats(c){
+  const m = matchById(c.matchId), out = {players: [], teams: {}};
+  (c.tracks || []).forEach(tr => {
+    const p = tr.pts; if (p.length < 2){ out.players.push({tr, dist: 0, avg: 0, max: 0, dur: 0}); return; }
+    // muestreo cada 0,2 s y velocidad suavizada en ventanas de 1 s (para no exagerar los errores al marcar)
+    const t0 = p[0].t, t1 = p[p.length - 1].t, S = [];
+    for (let t = t0; t <= t1 + 1e-6; t += .2) S.push([t, trkAt(tr, Math.min(t, t1))]);
+    let dist = 0; for (let i = 1; i < S.length; i++) dist += Math.hypot(S[i][1].x - S[i-1][1].x, S[i][1].y - S[i-1][1].y);
+    let max = 0; for (let i = 5; i < S.length; i++){ const v = Math.hypot(S[i][1].x - S[i-5][1].x, S[i][1].y - S[i-5][1].y)/(S[i][0] - S[i-5][0]); if (v > max) max = v; }
+    const dur = t1 - t0, avg = dur > 0 ? dist/dur : 0;
+    out.players.push({tr, dist, avg: avg*3.6, max: Math.min(max*3.6, 40), dur});
+  });
+  ['A', 'B'].forEach(team => {
+    const ts = (c.tracks || []).filter(tr => tr.team === team && tr.pts.length); if (ts.length < 2) return;
+    const a = Math.max(...ts.map(tr => tr.pts[0].t)), b = Math.min(...ts.map(tr => tr.pts[tr.pts.length - 1].t));
+    if (b < a) return;
+    let w = 0, d = 0, n = 0;
+    for (let t = a; t <= b + 1e-6; t += .5){ const ps = ts.map(tr => trkAt(tr, t)).filter(Boolean); if (ps.length < 2) continue; w += Math.max(...ps.map(q => q.y)) - Math.min(...ps.map(q => q.y)); d += Math.max(...ps.map(q => q.x)) - Math.min(...ps.map(q => q.x)); n++; }
+    if (n) out.teams[team] = {width: w/n, depth: d/n, n: ts.length};
+  });
+  return out;
+}
+const fmt1 = v => v.toFixed(1).replace('.', ',');
+function trkStatsHTML(c, light){
+  if (!c.tracks || !c.tracks.length) return '';
+  const S = trkStats(c);
+  const rows = S.players.map(p => `<tr><td><i class="tk-dot" style="--c:${esc(trkColor(p.tr))}"></i>${esc(trkLabel(p.tr))}</td><td>${esc(p.tr.team === 'B' ? 'Rival' : (brand.short || 'Propio'))}</td><td>${fmt1(p.dist)} m</td><td>${fmt1(p.avg)} km/h</td><td>${fmt1(p.max)} km/h</td><td>${p.tr.pts.length}</td></tr>`).join('');
+  const tm = Object.entries(S.teams).map(([k, v]) => `${k === 'B' ? 'Rival' : esc(brand.short || 'Propio')}: anchura media ${fmt1(v.width)} m · profundidad media ${fmt1(v.depth)} m`).join(' · ');
+  return `<div class="tk-stats${light ? ' light' : ''}"><table><thead><tr><th>Jugador</th><th>Equipo</th><th>Distancia</th><th>Vel. media</th><th>Vel. máx.</th><th>Puntos</th></tr></thead><tbody>${rows}</tbody></table>${tm ? `<p>Bloque · ${tm}</p>` : ''}</div>`;
+}
+/* ---------- modo seguimiento ---------- */
+function trkCandidate(){
+  if (selClip){ const c = clipById(selClip); if (c && c.matchId === curMatch && !isVirtual(c)) return c; }
+  const t = video.currentTime;
+  return state.clips.filter(c => c.matchId === curMatch && !isVirtual(c) && t >= c.start - .05 && t <= c.end + .05).sort((a, b) => (a.end - a.start) - (b.end - b.start))[0] || null;
+}
+async function openTrk(clipId){
+  if (exporting) return;
+  if (!ready()){ flash('Abre el vídeo del partido para seguir jugadores'); return; }
+  const m = matchById(curMatch);
+  if (!hasCalib(m)){
+    const r = await ask({title: 'Calibrar el campo', text: 'Para seguir jugadores sobre el campo real, primero hay que calibrar el campo de este partido (4 puntos conocidos en el vídeo).', buttons: [{label: 'Ahora no', value: null}, {label: 'Calibrar el campo', value: 'yes', kind: 'primary'}]});
+    if (r.value === 'yes') openCalib();
+    return;
+  }
+  const c = clipId ? clipById(clipId) : trkCandidate();
+  if (!c || c.matchId !== curMatch || isVirtual(c)){ flash('Selecciona un corte del partido abierto (o colócate dentro de uno) para seguir a sus jugadores', 3500); return; }
+  closeBoard(true); cancelFreeze(); playback = null; video.pause(); markPlaying();
+  if ($('#dlgClip').open) $('#dlgClip').close();
+  trk.on = true; trk.clipId = c.id; trk.sel = c.tracks && c.tracks[0] ? c.tracks[0].id : null; trk.adding = null; trk.prop = null;
+  selClip = c.id; markSelected();
+  if (!(video.currentTime >= c.start - .05 && video.currentTime <= c.end + .05)) seek(c.start);
+  map2d = true; try{ localStorage.setItem('tacticalab:map2d', '1'); }catch(e){}
+  document.body.classList.add('trk-on'); $('#trkBar').hidden = false;
+  trkUI(); trkPaint(); renderMap2d(true);
+  if (!c.tracks || !c.tracks.length) flash('Pulsa «+ Jugador» y luego los pies del jugador en el vídeo', 3500);
+}
+function closeTrk(){
+  if (!trk.on) return;
+  if (trk.auto) trk.auto.cancel = true;
+  trk.on = false; trk.adding = null; trk.prop = null; trk.drag = null;
+  document.body.classList.remove('trk-on'); $('#trkBar').hidden = true; $('#trkForm').hidden = true;
+  trkPaint(); renderAll();
+}
+function trkUI(){
+  const c = trkClip(); if (!c) return;
+  const cat = catById(c.cat), trs = c.tracks || [];
+  $('#trkTitle').innerHTML = `<i style="--c:${esc(cat.color)}"></i>${esc(cat.name)} <span class="mono">${fmtShort(c.start)}–${fmtShort(c.end)}</span>`;
+  $('#trkList').innerHTML = trs.map(tr => `<span class="tk-chip ${tr.id === trk.sel ? 'on' : ''}" data-id="${esc(tr.id)}" style="--c:${esc(trkColor(tr))}" role="button" tabindex="0" aria-pressed="${tr.id === trk.sel}" aria-label="${esc(trkLabel(tr))}: ${tr.pts.length} puntos"><b>${esc(tr.n || '?')}</b>${tr.name ? `<span class="nm">${esc(tr.name)}</span>` : ''}<small>${tr.pts.length} pt</small><button type="button" data-a="pop" title="Quitar último punto" aria-label="Quitar el último punto de ${esc(trkLabel(tr))}">↶</button><button type="button" data-a="del" title="Quitar jugador" aria-label="Quitar a ${esc(trkLabel(tr))}">✕</button></span>`).join('')
+    || '<span class="hint">Ningún jugador todavía.</span>';
+  $('#trkList').querySelectorAll('.tk-chip').forEach(ch => {
+    ch.onclick = e => { const a = e.target.closest('button'); const id = ch.dataset.id, tr = trs.find(x => x.id === id); if (!tr) return;
+      if (a && a.dataset.a === 'pop'){ pushUndo('quitar punto'); tr.pts.pop(); if (!tr.pts.length) c.tracks = trs.filter(x => x !== tr); trkSave(); return; }
+      if (a && a.dataset.a === 'del'){ pushUndo('quitar jugador'); c.tracks = trs.filter(x => x !== tr); if (trk.sel === id) trk.sel = null; trkSave(); return; }
+      trk.sel = id; trkUI(); trkPaint(); };
+    ch.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopPropagation(); ch.click(); } };
+  });
+  $('#trkAdd').disabled = trs.length >= TRK_MAX; $('#trkAdd').classList.toggle('on', !!trk.adding && !trk.adding.uv);
+  $('#trkAuto').disabled = !trk.sel || !!trk.auto; $('#trkToTac').disabled = !trs.some(tr => tr.pts.length);
+  const opts = '<option value="">—</option>' + trs.map(tr => `<option value="${esc(tr.id)}">${esc(trkLabel(tr))}</option>`).join('');
+  ['trkD1', 'trkD2'].forEach((id, i) => { const s = $('#' + id); s.innerHTML = opts; s.value = trs.some(tr => tr.id === trk[i ? 'd2' : 'd1']) ? trk[i ? 'd2' : 'd1'] : ''; });
+  $('#trkLines').value = trk.lines;
+  const sel = trs.find(tr => tr.id === trk.sel);
+  $('#trkHint').textContent = trk.prop ? 'Revisa el recorrido propuesto (amarillo) y elige Aplicar, Volver a intentar o Descartar.'
+    : trk.adding ? 'Pulsa en el vídeo los pies del jugador que quieres seguir (Esc cancela).'
+    : sel ? `${trkLabel(sel)}: avanza el vídeo (→ , . o la línea de tiempo) y arrastra su marca, o pulsa donde esté ahora. Puntos: ${sel.pts.length}/${TRK_PTS}.`
+    : 'Pulsa «+ Jugador» y luego los pies del jugador en el vídeo.';
+  $('#trkPropBox').hidden = !trk.prop;
+}
+function trkSave(){ save(); trkUI(); trkPaint(); renderMap2d(true); renderList(); }
+/* pintar marcas sobre el vídeo */
+function trkPaint(){
+  const r = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1, W = Math.max(1, Math.round(r.width*dpr)), H = Math.max(1, Math.round(r.height*dpr));
+  if (trkCv.width !== W || trkCv.height !== H){ trkCv.width = W; trkCv.height = H; }
+  const ctx = trkCv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+  if (!trk.on) return;
+  const c = trkClip(), m = matchById(curMatch); if (!c || !m) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cr = contentRect(), t = video.currentTime, S = (u, v) => [cr.x + u*cr.w, cr.y + v*cr.h];
+  // recorrido propuesto
+  if (trk.prop && trk.prop.pts.length){
+    ctx.save(); ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 2.5; ctx.setLineDash([6, 4]); ctx.beginPath();
+    trk.prop.pts.forEach((p, i) => { const uv = posToUV(m, p, p.t); if (!uv) return; const [x, y] = S(uv[0], uv[1]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.setLineDash([]);
+    trk.prop.pts.forEach(p => { const uv = posToUV(m, p, p.t); if (!uv) return; const [x, y] = S(uv[0], uv[1]); ctx.fillStyle = '#ffd400'; ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI*2); ctx.fill(); });
+    ctx.restore();
+  }
+  (c.tracks || []).forEach(tr => {
+    const p = trk.drag && trk.drag.id === tr.id && trk.drag.uv ? null : trkAt(tr, t, true);
+    let uv = trk.drag && trk.drag.id === tr.id && trk.drag.uv ? trk.drag.uv : p && posToUV(m, p, t);
+    if (!uv) return;
+    const [x, y] = S(uv[0], uv[1]), col = trkColor(tr), sel = tr.id === trk.sel, out = p && p.out, key = tr.pts.some(q => Math.abs(q.t - t) < .04);
+    // recorrido del seleccionado
+    if (sel && tr.pts.length > 1){
+      ctx.save(); ctx.strokeStyle = col; ctx.globalAlpha = .55; ctx.lineWidth = 2; ctx.beginPath();
+      tr.pts.forEach((q, i) => { const w = posToUV(m, q, q.t); if (!w) return; const [a, b] = S(w[0], w[1]); i ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }); ctx.stroke(); ctx.restore();
+    }
+    ctx.save(); ctx.globalAlpha = out ? .5 : 1;
+    ctx.lineWidth = sel ? 3.5 : 2.5; ctx.strokeStyle = col; if (out) ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.ellipse(x, y, 16, 6, 0, 0, Math.PI*2); ctx.stroke();
+    if (sel){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(x, y, 20, 8, 0, 0, Math.PI*2); ctx.stroke(); }
+    ctx.setLineDash([]);
+    if (key){ ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI*2); ctx.fill(); }
+    // etiqueta con el dorsal
+    const lbl = tr.n || '?'; ctx.font = '800 12px Manrope, system-ui, sans-serif'; const tw = ctx.measureText(lbl).width;
+    const bx = x - tw/2 - 6, by = y - 44;
+    ctx.fillStyle = col; povRR(ctx, bx, by, tw + 12, 18, 6); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - 4, by + 18); ctx.lineTo(x + 4, by + 18); ctx.lineTo(x, by + 24); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = inkFor(col); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(lbl, x, by + 9.5);
+    ctx.restore();
+  });
+  // instante fuera del corte
+  if (t < c.start - .05 || t > c.end + .05){ ctx.fillStyle = 'rgba(14,13,16,.8)'; ctx.font = '700 13px Manrope, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Fuera del corte: los puntos no se guardan aquí', r.width/2, 22); }
+}
+function trkHit(e){
+  const c = trkClip(), m = matchById(curMatch); if (!c) return null;
+  const [u, v] = relPoint(e), cr = contentRect(), tol = e.pointerType === 'mouse' ? 20 : 30, t = video.currentTime;
+  let best = null, bd = tol;
+  (c.tracks || []).forEach(tr => { const p = trkAt(tr, t, true), uv = p && posToUV(m, p, t); if (!uv) return;
+    const d = Math.hypot((uv[0] - u)*cr.w, (uv[1] - v)*cr.h); if (d < bd){ bd = d; best = tr; } });
+  return best;
+}
+function trkPlace(tr, u, v){
+  const c = trkClip(), m = matchById(curMatch), t = video.currentTime;
+  if (t < c.start - .05 || t > c.end + .05){ flash('Este instante está fuera del corte: vuelve dentro para añadir puntos', 3000); return false; }
+  if (tr.pts.length >= TRK_PTS && !tr.pts.some(p => Math.abs(p.t - t) < .04)){ flash(`Máximo ${TRK_PTS} puntos por jugador`); return false; }
+  const r = posFromUV(m, u, v, t);
+  if (r.err){ flash('Ese punto queda fuera del campo calibrado: pulsa sobre el césped, en los pies del jugador', 3000); return false; }
+  trkSetKey(tr, t, r.pos.x, r.pos.y); return true;
+}
+trkCv.addEventListener('pointerdown', e => {
+  if (!trk.on || e.button > 0 || trk.auto) return;
+  e.preventDefault(); e.stopPropagation(); video.pause();
+  const [u, v] = relPoint(e);
+  if (trk.prop) return;
+  if (trk.adding){
+    const m = matchById(curMatch), r = posFromUV(m, u, v, video.currentTime);
+    if (r.err){ flash('Pulsa sobre el césped, en los pies del jugador', 2500); return; }
+    trk.adding = {uv: [u, v], pos: r.pos}; trkForm(); return;
+  }
+  const hit = trkHit(e);
+  if (hit){ const wasSel = trk.sel === hit.id; trk.sel = hit.id; trk.drag = {wasSel, id: hit.id, pid: e.pointerId, x: e.clientX, y: e.clientY, moved: false, uv: null}; trkCv.setPointerCapture(e.pointerId); trkUI(); trkPaint(); return; }
+  // pulsar en un hueco: el jugador seleccionado está aquí ahora
+  const c = trkClip(), tr = c && (c.tracks || []).find(x => x.id === trk.sel);
+  if (tr){ pushUndo('punto de seguimiento'); if (trkPlace(tr, u, v)) trkSave(); }
+});
+trkCv.addEventListener('pointermove', e => {
+  const d = trk.drag; if (!d || e.pointerId !== d.pid) return;
+  if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 3) return;
+  d.moved = true; d.uv = relPoint(e); trkPaint();
+});
+const trkUp = e => {
+  const d = trk.drag; if (!d || (e && e.pointerId !== d.pid)) return;
+  trk.drag = null;
+  const c = trkClip(), tr = c && (c.tracks || []).find(x => x.id === d.id);
+  if (d.moved && d.uv){ if (tr){ pushUndo('mover jugador'); if (trkPlace(tr, d.uv[0], d.uv[1])) trkSave(); else trkPaint(); } }
+  else if (tr && d.wasSel && e){ const uv = relPoint(e); pushUndo('punto de seguimiento'); if (trkPlace(tr, uv[0], uv[1])) trkSave(); else trkPaint(); }   // clic sobre el ya seleccionado: «está aquí ahora»
+  else trkPaint();
+};
+trkCv.addEventListener('pointerup', trkUp); trkCv.addEventListener('pointercancel', trkUp);
+/* alta de un jugador */
+function trkForm(){
+  const f = $('#trkForm'); f.hidden = false;
+  $('#tkTeam').value = $('#tkTeam').value || 'A'; trkFormTeam();
+  $('#tkN').focus();
+}
+function trkFormTeam(){
+  const A = $('#tkTeam').value !== 'B';
+  $('#tkPl').innerHTML = A && players.length ? '<option value="">— de la plantilla —</option>' + players.map(p => `<option value="${esc(p.n)}">${esc(p.n)} · ${esc(p.name)}</option>`).join('') : '';
+  $('#tkPl').hidden = !(A && players.length);
+}
+$('#tkTeam').onchange = trkFormTeam;
+$('#tkPl').onchange = e => { const p = players.find(x => x.n === e.target.value); if (p){ $('#tkN').value = p.n; $('#tkName').value = p.name.split(' ')[0]; } };
+$('#tkN').oninput = () => { if ($('#tkTeam').value === 'B') return; const p = players.find(x => x.n === $('#tkN').value.trim()); if (p && !$('#tkName').value) $('#tkName').value = p.name.split(' ')[0]; };
+['tkN', 'tkName'].forEach(id => $('#' + id).addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') $('#tkOk').click(); if (e.key === 'Escape') $('#tkCancel').click(); }));
+$('#tkOk').onclick = () => {
+  const c = trkClip(), a = trk.adding; if (!c || !a || !a.uv) return;
+  c.tracks = c.tracks || [];
+  if (c.tracks.length >= TRK_MAX){ flash(`Máximo ${TRK_MAX} jugadores por corte`); return; }
+  const tr = {id: uid(), team: $('#tkTeam').value === 'B' ? 'B' : 'A', n: $('#tkN').value.replace(/[^\d]/g, '').slice(0, 3), pts: []};
+  const nm = cleanStr($('#tkName').value, 24).trim(); if (nm) tr.name = nm;
+  pushUndo('seguir jugador');
+  const t = video.currentTime;
+  if (t < c.start - .05 || t > c.end + .05){ flash('Colócate dentro del corte para añadir jugadores'); return; }
+  trkSetKey(tr, t, a.pos.x, a.pos.y); c.tracks.push(tr);
+  trk.sel = tr.id; trk.adding = null; $('#trkForm').hidden = true; $('#tkN').value = ''; $('#tkName').value = '';
+  trkSave(); flash(`Siguiendo a ${trkLabel(tr)} · avanza el vídeo y arrastra su marca`, 3000);
+};
+$('#tkCancel').onclick = () => { trk.adding = null; $('#trkForm').hidden = true; trkUI(); };
+$('#trkAdd').onclick = () => { if (trk.prop) return; trk.adding = trk.adding ? null : {}; $('#trkForm').hidden = true; trkUI(); if (trk.adding) flash('Pulsa en el vídeo los pies del jugador', 2500); };
+$('#trkClose').onclick = closeTrk;
+$('#trkLines').onchange = e => { trk.lines = e.target.value; renderMap2d(true); };
+$('#trkD1').onchange = e => { trk.d1 = e.target.value; renderMap2d(true); };
+$('#trkD2').onchange = e => { trk.d2 = e.target.value; renderMap2d(true); };
+/* ---------- 🤖 Proponer puntos (búsqueda por comparación de imagen, sin librerías) ---------- */
+async function trkPropose(){
+  const c = trkClip(), m = matchById(curMatch), tr = c && (c.tracks || []).find(x => x.id === trk.sel); if (!tr || trk.auto) return;
+  const t0 = video.currentTime, D = +$('#trkDur').value || 3, tEnd = Math.min(c.end, t0 + D);
+  if (t0 < c.start - .05 || t0 >= c.end - .1){ flash('Colócate dentro del corte (y no al final) para proponer puntos'); return; }
+  const p0 = trkAt(tr, t0, true), uv0 = p0 && posToUV(m, p0, t0); if (!uv0){ flash('Coloca primero al jugador en este instante'); return; }
+  const SW = 480, SH = Math.round(SW*(video.videoHeight || 9)/(video.videoWidth || 16)), cv = document.createElement('canvas'); cv.width = SW; cv.height = SH;
+  const cx = cv.getContext('2d', {willReadFrequently: true});
+  const gray = () => { cx.drawImage(video, 0, 0, SW, SH); const d = cx.getImageData(0, 0, SW, SH).data, g = new Float32Array(SW*SH); for (let i = 0; i < g.length; i++) g[i] = d[i*4]*.3 + d[i*4+1]*.59 + d[i*4+2]*.11; return g; };
+  let G; try{ await calSeek(t0); G = gray(); }catch(err){ flash('Este vídeo no deja leer sus imágenes: no se pueden proponer puntos'); return; }
+  // tamaño del recorte según la escala del campo en ese punto (1 m en el suelo, en píxeles del canvas pequeño)
+  const uv1 = posToUV(m, {x: p0.x + 1, y: p0.y}, t0), uv2 = posToUV(m, {x: p0.x, y: p0.y + 1}, t0);
+  const mpx = Math.max(uv1 ? Math.hypot((uv1[0] - uv0[0])*SW, (uv1[1] - uv0[1])*SH) : 4, uv2 ? Math.hypot((uv2[0] - uv0[0])*SW, (uv2[1] - uv0[1])*SH) : 4);
+  const bw = Math.round(clamp(mpx*1.1, 6, 40)), bh = Math.round(clamp(bw*2.2, 12, 90));
+  let fx = uv0[0]*SW, fy = uv0[1]*SH, vx = 0, vy = 0;
+  const cut = (g, x, y) => { const T = new Float32Array(bw*bh); const x0 = Math.round(x - bw/2), y0 = Math.round(y - bh); for (let j = 0; j < bh; j++) for (let i = 0; i < bw; i++){ const X = clamp(x0 + i, 0, SW - 1), Y = clamp(y0 + j, 0, SH - 1); T[j*bw + i] = g[Y*SW + X]; } return T; };
+  let T = cut(G, fx, fy);
+  trk.auto = {cancel: false}; trk.prop = null; trkUI(); $('#trkProg').hidden = false;
+  const step = (FRAME || .04)*2, R = Math.max(6, Math.round(bw*.9)), pts = [], last = {t: t0};
+  let lostAt = null, t = t0;
+  while (t + step <= tEnd + 1e-6 && !trk.auto.cancel){
+    t += step; await calSeek(t); const g = gray();
+    const px = fx + vx, py = fy + vy;
+    let best = Infinity, bx = px, by = py;
+    for (let dy = -R; dy <= R; dy += 1) for (let dx = -R; dx <= R; dx += 1){
+      const x0 = Math.round(px + dx - bw/2), y0 = Math.round(py + dy - bh); if (x0 < 0 || y0 < 0 || x0 + bw >= SW || y0 + bh >= SH) continue;
+      let s = 0; for (let j = 0; j < bh; j += 2){ const row = (y0 + j)*SW + x0, tr0 = j*bw; for (let i = 0; i < bw; i += 2) s += Math.abs(g[row + i] - T[tr0 + i]); if (s >= best) break; }
+      s += (dx*dx + dy*dy)*(bw*bh/4)*.6;   // preferir lo cercano a lo previsto (evita saltos a líneas o rayas del césped)
+      if (s < best){ best = s; bx = px + dx; by = py + dy; }
+    }
+    const score = best/((bw/2)*(bh/2)*255);
+    if (!isFinite(best) || score > .2){ lostAt = t; break; }
+    vx = (bx - fx)*.6 + vx*.4; vy = (by - fy)*.6 + vy*.4; fx = bx; fy = by;
+    const T2 = cut(g, fx, fy); for (let i = 0; i < T.length; i++) T[i] = T[i]*.8 + T2[i]*.2;
+    $('#trkProg').textContent = `🤖 Siguiendo… ${fmt1(t - t0)} / ${fmt1(tEnd - t0)} s`;
+    if (t - last.t >= .44 || t + step > tEnd){ const r = posFromUV(m, fx/SW, fy/SH, t); if (r.err){ lostAt = t; break; } pts.push({t: +t.toFixed(2), x: r.pos.x, y: r.pos.y}); last.t = t; }
+    trk.prop = {pts: pts.slice(), id: tr.id}; trkPaint();
+  }
+  const cancelled = trk.auto.cancel; trk.auto = null; $('#trkProg').hidden = true;
+  if (cancelled){ trk.prop = null; trkUI(); trkPaint(); return; }
+  trk.prop = {pts, id: tr.id, t0};
+  trkUI(); trkPaint();
+  if (lostAt != null) flash(pts.length ? `Perdido en ${fmtShort(lostAt)}: aplica lo propuesto, corrige la posición y continúa` : `Perdido en ${fmtShort(lostAt)}: corrige la posición del jugador y vuelve a intentarlo`, 4500);
+  else flash(`${pts.length} punto${pts.length === 1 ? '' : 's'} propuesto${pts.length === 1 ? '' : 's'}: revisa el recorrido amarillo`, 3000);
+}
+$('#trkAuto').onclick = trkPropose;
+$('#trkProg').onclick = () => { if (trk.auto) trk.auto.cancel = true; };
+$('#trkApply').onclick = () => {
+  const c = trkClip(), P = trk.prop, tr = c && P && (c.tracks || []).find(x => x.id === P.id); if (!tr) return;
+  pushUndo('aplicar puntos propuestos');
+  P.pts.filter(p => p.t >= c.start - .05 && p.t <= c.end + .05).forEach(p => { if (tr.pts.length < TRK_PTS || tr.pts.some(q => Math.abs(q.t - p.t) < .04)) trkSetKey(tr, p.t, p.x, p.y); });
+  trk.prop = null; trkSave(); flash(`Puntos añadidos · ${trkLabel(tr)}: ${tr.pts.length}`);
+};
+$('#trkRetry').onclick = async () => { const P = trk.prop; if (!P) return; trk.prop = null; await calSeek(P.t0); trkPropose(); };
+$('#trkDiscard').onclick = async () => { const P = trk.prop; trk.prop = null; if (P) await calSeek(P.t0); trkUI(); trkPaint(); };
+/* ---------- enviar a la pizarra táctica ---------- */
+$('#trkToTac').onclick = () => {
+  const c = trkClip(), m = matchById(curMatch); if (!c || !c.tracks || !c.tracks.length) return;
+  const F = fieldOf(m), field = F.type === 'f7' ? 'f7' : F.type === 'sala' ? 'sala' : 'f11';
+  const trs = c.tracks.filter(tr => tr.pts.length), a = Math.min(...trs.map(tr => tr.pts[0].t)), b = Math.max(...trs.map(tr => tr.pts[tr.pts.length - 1].t));
+  const dt = (b - a) > 16 ? (b - a)/10 : 1.5, steps = [];
+  for (let t = a; t <= b + 1e-6 && steps.length < 40; t += dt){
+    steps.push({items: trs.map(tr => { const p = trkAt(tr, t, true); const it = {id: tr.id, k: tr.team, x: +(p.x/F.L).toFixed(4), y: +(p.y/F.W).toFixed(4)}; if (tr.n) it.n = tr.n; if (tr.name) it.name = tr.name; return it; }), shapes: [], dur: +clamp(dt, .5, 10).toFixed(1)});
+  }
+  const cat = catById(c.cat), nb = sanitizeBoards([{id: uid(), name: `${cat.name} · ${fmtShort(c.start)}`.slice(0, 60), field, vertical: false, steps}])[0];
+  state.boards = (state.boards || []).concat([nb]).slice(-50); save();
+  closeTrk(); openTac(nb.id);
+  flash(`Pizarra táctica creada con ${trs.length} jugador${trs.length === 1 ? '' : 'es'} y ${steps.length} pasos`, 3500);
+};
+/* ---------- Campo 2D con los jugadores en movimiento ---------- */
+function trkActiveClip(t){
+  if (trk.on){ const c = trkClip(); if (c && c.tracks && c.tracks.length) return c; }
+  return state.clips.find(c => c.matchId === curMatch && c.tracks && c.tracks.length && t >= c.start - .05 && t <= c.end + .05) || null;
+}
+function hull(P){
+  if (P.length < 3) return P.slice();
+  const p = P.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+  const lo = [], up = [];
+  p.forEach(q => { while (lo.length >= 2 && cr(lo[lo.length-2], lo[lo.length-1], q) <= 0) lo.pop(); lo.push(q); });
+  p.slice().reverse().forEach(q => { while (up.length >= 2 && cr(up[up.length-2], up[up.length-1], q) <= 0) up.pop(); up.push(q); });
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+function defLine(ps, team){
+  // línea defensiva: los jugadores más retrasados (sin el portero si está muy por detrás)
+  const s = ps.slice().sort((a, b) => team === 'A' ? a[0] - b[0] : b[0] - a[0]);
+  if (s.length > 4 && Math.abs(s[1][0] - s[0][0]) > 8) s.shift();
+  return s.slice(0, Math.min(4, s.length)).sort((a, b) => a[1] - b[1]);
+}
+/* escena del momento: posiciones, estelas, bloque y distancia (en metros) */
+function trkFrame(c, t, lines, d1, d2){
+  const trs = (c.tracks || []).filter(tr => tr.pts.length);
+  const now = trs.map(tr => ({tr, p: trkAt(tr, t)})).filter(o => o.p);
+  const trails = now.map(o => { const q = []; for (let k = Math.max(o.tr.pts[0].t, t - TRK_TRAIL); k <= t + 1e-6; k += .15) q.push(trkAt(o.tr, k)); return {tr: o.tr, q: q.filter(Boolean)}; });
+  const groups = {};
+  if (lines) ['A', 'B'].forEach(tm => { const ps = now.filter(o => o.tr.team === tm).map(o => [o.p.x, o.p.y]); if (ps.length >= 2) groups[tm] = lines === 'hull' ? hull(ps) : defLine(ps, tm); });
+  const a = now.find(o => o.tr.id === d1), b = now.find(o => o.tr.id === d2);
+  return {now, trails, groups, lines, dist: a && b && a !== b ? {a: a.p, b: b.p, d: Math.hypot(a.p.x - b.p.x, a.p.y - b.p.y)} : null};
+}
+function trkMapSVG(c, t, F){
+  const fr = trkFrame(c, t, trk.lines, trk.d1, trk.d2), r = F.L*.016, sw = F.L*.004;
+  let s = '';
+  Object.entries(fr.groups).forEach(([tm, ps]) => { const col = tm === 'B' ? '#2f8cff' : (hexToRgb(brand.accent) ? brand.accent : '#ff3550');
+    s += fr.lines === 'hull' ? `<polygon points="${ps.map(p => p.join(',')).join(' ')}" fill="${col}" fill-opacity=".16" stroke="${col}" stroke-width="${sw}" stroke-dasharray="${sw*3} ${sw*2}"/>` : `<polyline points="${ps.map(p => p.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${sw*1.4}"/>`; });
+  fr.trails.forEach(({tr, q}) => { if (q.length > 1) s += `<polyline points="${q.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')}" fill="none" stroke="${trkColor(tr)}" stroke-opacity=".55" stroke-width="${sw*1.2}" stroke-linecap="round"/>`; });
+  if (fr.dist){ const {a, b, d} = fr.dist; s += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#ffd400" stroke-width="${sw}" stroke-dasharray="${sw*3} ${sw*2}"/><text x="${((a.x + b.x)/2).toFixed(2)}" y="${((a.y + b.y)/2 - r*1.2).toFixed(2)}" class="tk-dist" style="font-size:${(r*1.6).toFixed(2)}px">${fmt1(d)} m</text>`; }
+  fr.now.forEach(({tr, p}) => { const col = trkColor(tr);
+    s += `<g class="tk-p"><circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${r.toFixed(2)}" fill="${col}" stroke="#fff" stroke-width="${(sw*.8).toFixed(2)}"/><text x="${p.x.toFixed(2)}" y="${(p.y + r*.38).toFixed(2)}" style="font-size:${(r*1.1).toFixed(2)}px;fill:${inkFor(col)}">${esc(tr.n || '')}</text><title>${esc(trkLabel(tr))}</title></g>`; });
+  return s;
+}
+let trkMapLast = '';
+function trkMapTick(force){
+  const box = map2dBig ? $('#map2dBig') : $('#map2d'); if (!box || box.hidden) return;
+  const g = box.querySelector('.trk-g'); if (!g) return;
+  const t = video.currentTime, c = trkActiveClip(t), m = matchById(curMatch);
+  const key = c ? `${c.id}|${t.toFixed(2)}|${trk.lines}|${trk.d1}|${trk.d2}|${JSON.stringify(c.tracks).length}` : '';
+  if (!force && key === trkMapLast) return; trkMapLast = key;
+  g.innerHTML = c ? trkMapSVG(c, t, fieldOf(m)) : '';
+}
+/* el mismo campo 2D dibujado en un canvas (MP4, presentación y otra ventana) */
+function trkMapCanvas(ctx, X, Y, w, h, c, t){
+  const m = matchById(c.matchId), F = fieldOf(m), mg = F.L*.04, s = Math.min(w/(F.L + 2*mg), h/(F.W + 2*mg)), ox = X + (w - (F.L + 2*mg)*s)/2 + mg*s, oy = Y + (h - (F.W + 2*mg)*s)/2 + mg*s;
+  const P = (x, y) => [ox + x*s, oy + y*s];
+  ctx.save();
+  ctx.fillStyle = 'rgba(14,13,16,.82)'; ctx.fillRect(X, Y, w, h);
+  ctx.fillStyle = '#163a26'; ctx.fillRect(ox - mg*s*.6, oy - mg*s*.6, (F.L + mg*1.2)*s, (F.W + mg*1.2)*s);
+  const {segs, arcs} = calLines(F.type, F.L, F.W); ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = Math.max(1, s*.2);
+  segs.forEach(q => { ctx.beginPath(); ctx.moveTo(...P(q[0], q[1])); ctx.lineTo(...P(q[2], q[3])); ctx.stroke(); });
+  arcs.forEach(([cx, cy, r, a0, a1]) => { ctx.beginPath(); ctx.arc(...P(cx, cy), r*s, a0, a1); ctx.stroke(); });
+  const fr = trkFrame(c, t, trk.lines, trk.d1, trk.d2), r = Math.max(4, F.L*.016*s);
+  Object.entries(fr.groups).forEach(([tm, ps]) => { const col = tm === 'B' ? '#2f8cff' : (hexToRgb(brand.accent) ? brand.accent : '#ff3550'); ctx.beginPath(); ps.forEach((p, i) => i ? ctx.lineTo(...P(p[0], p[1])) : ctx.moveTo(...P(p[0], p[1]))); if (fr.lines === 'hull'){ ctx.closePath(); ctx.globalAlpha = .16; ctx.fillStyle = col; ctx.fill(); ctx.globalAlpha = 1; } ctx.strokeStyle = col; ctx.lineWidth = Math.max(1.5, s*.3); ctx.stroke(); });
+  fr.trails.forEach(({tr, q}) => { if (q.length < 2) return; ctx.globalAlpha = .55; ctx.strokeStyle = trkColor(tr); ctx.lineWidth = Math.max(1.5, s*.35); ctx.beginPath(); q.forEach((p, i) => i ? ctx.lineTo(...P(p.x, p.y)) : ctx.moveTo(...P(p.x, p.y))); ctx.stroke(); ctx.globalAlpha = 1; });
+  if (fr.dist){ const {a, b, d} = fr.dist; ctx.setLineDash([6, 4]); ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(...P(a.x, a.y)); ctx.lineTo(...P(b.x, b.y)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#ffd400'; ctx.font = `700 ${Math.round(r*1.5)}px Manrope, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.fillText(`${fmt1(d)} m`, ...P((a.x + b.x)/2, (a.y + b.y)/2 - 2.2)); }
+  fr.now.forEach(({tr, p}) => { const [x, y] = P(p.x, p.y), col = trkColor(tr); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1, r*.18); ctx.stroke();
+    if (tr.n){ ctx.fillStyle = inkFor(col); ctx.font = `800 ${Math.round(r*1.15)}px Manrope, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(tr.n, x, y + .5); } });
+  ctx.restore();
+}
+/* presentación */
+function trkPresTick(){
+  const cv = $('#pMap'); if (!cv) return;
+  const c = pres.list && pres.list[pres.i], on = !$('#present').hidden && c && c.tracks && c.tracks.length && pv.currentTime >= c.start - .05 && pv.currentTime <= c.end + .05;
+  cv.hidden = !on; if (!on) return;
+  const w = cv.clientWidth || 260, h = cv.clientHeight || 170, dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(w*dpr)){ cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  trkMapCanvas(ctx, 0, 0, w, h, c, pv.currentTime);
+}
+/* otra ventana */
+function trkMirror(M){
+  const t = video.currentTime, c = trkActiveClip(t), d = M.win.document;
+  let cv = M.map;
+  if (!cv){ cv = M.map = d.createElement('canvas'); cv.style.cssText = 'position:fixed;right:12px;bottom:12px;width:min(34vw,360px);aspect-ratio:1.5;z-index:5;border-radius:10px;pointer-events:none'; d.body.appendChild(cv); }
+  const show = !!(c && map2d);
+  cv.style.display = show ? '' : 'none'; if (!show) return;
+  const w = cv.clientWidth || 300, h = cv.clientHeight || 200, dpr = M.win.devicePixelRatio || 1;
+  if (cv.width !== Math.round(w*dpr)){ cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  trkMapCanvas(ctx, 0, 0, w, h, c, t);
+}
+/* bucle: marcas sobre el vídeo mientras se reproduce o se mueve el vídeo */
+let trkLastT = null;
+function trkTick(){
+  const t = video.currentTime;
+  if (trk.on && t !== trkLastT && !trk.drag){ trkLastT = t; trkPaint(); }
+  if (map2d) trkMapTick(false);
+  if (pres && pres.list) trkPresTick();
+  if (mirror && !mirror.win.closed) try{ trkMirror(mirror); }catch(e){}
+}
+/* ampliar el Campo 2D: vídeo y campo lado a lado */
+function trkBigApply(){
+  const vw = $('#vwrap'), big = map2dBig && map2d && !!matchById(curMatch) && ready() && window.innerWidth > 760;
+  vw.classList.toggle('map-big', big); $('#map2dBig').hidden = !big;
+  if (big){ $('#map2dBig').style.top = stage.offsetTop + 'px'; $('#map2dBig').style.height = stage.offsetHeight + 'px'; }
+}
+/* teclado en el modo seguimiento */
+function trkKeys(e){
+  if (!trk.on) return false;
+  if (e.target.matches('input,select,textarea') && e.key !== 'Escape') return false;
+  const k = (e.key || '').toLowerCase();
+  if (e.key === 'Escape'){ e.preventDefault(); if (trk.auto) trk.auto.cancel = true; else if (trk.adding){ trk.adding = null; $('#trkForm').hidden = true; trkUI(); } else if (trk.prop) $('#trkDiscard').click(); else closeTrk(); return true; }
+  if (trk.auto) { e.preventDefault(); return true; }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ e.preventDefault(); video.pause(); seek(video.currentTime + (e.key === 'ArrowRight' ? 1 : -1)*(e.shiftKey ? 1 : JUMP)); return true; }
+  if (e.key === ',' || e.key === '.'){ e.preventDefault(); video.pause(); seek(video.currentTime + (e.key === '.' ? FRAME : -FRAME)); return true; }
+  if (e.code === 'Space'){ e.preventDefault(); if (video.paused) video.play().catch(() => {}); else video.pause(); return true; }
+  if (k === 'j' && !e.ctrlKey && !e.metaKey){ e.preventDefault(); closeTrk(); return true; }
+  return false;
+}
+$('#bTrk').onclick = () => { const id = board.clipId; closeBoard(true); openTrk(id); };
+$('#dcTrk').onclick = () => { const c = dcClip; if (!c) return; if (c.matchId !== curMatch){ flash('Abre el partido de este corte para seguir a sus jugadores'); return; } openTrk(c.id); };
+window.addEventListener('resize', () => { if (trk.on) trkPaint(); trkBigApply(); });
+trkReady = true;   // v3.14: listo para el bucle
 
 /* =========================================================
    INICIO
