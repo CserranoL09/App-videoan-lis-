@@ -1107,6 +1107,53 @@ body.lay-mixed .controls > #bBack5,body.lay-mixed .controls > #bFwd5,body.lay-be
 .boardbar button.tool{padding-left:.45rem;padding-right:.5rem}
 .boardbar button.tool:has(> .ic){gap:.32em}
 .boardbar button.tool .ic{width:16px;height:16px}
+/* ===== v3.17 · balón, pases y redes de pases ===== */
+.tk-chip.ball{--c:#e9e6ee;border-style:dashed}
+.tk-chip.ball b{display:inline-flex}
+.tk-chip.ball b .ic{width:14px;height:14px}
+.tk-chip.roster{border-style:dotted;opacity:.9}
+.tk-chip.from{box-shadow:0 0 0 2px #ffd400;background:color-mix(in srgb,#ffd400 26%,transparent)}
+.tk-ballgrp input[type=number]{width:3.6rem}
+#trkBall[aria-pressed="true"],#trkPlog[aria-pressed="true"],#trkGap[aria-pressed="true"]{background:color-mix(in srgb,var(--accent-hi) 26%,var(--panel2));border-color:var(--accent-hi);color:var(--fg)}
+.tk-ev{width:100%;border:1px solid var(--line);border-radius:8px;padding:.3rem .5rem;background:var(--panel2)}
+.tk-ev summary{cursor:pointer;font-size:.8rem;font-weight:600}
+.tk-ev-acts{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;margin:.4rem 0 .3rem}
+.tk-poss{font-size:.76rem;color:var(--muted)}
+.tk-ev-list{display:flex;flex-direction:column;gap:.25rem;max-height:12.5rem;overflow-y:auto}
+.tk-ev-list .hint{margin:0;font-size:.76rem;color:var(--muted)}
+.tk-evr{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.78rem;padding:.15rem .2rem;border-radius:6px}
+.tk-evr.loss{background:color-mix(in srgb,#ff5a5a 12%,transparent)}
+.tk-evr select{max-width:8.5rem;min-width:0;padding:.2rem .3rem;font-size:.76rem}
+.boardbar .tk-evr button{padding:.15rem .4rem;font-size:.74rem;min-height:0}
+.tk-evk{color:var(--muted);flex:1;min-width:6rem}
+.pa-card{margin-top:1rem;padding-top:.2rem;border-top:1px solid var(--line)}
+.pa-card h5{margin:.9rem 0 .35rem;font-size:.82rem;font-weight:700}
+.pa-ctl{display:flex;flex-wrap:wrap;gap:.5rem .8rem;align-items:center;font-size:.8rem;margin:.3rem 0 .5rem}
+.pa-ctl label{display:inline-flex;align-items:center;gap:.35rem}
+.pa-ctl input[type=range]{width:6rem}
+.pa-net{margin:0}
+.pa-net svg{width:100%;height:auto;display:block;border-radius:8px}
+.pa-net figcaption{font-size:.74rem;color:var(--muted);margin-top:.3rem}
+.fieldm .pn text{text-anchor:middle;font-weight:800;font-family:Manrope,system-ui,sans-serif;pointer-events:none}
+.fieldm .pn-n{cursor:pointer;outline:none}
+.fieldm .pn-n:focus-visible circle{stroke:#ffd400}
+.fieldm .pn-e,.fieldm .pn-n{transition:opacity .15s}
+.fieldm.hl .pn-e:not(.on){opacity:.08}
+.fieldm.hl .pn-n:not(.on){opacity:.3}
+.pa-poss{display:flex;height:1.5rem;border-radius:6px;overflow:hidden;font-size:.72rem;font-weight:700;margin:.4rem 0}
+.pa-poss span{display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;min-width:0}
+.tk-stats td.n,.tk-stats th.n{text-align:right}
+.pa-mx table{min-width:0}
+.pa-mx td.v{font-weight:700;background:color-mix(in srgb,var(--accent-hi) 16%,transparent)}
+.pa-mx tbody th{color:var(--muted);font-weight:700;text-align:left;padding:.2rem .35rem;border-bottom:1px solid var(--line)}
+.rp-pass{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin:8px 0 14px;break-inside:avoid}
+.rp-pass h5{margin:8px 0 4px;font-size:11px}
+.rp-page .pa-net figcaption,.rp-page .fmtnote{color:#6b6570}
+.rp-page .pa-mx td.v{background:#f1eef4}
+@media (max-width:760px){ .rp-pass{grid-template-columns:1fr} .tk-evr select{max-width:6.2rem} }
+.trkbar.plog .tk-chip button{display:none}
+.trkbar.plog .tk-chip{padding-right:.5rem;cursor:pointer}
+.trkbar.plog .tk-chip.ball{opacity:.45}
 </style>
 </head>
 <body>
@@ -1296,6 +1343,12 @@ body.lay-mixed .controls > #bBack5,body.lay-mixed .controls > #bFwd5,body.lay-be
         <button id="trkAuto" title="La app busca al jugador durante unos segundos y propone los puntos">🤖 Proponer</button>
         <select id="trkDur" aria-label="Duración de la propuesta"><option value="2">2 s</option><option value="3" selected>3 s</option><option value="5">5 s</option></select>
       </div>
+      <div class="grp tk-ballgrp">
+        <button id="trkBall" title="Seguir el balón: pulsa el balón en el vídeo (B)">⚽ Balón</button>
+        <button id="trkGap" title="Balón por el aire o tapado desde este punto: la app no inventa su posición hasta el siguiente punto (G)">Hueco</button>
+        <button id="trkPlog" aria-pressed="false" title="Registrar pases a mano: pulsa al pasador y luego al receptor (R)">Registrar pases</button>
+        <label class="tk-d" title="Distancia máxima entre el balón y el jugador para dar la posesión">Radio <input id="trkR" type="number" min="1" max="5" step="0.5" value="2" aria-label="Radio de posesión en metros"> m</label>
+      </div>
       <div class="grp">
         <select id="trkLines" aria-label="Líneas entre compañeros"><option value="">Sin líneas</option><option value="hull">Bloque</option><option value="def">Línea defensiva</option></select>
         <label class="tk-d">Distancia <select id="trkD1" aria-label="Primer jugador"></select>↔<select id="trkD2" aria-label="Segundo jugador"></select></label>
@@ -1309,8 +1362,12 @@ body.lay-mixed .controls > #bBack5,body.lay-mixed .controls > #bFwd5,body.lay-be
         <button id="tkOk" class="primary">Seguir</button><button id="tkCancel">Cancelar</button>
       </div>
       <div class="tk-prop" id="trkPropBox" hidden><button id="trkApply" class="primary">Aplicar</button><button id="trkRetry">Volver a intentar</button><button id="trkDiscard">Descartar</button></div>
-      <button class="tk-prog" id="trkProg" hidden title="Cancelar la búsqueda">🤖 Siguiendo…</button>
+      <button class="tk-prog" id="trkProg" hidden title="Cancelar la búsqueda">Siguiendo…</button>
       <p class="tk-hint" id="trkHint" aria-live="polite"></p>
+      <details class="tk-ev" id="trkEv"><summary><span id="trkEvSum">Eventos del balón</span></summary>
+        <div class="tk-ev-acts"><button id="trkEvAdd" type="button" title="Añadir un pase a mano en este instante">+ Pase</button><button id="trkEvCalc" type="button" title="Volver a calcular los pases automáticos (los corregidos a mano no cambian)">Recalcular</button><span class="tk-poss" id="trkPoss"></span></div>
+        <div class="tk-ev-list" id="trkEvList"></div>
+      </details>
     </div>
     <div class="boardbar" id="boardBar" hidden role="toolbar" aria-label="Pizarra">
       <div class="grp" id="bTools">
@@ -1774,8 +1831,15 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.16';
+const APP_VERSION = '3.17';
 const CHANGELOG = [
+  {v:'3.17', date:'Noviembre 2026', items:[
+    '<b>Seguir el balón:</b> en «Seguir jugadores» (J) pulsa «Balón» (B) y márcalo en el vídeo como a un jugador más; «Proponer» lo busca solo durante unos segundos. Si va por el aire o no se ve, pulsa «Hueco» (G) y la app no inventa esa parte.',
+    '<b>Posesión y pases automáticos:</b> con el balón y los jugadores seguidos, la app calcula quién tiene el balón, los pases, las pérdidas y las recuperaciones. Todo se puede corregir en «Eventos del balón»; lo que corrijas a mano no se recalcula.',
+    '<b>Registrar pases a mano</b> (R): pulsa al pasador y luego al receptor mientras corre el vídeo, sin necesidad de seguir el balón.',
+    '<b>Red de pases y estadísticas</b> en Resumen: red por equipo, matriz pasador → receptor, pases por jugador, parejas más repetidas, posesión, mapa de pases y mapa de calor del balón, para el corte actual, los cortes filtrados o la lista. También en el Informe y en el Excel (hojas «Pases» y «Red de pases»).',
+    'El balón se ve en el Campo 2D, en la presentación, en la otra ventana y en el MP4 con mapa. Los proyectos anteriores se abren igual.'
+  ]},
   {v:'3.16', date:'Noviembre 2026', items:[
     '<b>Iconos nuevos:</b> todos los emojis y símbolos de los botones se han cambiado por un juego de iconos de línea propio, del mismo grosor y tamaño en toda la app: blancos sobre el tema oscuro y oscuros sobre el claro, y del color de acento cuando un botón está activo.',
     'Afecta a los controles del vídeo, la cabecera, los cortes, el panel «Cortes por etiqueta», la pizarra, la pizarra táctica, el directo, la calibración y el seguimiento. Los atajos de teclado y el orden de los botones no cambian.',
@@ -2108,7 +2172,7 @@ function sanitizeClip(c, catMap, matchMap, fallbackMatch){
     zone: Number.isInteger(z) && z >= 1 && z <= 18 ? z : null,
     players: [...new Set((Array.isArray(c.players) ? c.players : []).map(p => String(p).replace(/[^\d]/g,'').slice(0,3)).filter(Boolean))].slice(0, 11),
     drawings: trimTracks(sanitizeDrawings(c.drawings), start, end),
-    tags: sanitizeTags(c.tags), ...sanitizeClipLive(c.live), ...(sanitizePos(c.pos) ? {pos: sanitizePos(c.pos)} : {}), ...(sanitizeTracks(c.tracks, start, end) ? {tracks: sanitizeTracks(c.tracks, start, end)} : {})};
+    tags: sanitizeTags(c.tags), ...sanitizeClipLive(c.live), ...(sanitizePos(c.pos) ? {pos: sanitizePos(c.pos)} : {}), ...(sanitizeTracks(c.tracks, start, end) ? {tracks: sanitizeTracks(c.tracks, start, end)} : {}), ...(sanitizeBall(c.ball, start, end) ? {ball: sanitizeBall(c.ball, start, end)} : {}), ...(sanitizePasses(c.passes, start, end) ? {passes: sanitizePasses(c.passes, start, end)} : {})};
 }
 /* v3.1 · acción registrada en directo: {p, s, r, pre, post} */
 function sanitizeClipLive(L){
@@ -2197,7 +2261,7 @@ const FIXED_KEYS = new Set(Object.values(KEY));
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
 function save(){
   try{ localStorage.setItem(KEY.cats, JSON.stringify(state.cats)); }catch(e){}
-  try{ localStorage.setItem(KEY.project, JSON.stringify({version:14, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
+  try{ localStorage.setItem(KEY.project, JSON.stringify({version:15, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
   catch(e){ flash('No se pudo guardar en este navegador (almacenamiento lleno). Usa «Guardar proyecto» para no perder el trabajo.', 5000); }
 }
 function saveBrand(){ try{ localStorage.setItem(KEY.brand, JSON.stringify(brand)); }catch(e){ flash('No se pudo guardar el escudo en este navegador (imagen demasiado grande)', 3500); } }
@@ -2976,7 +3040,7 @@ $('#plExport').onclick = () => {
    ========================================================= */
 function renderStats(){
   const cs = filtered();
-  if (!cs.length){ $('#stats').innerHTML = '<div class="empty">El resumen aparecerá al crear cortes (y respeta los filtros de Cortes).</div>'; return; }
+  if (!cs.length){ $('#stats').innerHTML = '<div class="empty">El resumen aparecerá al crear cortes (y respeta los filtros de Cortes).</div>'; if (state.clips.length) passStatsMount($('#stats')); return; }
   const rows = statRows(cs);
   const own = esc((brand.short || 'Propio').slice(0,8));
   let html = `<h4>Por etiqueta · ${own} vs rival</h4>${barsSVG(rows)}<div class="legend"><span><i style="background:var(--fg)"></i>${own} (color lleno)</span><span><i style="background:var(--muted);opacity:.45"></i>Rival (color suave)</span></div>`;
@@ -3002,6 +3066,7 @@ function renderStats(){
   }</tbody></table>` : '<div class="empty">Ningún corte filtrado tiene jugadores asignados.</div>');
   $('#stats').innerHTML = html;
   bindPosDots($('#stats'));
+  passStatsMount($('#stats'));   // v3.17 · balón y pases
 }
 
 /* =========================================================
@@ -3583,7 +3648,7 @@ async function exportClips(list, opts){
     if (scene.type === 'intro') drawIntro(ctx, W, H, opts.name, list.length, nMatches, total/1000);
     else if (scene.type === 'title') drawTitle(ctx, W, H, scene.clip, scene.i, list.length);
     else if (scene.type === 'video' || scene.type === 'freeze'){
-      const withMap = mapMode && scene.clip && scene.clip.tracks && scene.clip.tracks.length;
+      const withMap = mapMode && hasTrk(scene.clip);
       if (withMap && mapMode === 'split'){ ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); const b0 = videoBox(Math.round(W*.6), H); if (video.videoWidth) ctx.drawImage(video, b0.x, b0.y, b0.w, b0.h); }
       else drawVideoFit(ctx, W, H);
       drawWatermark(ctx, W, H);
@@ -3859,7 +3924,7 @@ $('#catReset').onclick = async () => {
    GUARDAR / CARGAR PROYECTO (v5 con partidos y registro en directo; abre también v4 y proyectos v1–v3 de un solo vídeo)
    ========================================================= */
 $('#btnSave').onclick = () => {
-  const data = {app:'TacticaLab', version:14, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
+  const data = {app:'TacticaLab', version:15, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const one = state.matches.length === 1 ? baseFile(state.matches[0].fileName) : 'tactica-lab';
   download(`${slug(one)}_analisis_${stamp}.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
@@ -4226,6 +4291,7 @@ function buildReport(){
     <div class="rp-chart">${barsSVG(rows)}</div>
     <p style="font-size:.78rem;color:#6b6570;margin:.2rem 0 0">Barra superior (color lleno): ${esc(own)} · barra inferior (color suave): rival.</p>
     ${(() => { const h = posMapsHTML(cs); return h ? `<h2>Posiciones en el campo</h2><div class="rp-pos">${h.replace(/<h4>[^<]*<\/h4>/, '').replace('Pulsa un punto para ver el corte.', '')}</div>` : ''; })()}
+    ${passReportHTML(cs)}
     <h2>Cortes (${cs.length})</h2>
     ${cs.map((c, i) => { const cat = catById(c.cat), img = reportShots[c.id];
       const meta = [matchTitle(matchById(c.matchId)), minuteText(c) || `vídeo ${fmtShort(c.start)}`, `${(c.end-c.start).toFixed(1)} s`, teamName(c), c.result === 'ok' ? '✓ éxito' : c.result === 'ko' ? '✗ fallo' : '', c.zone ? `zona ${c.zone}` : '', c.pos ? posText(c.pos) : '', (c.players||[]).length ? playersText(c.players) : '', tagsText(c)].filter(Boolean).join(' · ');
@@ -4330,7 +4396,10 @@ async function exportXlsx(){
   // v3.14 · seguimiento de jugadores
   const seg = [['Corte','Etiqueta','Partido','Jugador','Equipo','t (s)','x (m)','y (m)']];
   clips.forEach((c, i) => (c.tracks || []).forEach(tr => tr.pts.forEach(p => seg.push([i + 1, catById(c.cat).name, matchTitle(matchById(c.matchId)), trkLabel(tr), tr.team === 'B' ? 'Rival' : (brand.short || 'Propio'), p.t, p.x, p.y]))));
+  clips.forEach((c, i) => ((c.ball && c.ball.pts) || []).forEach(p => seg.push([i + 1, catById(c.cat).name, matchTitle(matchById(c.matchId)), p.g ? 'Balón (hueco desde aquí)' : 'Balón', '', p.t, p.x, p.y])));
   if (seg.length > 1) X.utils.book_append_sheet(wb, sheet(seg, [], [7,20,26,18,10,8,8,8]), 'Seguimiento');
+  { const PS = passSheets(clips);   // v3.17
+    if (PS.pases.length > 1){ X.utils.book_append_sheet(wb, sheet(PS.pases, [], [7,20,26,8,10,10,7,7,11,12,8,8,8,8,12]), 'Pases'); X.utils.book_append_sheet(wb, sheet(PS.red, [], [12,10,10,8]), 'Red de pases'); } }
   const out = X.write(wb, {bookType:'xlsx', type:'array'});
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   download(`tactica-lab_${stamp}.xlsx`, new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
@@ -4841,6 +4910,8 @@ function histRestore(json){
   $('#cmpCount').textContent = `${compareSel.length}/2`; $('#bCompare').disabled = compareSel.length !== 2;
   playback = null; cancelFreeze();
   save(); renderAll();
+  // v3.17 · el seguimiento abierto debe trabajar sobre el corte restaurado, no sobre la copia anterior
+  if (trkReady && trk.on){ const tc = trkClip(); if (!tc) closeTrk(); else { if (trk.sel && !trkAll(tc).some(x => x.id === trk.sel)) trk.sel = null; trk.plog = trk.plog ? {from: null} : null; trkUI(); trkPaint(); renderMap2d(true); } }
 }
 function undoEdit(){
   const e = undoStack.pop();
@@ -7603,7 +7674,7 @@ window.addEventListener('resize', () => { if (pov.open) povDraw(); });
    · t en segundos del vídeo; x, y en metros, en el campo donde el propio ataca hacia la derecha (como clip.pos)
    · la marca se pinta sobre el vídeo con la calibración de su instante (homografía inversa)
    ========================================================= */
-const TRK_MAX = 12, TRK_PTS = 60, TRK_TRAIL = 3;
+const TRK_MAX = 12, TRK_PTS = 60, TRK_TRAIL = 3, BALL_PTS = 300;
 const trk = {on: false, clipId: null, sel: null, adding: null, drag: null, auto: null, prop: null, lines: '', d1: '', d2: ''};
 const trkCv = $('#trkCv');
 function sanitizeTracks(arr, start, end){
@@ -7640,12 +7711,25 @@ function posToUV(m, pos, t){
   const q = homApply(inv, x/C.L, y/C.W); if (!q) return null;
   return [q[0], q[1]];
 }
-const trkColor = tr => tr.team === 'B' ? '#2f8cff' : (hexToRgb(brand.accent) ? brand.accent : '#ff3550');
-const trkLabel = tr => `${tr.n ? tr.n : '?'}${tr.name ? ' · ' + tr.name : ''}`;
+const trkColor = tr => tr.ball ? '#ffffff' : tr.team === 'B' ? '#2f8cff' : (hexToRgb(brand.accent) ? brand.accent : '#ff3550');
+const trkLabel = tr => tr.ball ? 'Balón' : `${tr.n ? tr.n : '?'}${tr.name ? ' · ' + tr.name : ''}`;
 const trkClip = () => trk.clipId && clipById(trk.clipId);
+/* v3.17 · el balón es una pista más: clip.ball = {pts:[{t,x,y,g?}]} (g = balón perdido o aéreo hasta el punto siguiente) */
+function ballTr(c, create){
+  if (!c) return null;
+  if (!c.ball){ if (!create) return null; c.ball = {pts: []}; }
+  const b = c.ball;
+  if (b.id !== 'ball') ['id', 'team', 'n', 'ball'].forEach((k, i) => Object.defineProperty(b, k, {value: ['ball', 'ball', '', true][i], enumerable: false, configurable: true}));
+  return b;
+}
+function trkAll(c){ const b = ballTr(c); return (c.tracks || []).concat(b ? [b] : []); }
+const trkMaxPts = tr => tr.ball ? BALL_PTS : TRK_PTS;
+const hasTrk = c => !!(c && ((c.tracks && c.tracks.length) || (c.ball && c.ball.pts && c.ball.pts.length)));
 function trkSetKey(tr, t, x, y){
   const k = tr.pts.filter(p => Math.abs(p.t - t) >= .04);
-  k.push({t: +t.toFixed(2), x: +x.toFixed(2), y: +y.toFixed(2)}); k.sort((a, b) => a.t - b.t); tr.pts = k;
+  k.push({t: +t.toFixed(2), x: +x.toFixed(2), y: +y.toFixed(2)}); k.sort((a, b) => a.t - b.t);
+  if (tr.ball){ const i = k.findIndex(p => Math.abs(p.t - t) < .04); if (i > 0 && k[i-1].g && k[i].t - k[i-1].t <= 1){ k[i-1] = {t: k[i-1].t, x: k[i-1].x, y: k[i-1].y}; } }
+  tr.pts = k;
 }
 /* datos del movimiento */
 function trkStats(c){
@@ -7672,11 +7756,12 @@ function trkStats(c){
 }
 const fmt1 = v => v.toFixed(1).replace('.', ',');
 function trkStatsHTML(c, light){
-  if (!c.tracks || !c.tracks.length) return '';
+  if (!hasTrk(c) && !(c.passes && c.passes.length)) return '';
+  if (!c.tracks || !c.tracks.length) return `<div class="tk-stats${light ? ' light' : ''}">${passClipHTML(c)}</div>`;
   const S = trkStats(c);
   const rows = S.players.map(p => `<tr><td><i class="tk-dot" style="--c:${esc(trkColor(p.tr))}"></i>${esc(trkLabel(p.tr))}</td><td>${esc(p.tr.team === 'B' ? 'Rival' : (brand.short || 'Propio'))}</td><td>${fmt1(p.dist)} m</td><td>${fmt1(p.avg)} km/h</td><td>${fmt1(p.max)} km/h</td><td>${p.tr.pts.length}</td></tr>`).join('');
   const tm = Object.entries(S.teams).map(([k, v]) => `${k === 'B' ? 'Rival' : esc(brand.short || 'Propio')}: anchura media ${fmt1(v.width)} m · profundidad media ${fmt1(v.depth)} m`).join(' · ');
-  return `<div class="tk-stats${light ? ' light' : ''}"><table><thead><tr><th>Jugador</th><th>Equipo</th><th>Distancia</th><th>Vel. media</th><th>Vel. máx.</th><th>Puntos</th></tr></thead><tbody>${rows}</tbody></table>${tm ? `<p>Bloque · ${tm}</p>` : ''}</div>`;
+  return `<div class="tk-stats${light ? ' light' : ''}"><table><thead><tr><th>Jugador</th><th>Equipo</th><th>Distancia</th><th>Vel. media</th><th>Vel. máx.</th><th>Puntos</th></tr></thead><tbody>${rows}</tbody></table>${tm ? `<p>Bloque · ${tm}</p>` : ''}${passClipHTML(c)}</div>`;
 }
 /* ---------- modo seguimiento ---------- */
 function trkCandidate(){
@@ -7697,47 +7782,52 @@ async function openTrk(clipId){
   if (!c || c.matchId !== curMatch || isVirtual(c)){ flash('Selecciona un corte del partido abierto (o colócate dentro de uno) para seguir a sus jugadores', 3500); return; }
   closeBoard(true); cancelFreeze(); playback = null; video.pause(); markPlaying();
   if ($('#dlgClip').open) $('#dlgClip').close();
-  trk.on = true; trk.clipId = c.id; trk.sel = c.tracks && c.tracks[0] ? c.tracks[0].id : null; trk.adding = null; trk.prop = null;
+  trk.on = true; trk.clipId = c.id; trk.sel = c.tracks && c.tracks[0] ? c.tracks[0].id : (c.ball && c.ball.pts.length ? 'ball' : null); trk.adding = null; trk.prop = null; trk.plog = null;
   selClip = c.id; markSelected();
   if (!(video.currentTime >= c.start - .05 && video.currentTime <= c.end + .05)) seek(c.start);
   map2d = true; try{ localStorage.setItem('tacticalab:map2d', '1'); }catch(e){}
   document.body.classList.add('trk-on'); $('#trkBar').hidden = false;
   trkUI(); trkPaint(); renderMap2d(true);
-  if (!c.tracks || !c.tracks.length) flash('Pulsa «+ Jugador» y luego los pies del jugador en el vídeo', 3500);
+  if (!hasTrk(c)) flash('Pulsa «+ Jugador» y luego los pies del jugador en el vídeo', 3500);
 }
 function closeTrk(){
   if (!trk.on) return;
   if (trk.auto) trk.auto.cancel = true;
-  trk.on = false; trk.adding = null; trk.prop = null; trk.drag = null;
+  trk.on = false; trk.adding = null; trk.prop = null; trk.drag = null; trk.plog = null;
   document.body.classList.remove('trk-on'); $('#trkBar').hidden = true; $('#trkForm').hidden = true;
   trkPaint(); renderAll();
 }
 function trkUI(){
   const c = trkClip(); if (!c) return;
-  const cat = catById(c.cat), trs = c.tracks || [];
+  const cat = catById(c.cat), trs = trkAll(c), nPl = (c.tracks || []).length;
   $('#trkTitle').innerHTML = `<i style="--c:${esc(cat.color)}"></i>${esc(cat.name)} <span class="mono">${fmtShort(c.start)}–${fmtShort(c.end)}</span>`;
-  $('#trkList').innerHTML = trs.map(tr => `<span class="tk-chip ${tr.id === trk.sel ? 'on' : ''}" data-id="${esc(tr.id)}" style="--c:${esc(trkColor(tr))}" role="button" tabindex="0" aria-pressed="${tr.id === trk.sel}" aria-label="${esc(trkLabel(tr))}: ${tr.pts.length} puntos"><b>${esc(tr.n || '?')}</b>${tr.name ? `<span class="nm">${esc(tr.name)}</span>` : ''}<small>${tr.pts.length} pt</small><button type="button" data-a="pop" title="Quitar último punto" aria-label="Quitar el último punto de ${esc(trkLabel(tr))}">↶</button><button type="button" data-a="del" title="Quitar jugador" aria-label="Quitar a ${esc(trkLabel(tr))}">✕</button></span>`).join('')
+  $('#trkList').innerHTML = trs.map(tr => `<span class="tk-chip ${tr.ball ? 'ball ' : ''}${tr.id === trk.sel ? 'on' : ''}${trk.plog && trk.plog.from === passKey(tr) ? ' from' : ''}" data-id="${esc(tr.id)}" style="--c:${esc(trkColor(tr))}" role="button" tabindex="0" aria-pressed="${tr.id === trk.sel}" aria-label="${esc(trkLabel(tr))}: ${tr.pts.length} puntos"><b>${tr.ball ? ic('ball') : esc(tr.n || '?')}</b>${tr.ball ? '<span class="nm">Balón</span>' : tr.name ? `<span class="nm">${esc(tr.name)}</span>` : ''}<small>${tr.pts.length} pt</small><button type="button" data-a="pop" title="Quitar último punto" aria-label="Quitar el último punto de ${esc(trkLabel(tr))}">↶</button><button type="button" data-a="del" title="${tr.ball ? 'Quitar el balón' : 'Quitar jugador'}" aria-label="Quitar ${tr.ball ? 'el balón' : 'a ' + esc(trkLabel(tr))}">✕</button></span>`).join('')
     || '<span class="hint">Ningún jugador todavía.</span>';
   $('#trkList').querySelectorAll('.tk-chip').forEach(ch => {
     ch.onclick = e => { const a = e.target.closest('button'); const id = ch.dataset.id, tr = trs.find(x => x.id === id); if (!tr) return;
-      if (a && a.dataset.a === 'pop'){ pushUndo('quitar punto'); tr.pts.pop(); if (!tr.pts.length) c.tracks = trs.filter(x => x !== tr); trkSave(); return; }
-      if (a && a.dataset.a === 'del'){ pushUndo('quitar jugador'); c.tracks = trs.filter(x => x !== tr); if (trk.sel === id) trk.sel = null; trkSave(); return; }
+      const drop = () => { if (tr.ball) delete c.ball; else c.tracks = (c.tracks || []).filter(x => x !== tr); if (trk.sel === id) trk.sel = null; };
+      if (a && a.dataset.a === 'pop'){ pushUndo('quitar punto'); tr.pts = tr.pts.slice(0, -1); if (!tr.pts.length) drop(); trkSave(); return; }
+      if (a && a.dataset.a === 'del'){ pushUndo(tr.ball ? 'quitar balón' : 'quitar jugador'); drop(); trkSave(); return; }
+      if (trk.plog && !tr.ball){ passLogTap(tr); return; }
       trk.sel = id; trkUI(); trkPaint(); };
     ch.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopPropagation(); ch.click(); } };
   });
-  $('#trkAdd').disabled = trs.length >= TRK_MAX; $('#trkAdd').classList.toggle('on', !!trk.adding && !trk.adding.uv);
-  $('#trkAuto').disabled = !trk.sel || !!trk.auto; $('#trkToTac').disabled = !trs.some(tr => tr.pts.length);
-  const opts = '<option value="">—</option>' + trs.map(tr => `<option value="${esc(tr.id)}">${esc(trkLabel(tr))}</option>`).join('');
+  $('#trkAdd').disabled = nPl >= TRK_MAX; $('#trkAdd').classList.toggle('on', !!trk.adding && !trk.adding.uv);
+  $('#trkAuto').disabled = !trk.sel || !!trk.auto; $('#trkToTac').disabled = !trs.some(tr => tr.pts.length); passUI(c);
+  const opts = '<option value="">—</option>' + trs.filter(tr => !tr.ball).map(tr => `<option value="${esc(tr.id)}">${esc(trkLabel(tr))}</option>`).join('');
   ['trkD1', 'trkD2'].forEach((id, i) => { const s = $('#' + id); s.innerHTML = opts; s.value = trs.some(tr => tr.id === trk[i ? 'd2' : 'd1']) ? trk[i ? 'd2' : 'd1'] : ''; });
   $('#trkLines').value = trk.lines;
   const sel = trs.find(tr => tr.id === trk.sel);
   $('#trkHint').textContent = trk.prop ? 'Revisa el recorrido propuesto (amarillo) y elige Aplicar, Volver a intentar o Descartar.'
+    : trk.plog ? (trk.plog.from ? 'Registrar pases: pulsa ahora al jugador que RECIBE (o su número de orden 1–9). Esc o R para terminar.' : 'Registrar pases: pulsa al jugador que tiene el balón y, cuando pase, al que lo recibe. El vídeo puede seguir en marcha.')
+    : trk.adding && trk.adding.ball ? 'Pulsa en el vídeo el balón, sobre el césped (Esc cancela).'
     : trk.adding ? 'Pulsa en el vídeo los pies del jugador que quieres seguir (Esc cancela).'
+    : sel && sel.ball ? `Balón: avanza el vídeo y pulsa donde esté, o usa «Proponer». Si va por el aire o no se ve, pulsa «Hueco» (G): la app no inventa esa parte. Puntos: ${sel.pts.length}/${BALL_PTS}${ballDropped(sel) ? ` · ${ballDropped(sel)} descartado(s) por salto imposible` : ''}.`
     : sel ? `${trkLabel(sel)}: avanza el vídeo (→ , . o la línea de tiempo) y arrastra su marca, o pulsa donde esté ahora. Puntos: ${sel.pts.length}/${TRK_PTS}.`
     : 'Pulsa «+ Jugador» y luego los pies del jugador en el vídeo.';
   $('#trkPropBox').hidden = !trk.prop;
 }
-function trkSave(){ save(); trkUI(); trkPaint(); renderMap2d(true); renderList(); }
+function trkSave(){ const c0 = trkClip(); if (c0) passAuto(c0); save(); trkUI(); trkPaint(); renderMap2d(true); renderList(); }
 /* pintar marcas sobre el vídeo */
 function trkPaint(){
   const r = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1, W = Math.max(1, Math.round(r.width*dpr)), H = Math.max(1, Math.round(r.height*dpr));
@@ -7754,7 +7844,7 @@ function trkPaint(){
     trk.prop.pts.forEach(p => { const uv = posToUV(m, p, p.t); if (!uv) return; const [x, y] = S(uv[0], uv[1]); ctx.fillStyle = '#ffd400'; ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI*2); ctx.fill(); });
     ctx.restore();
   }
-  (c.tracks || []).forEach(tr => {
+  trkAll(c).forEach(tr => {
     const p = trk.drag && trk.drag.id === tr.id && trk.drag.uv ? null : trkAt(tr, t, true);
     let uv = trk.drag && trk.drag.id === tr.id && trk.drag.uv ? trk.drag.uv : p && posToUV(m, p, t);
     if (!uv) return;
@@ -7763,6 +7853,16 @@ function trkPaint(){
     if (sel && tr.pts.length > 1){
       ctx.save(); ctx.strokeStyle = col; ctx.globalAlpha = .55; ctx.lineWidth = 2; ctx.beginPath();
       tr.pts.forEach((q, i) => { const w = posToUV(m, q, q.t); if (!w) return; const [a, b] = S(w[0], w[1]); i ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }); ctx.stroke(); ctx.restore();
+    }
+    if (tr.ball){
+      const gap = ballGapAt(tr, t);
+      ctx.save(); ctx.globalAlpha = out || gap ? .55 : 1; if (out || gap) ctx.setLineDash([3, 3]);
+      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(14,13,16,.85)'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI*2); ctx.stroke();
+      ctx.lineWidth = 2.2; ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+      if (sel){ ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI*2); ctx.stroke(); }
+      if (key){ ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI*2); ctx.fill(); }
+      if (gap){ ctx.fillStyle = '#fff'; ctx.font = '800 11px Manrope, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('?', x, y - 14); }
+      ctx.restore(); return;
     }
     ctx.save(); ctx.globalAlpha = out ? .5 : 1;
     ctx.lineWidth = sel ? 3.5 : 2.5; ctx.strokeStyle = col; if (out) ctx.setLineDash([4, 3]);
@@ -7785,16 +7885,18 @@ function trkHit(e){
   const c = trkClip(), m = matchById(curMatch); if (!c) return null;
   const [u, v] = relPoint(e), cr = contentRect(), tol = e.pointerType === 'mouse' ? 20 : 30, t = video.currentTime;
   let best = null, bd = tol;
-  (c.tracks || []).forEach(tr => { const p = trkAt(tr, t, true), uv = p && posToUV(m, p, t); if (!uv) return;
+  // con el balón seleccionado, un clic junto a un jugador coloca el balón (casi siempre está en sus pies): solo se «agarra» el propio balón
+  const list = trk.sel === 'ball' ? trkAll(c).filter(tr => tr.ball) : trkAll(c); if (trk.sel === 'ball') bd = Math.min(bd, 12);
+  list.forEach(tr => { const p = trkAt(tr, t, true), uv = p && posToUV(m, p, t); if (!uv) return;
     const d = Math.hypot((uv[0] - u)*cr.w, (uv[1] - v)*cr.h); if (d < bd){ bd = d; best = tr; } });
   return best;
 }
 function trkPlace(tr, u, v){
   const c = trkClip(), m = matchById(curMatch), t = video.currentTime;
   if (t < c.start - .05 || t > c.end + .05){ flash('Este instante está fuera del corte: vuelve dentro para añadir puntos', 3000); return false; }
-  if (tr.pts.length >= TRK_PTS && !tr.pts.some(p => Math.abs(p.t - t) < .04)){ flash(`Máximo ${TRK_PTS} puntos por jugador`); return false; }
+  if (tr.pts.length >= trkMaxPts(tr) && !tr.pts.some(p => Math.abs(p.t - t) < .04)){ flash(tr.ball ? `Máximo ${BALL_PTS} puntos del balón por corte` : `Máximo ${TRK_PTS} puntos por jugador`); return false; }
   const r = posFromUV(m, u, v, t);
-  if (r.err){ flash('Ese punto queda fuera del campo calibrado: pulsa sobre el césped, en los pies del jugador', 3000); return false; }
+  if (r.err){ flash(tr.ball ? 'Ese punto queda fuera del campo calibrado: pulsa el balón cuando esté sobre el césped' : 'Ese punto queda fuera del campo calibrado: pulsa sobre el césped, en los pies del jugador', 3000); return false; }
   trkSetKey(tr, t, r.pos.x, r.pos.y); return true;
 }
 trkCv.addEventListener('pointerdown', e => {
@@ -7804,14 +7906,20 @@ trkCv.addEventListener('pointerdown', e => {
   if (trk.prop) return;
   if (trk.adding){
     const m = matchById(curMatch), r = posFromUV(m, u, v, video.currentTime);
-    if (r.err){ flash('Pulsa sobre el césped, en los pies del jugador', 2500); return; }
+    if (r.err){ flash(trk.adding.ball ? 'Pulsa el balón cuando esté sobre el césped' : 'Pulsa sobre el césped, en los pies del jugador', 2500); return; }
+    if (trk.adding.ball){
+      const c = trkClip(), t = video.currentTime;
+      if (t < c.start - .05 || t > c.end + .05){ flash('Colócate dentro del corte para marcar el balón'); return; }
+      pushUndo('seguir balón'); const b = ballTr(c, true); trkSetKey(b, t, r.pos.x, r.pos.y); trk.sel = 'ball'; trk.adding = null; trkSave();
+      flash('Balón marcado · avanza el vídeo y pulsa donde esté, o usa «Proponer»', 3200); return;
+    }
     trk.adding = {uv: [u, v], pos: r.pos}; trkForm(); return;
   }
   const hit = trkHit(e);
   if (hit){ const wasSel = trk.sel === hit.id; trk.sel = hit.id; trk.drag = {wasSel, id: hit.id, pid: e.pointerId, x: e.clientX, y: e.clientY, moved: false, uv: null}; trkCv.setPointerCapture(e.pointerId); trkUI(); trkPaint(); return; }
   // pulsar en un hueco: el jugador seleccionado está aquí ahora
-  const c = trkClip(), tr = c && (c.tracks || []).find(x => x.id === trk.sel);
-  if (tr){ pushUndo('punto de seguimiento'); if (trkPlace(tr, u, v)) trkSave(); }
+  const c = trkClip(), tr = c && trkAll(c).find(x => x.id === trk.sel);
+  if (tr){ pushUndo(tr.ball ? 'punto del balón' : 'punto de seguimiento'); if (trkPlace(tr, u, v)) trkSave(); }
 });
 trkCv.addEventListener('pointermove', e => {
   const d = trk.drag; if (!d || e.pointerId !== d.pid) return;
@@ -7821,8 +7929,8 @@ trkCv.addEventListener('pointermove', e => {
 const trkUp = e => {
   const d = trk.drag; if (!d || (e && e.pointerId !== d.pid)) return;
   trk.drag = null;
-  const c = trkClip(), tr = c && (c.tracks || []).find(x => x.id === d.id);
-  if (d.moved && d.uv){ if (tr){ pushUndo('mover jugador'); if (trkPlace(tr, d.uv[0], d.uv[1])) trkSave(); else trkPaint(); } }
+  const c = trkClip(), tr = c && trkAll(c).find(x => x.id === d.id);
+  if (d.moved && d.uv){ if (tr){ pushUndo(tr.ball ? 'mover balón' : 'mover jugador'); if (trkPlace(tr, d.uv[0], d.uv[1])) trkSave(); else trkPaint(); } }
   else if (tr && d.wasSel && e){ const uv = relPoint(e); pushUndo('punto de seguimiento'); if (trkPlace(tr, uv[0], uv[1])) trkSave(); else trkPaint(); }   // clic sobre el ya seleccionado: «está aquí ahora»
   else trkPaint();
 };
@@ -7856,74 +7964,76 @@ $('#tkOk').onclick = () => {
   trkSave(); flash(`Siguiendo a ${trkLabel(tr)} · avanza el vídeo y arrastra su marca`, 3000);
 };
 $('#tkCancel').onclick = () => { trk.adding = null; $('#trkForm').hidden = true; trkUI(); };
-$('#trkAdd').onclick = () => { if (trk.prop) return; trk.adding = trk.adding ? null : {}; $('#trkForm').hidden = true; trkUI(); if (trk.adding) flash('Pulsa en el vídeo los pies del jugador', 2500); };
+$('#trkAdd').onclick = () => { if (trk.prop) return; trk.plog = null; trk.adding = trk.adding && !trk.adding.ball ? null : {}; $('#trkForm').hidden = true; trkUI(); if (trk.adding) flash('Pulsa en el vídeo los pies del jugador', 2500); };
 $('#trkClose').onclick = closeTrk;
 $('#trkLines').onchange = e => { trk.lines = e.target.value; renderMap2d(true); };
 $('#trkD1').onchange = e => { trk.d1 = e.target.value; renderMap2d(true); };
 $('#trkD2').onchange = e => { trk.d2 = e.target.value; renderMap2d(true); };
 /* ---------- 🤖 Proponer puntos (búsqueda por comparación de imagen, sin librerías) ---------- */
 async function trkPropose(){
-  const c = trkClip(), m = matchById(curMatch), tr = c && (c.tracks || []).find(x => x.id === trk.sel); if (!tr || trk.auto) return;
+  const c = trkClip(), m = matchById(curMatch), tr = c && trkAll(c).find(x => x.id === trk.sel); if (!tr || trk.auto) return;
+  const isB = !!tr.ball;
   const t0 = video.currentTime, D = +$('#trkDur').value || 3, tEnd = Math.min(c.end, t0 + D);
   if (t0 < c.start - .05 || t0 >= c.end - .1){ flash('Colócate dentro del corte (y no al final) para proponer puntos'); return; }
-  const p0 = trkAt(tr, t0, true), uv0 = p0 && posToUV(m, p0, t0); if (!uv0){ flash('Coloca primero al jugador en este instante'); return; }
-  const SW = 480, SH = Math.round(SW*(video.videoHeight || 9)/(video.videoWidth || 16)), cv = document.createElement('canvas'); cv.width = SW; cv.height = SH;
+  const p0 = trkAt(tr, t0, true), uv0 = p0 && posToUV(m, p0, t0); if (!uv0){ flash(isB ? 'Marca primero el balón en este instante' : 'Coloca primero al jugador en este instante'); return; }
+  const SW = isB ? 960 : 480, SH = Math.round(SW*(video.videoHeight || 9)/(video.videoWidth || 16)), cv = document.createElement('canvas'); cv.width = SW; cv.height = SH;
   const cx = cv.getContext('2d', {willReadFrequently: true});
   const gray = () => { cx.drawImage(video, 0, 0, SW, SH); const d = cx.getImageData(0, 0, SW, SH).data, g = new Float32Array(SW*SH); for (let i = 0; i < g.length; i++) g[i] = d[i*4]*.3 + d[i*4+1]*.59 + d[i*4+2]*.11; return g; };
   let G; try{ await calSeek(t0); G = gray(); }catch(err){ flash('Este vídeo no deja leer sus imágenes: no se pueden proponer puntos'); return; }
   // tamaño del recorte según la escala del campo en ese punto (1 m en el suelo, en píxeles del canvas pequeño)
   const uv1 = posToUV(m, {x: p0.x + 1, y: p0.y}, t0), uv2 = posToUV(m, {x: p0.x, y: p0.y + 1}, t0);
   const mpx = Math.max(uv1 ? Math.hypot((uv1[0] - uv0[0])*SW, (uv1[1] - uv0[1])*SH) : 4, uv2 ? Math.hypot((uv2[0] - uv0[0])*SW, (uv2[1] - uv0[1])*SH) : 4);
-  const bw = Math.round(clamp(mpx*1.1, 6, 40)), bh = Math.round(clamp(bw*2.2, 12, 90));
+  const bw = isB ? Math.round(clamp(mpx*1.2, 9, 23)) : Math.round(clamp(mpx*1.1, 6, 40)), bh = isB ? bw : Math.round(clamp(bw*2.2, 12, 90)), oy = isB ? Math.round(bh/2) : bh;   // el balón se busca centrado; el jugador, desde los pies hacia arriba
   let fx = uv0[0]*SW, fy = uv0[1]*SH, vx = 0, vy = 0;
-  const cut = (g, x, y) => { const T = new Float32Array(bw*bh); const x0 = Math.round(x - bw/2), y0 = Math.round(y - bh); for (let j = 0; j < bh; j++) for (let i = 0; i < bw; i++){ const X = clamp(x0 + i, 0, SW - 1), Y = clamp(y0 + j, 0, SH - 1); T[j*bw + i] = g[Y*SW + X]; } return T; };
+  const cut = (g, x, y) => { const T = new Float32Array(bw*bh); const x0 = Math.round(x - bw/2), y0 = Math.round(y - oy); for (let j = 0; j < bh; j++) for (let i = 0; i < bw; i++){ const X = clamp(x0 + i, 0, SW - 1), Y = clamp(y0 + j, 0, SH - 1); T[j*bw + i] = g[Y*SW + X]; } return T; };
   let T = cut(G, fx, fy);
   trk.auto = {cancel: false}; trk.prop = null; trkUI(); $('#trkProg').hidden = false;
-  const step = (FRAME || .04)*2, R = Math.max(6, Math.round(bw*.9)), pts = [], last = {t: t0};
+  const step = (FRAME || .04)*(isB ? 1 : 2), R = isB ? Math.max(12, Math.round(bw*1.6)) : Math.max(6, Math.round(bw*.9)), pts = [], last = {t: t0}, pen = isB ? .22 : .6, lim = isB ? .17 : .2, every = isB ? .19 : .44;
   let lostAt = null, t = t0;
   while (t + step <= tEnd + 1e-6 && !trk.auto.cancel){
     t += step; await calSeek(t); const g = gray();
     const px = fx + vx, py = fy + vy;
     let best = Infinity, bx = px, by = py;
     for (let dy = -R; dy <= R; dy += 1) for (let dx = -R; dx <= R; dx += 1){
-      const x0 = Math.round(px + dx - bw/2), y0 = Math.round(py + dy - bh); if (x0 < 0 || y0 < 0 || x0 + bw >= SW || y0 + bh >= SH) continue;
+      const x0 = Math.round(px + dx - bw/2), y0 = Math.round(py + dy - oy); if (x0 < 0 || y0 < 0 || x0 + bw >= SW || y0 + bh >= SH) continue;
       let s = 0; for (let j = 0; j < bh; j += 2){ const row = (y0 + j)*SW + x0, tr0 = j*bw; for (let i = 0; i < bw; i += 2) s += Math.abs(g[row + i] - T[tr0 + i]); if (s >= best) break; }
-      s += (dx*dx + dy*dy)*(bw*bh/4)*.6;   // preferir lo cercano a lo previsto (evita saltos a líneas o rayas del césped)
+      s += (dx*dx + dy*dy)*(bw*bh/4)*pen;   // preferir lo cercano a lo previsto (evita saltos a líneas o rayas del césped)
       if (s < best){ best = s; bx = px + dx; by = py + dy; }
     }
     const score = best/((bw/2)*(bh/2)*255);
-    if (!isFinite(best) || score > .2){ lostAt = t; break; }
+    if (!isFinite(best) || score > lim){ lostAt = t; break; }
     vx = (bx - fx)*.6 + vx*.4; vy = (by - fy)*.6 + vy*.4; fx = bx; fy = by;
     const T2 = cut(g, fx, fy); for (let i = 0; i < T.length; i++) T[i] = T[i]*.8 + T2[i]*.2;
-    $('#trkProg').textContent = `🤖 Siguiendo… ${fmt1(t - t0)} / ${fmt1(tEnd - t0)} s`;
-    if (t - last.t >= .44 || t + step > tEnd){ const r = posFromUV(m, fx/SW, fy/SH, t); if (r.err){ lostAt = t; break; } pts.push({t: +t.toFixed(2), x: r.pos.x, y: r.pos.y}); last.t = t; }
+    $('#trkProg').textContent = `Siguiendo… ${fmt1(t - t0)} / ${fmt1(tEnd - t0)} s`;
+    if (t - last.t >= every || t + step > tEnd){ const r = posFromUV(m, fx/SW, fy/SH, t); if (r.err){ lostAt = t; break; } pts.push({t: +t.toFixed(2), x: r.pos.x, y: r.pos.y}); last.t = t; }
     trk.prop = {pts: pts.slice(), id: tr.id}; trkPaint();
   }
   const cancelled = trk.auto.cancel; trk.auto = null; $('#trkProg').hidden = true;
   if (cancelled){ trk.prop = null; trkUI(); trkPaint(); return; }
-  trk.prop = {pts, id: tr.id, t0};
+  trk.prop = {pts, id: tr.id, t0, lost: lostAt != null};
   trkUI(); trkPaint();
-  if (lostAt != null) flash(pts.length ? `Perdido en ${fmtShort(lostAt)}: aplica lo propuesto, corrige la posición y continúa` : `Perdido en ${fmtShort(lostAt)}: corrige la posición del jugador y vuelve a intentarlo`, 4500);
+  if (lostAt != null) flash(isB ? (pts.length ? `Balón perdido en ${fmtShort(lostAt)}: al aplicar queda un hueco; pulsa el balón donde vuelva a verse` : `No encuentro el balón desde ${fmtShort(lostAt)}: márcalo a mano o usa «Hueco»`) : pts.length ? `Perdido en ${fmtShort(lostAt)}: aplica lo propuesto, corrige la posición y continúa` : `Perdido en ${fmtShort(lostAt)}: corrige la posición del jugador y vuelve a intentarlo`, 4500);
   else flash(`${pts.length} punto${pts.length === 1 ? '' : 's'} propuesto${pts.length === 1 ? '' : 's'}: revisa el recorrido amarillo`, 3000);
 }
 $('#trkAuto').onclick = trkPropose;
 $('#trkProg').onclick = () => { if (trk.auto) trk.auto.cancel = true; };
 $('#trkApply').onclick = () => {
-  const c = trkClip(), P = trk.prop, tr = c && P && (c.tracks || []).find(x => x.id === P.id); if (!tr) return;
+  const c = trkClip(), P = trk.prop, tr = c && P && trkAll(c).find(x => x.id === P.id); if (!tr) return;
   pushUndo('aplicar puntos propuestos');
-  P.pts.filter(p => p.t >= c.start - .05 && p.t <= c.end + .05).forEach(p => { if (tr.pts.length < TRK_PTS || tr.pts.some(q => Math.abs(q.t - p.t) < .04)) trkSetKey(tr, p.t, p.x, p.y); });
+  P.pts.filter(p => p.t >= c.start - .05 && p.t <= c.end + .05).forEach(p => { if (tr.pts.length < trkMaxPts(tr) || tr.pts.some(q => Math.abs(q.t - p.t) < .04)) trkSetKey(tr, p.t, p.x, p.y); });
+  if (tr.ball && P.lost && P.pts.length){ const lt = P.pts[P.pts.length - 1].t, i = tr.pts.findIndex(q => Math.abs(q.t - lt) < .04); if (i >= 0 && i < tr.pts.length){ tr.pts = tr.pts.map((q, j) => j === i ? {...q, g: 1} : q); } }
   trk.prop = null; trkSave(); flash(`Puntos añadidos · ${trkLabel(tr)}: ${tr.pts.length}`);
 };
 $('#trkRetry').onclick = async () => { const P = trk.prop; if (!P) return; trk.prop = null; await calSeek(P.t0); trkPropose(); };
 $('#trkDiscard').onclick = async () => { const P = trk.prop; trk.prop = null; if (P) await calSeek(P.t0); trkUI(); trkPaint(); };
 /* ---------- enviar a la pizarra táctica ---------- */
 $('#trkToTac').onclick = () => {
-  const c = trkClip(), m = matchById(curMatch); if (!c || !c.tracks || !c.tracks.length) return;
+  const c = trkClip(), m = matchById(curMatch); if (!c || !c.tracks || !c.tracks.length){ flash('Sigue al menos a un jugador para crear la pizarra'); return; }
   const F = fieldOf(m), field = F.type === 'f7' ? 'f7' : F.type === 'sala' ? 'sala' : 'f11';
-  const trs = c.tracks.filter(tr => tr.pts.length), a = Math.min(...trs.map(tr => tr.pts[0].t)), b = Math.max(...trs.map(tr => tr.pts[tr.pts.length - 1].t));
+  const trs = (c.tracks || []).filter(tr => tr.pts.length), a = Math.min(...trs.map(tr => tr.pts[0].t)), b = Math.max(...trs.map(tr => tr.pts[tr.pts.length - 1].t));
   const dt = (b - a) > 16 ? (b - a)/10 : 1.5, steps = [];
   for (let t = a; t <= b + 1e-6 && steps.length < 40; t += dt){
-    steps.push({items: trs.map(tr => { const p = trkAt(tr, t, true); const it = {id: tr.id, k: tr.team, x: +(p.x/F.L).toFixed(4), y: +(p.y/F.W).toFixed(4)}; if (tr.n) it.n = tr.n; if (tr.name) it.name = tr.name; return it; }), shapes: [], dur: +clamp(dt, .5, 10).toFixed(1)});
+    steps.push({items: trs.map(tr => { const p = trkAt(tr, t, true); const it = {id: tr.id, k: tr.team, x: +(p.x/F.L).toFixed(4), y: +(p.y/F.W).toFixed(4)}; if (tr.n) it.n = tr.n; if (tr.name) it.name = tr.name; return it; }).concat((() => { const bp = c.ball && ballAt(c, t, true); return bp ? [{id: 'ball', k: 'ball', x: +(bp.x/F.L).toFixed(4), y: +(bp.y/F.W).toFixed(4)}] : []; })()), shapes: [], dur: +clamp(dt, .5, 10).toFixed(1)});
   }
   const cat = catById(c.cat), nb = sanitizeBoards([{id: uid(), name: `${cat.name} · ${fmtShort(c.start)}`.slice(0, 60), field, vertical: false, steps}])[0];
   state.boards = (state.boards || []).concat([nb]).slice(-50); save();
@@ -7932,8 +8042,8 @@ $('#trkToTac').onclick = () => {
 };
 /* ---------- Campo 2D con los jugadores en movimiento ---------- */
 function trkActiveClip(t){
-  if (trk.on){ const c = trkClip(); if (c && c.tracks && c.tracks.length) return c; }
-  return state.clips.find(c => c.matchId === curMatch && c.tracks && c.tracks.length && t >= c.start - .05 && t <= c.end + .05) || null;
+  if (trk.on){ const c = trkClip(); if (hasTrk(c)) return c; }
+  return state.clips.find(c => c.matchId === curMatch && hasTrk(c) && t >= c.start - .05 && t <= c.end + .05) || null;
 }
 function hull(P){
   if (P.length < 3) return P.slice();
@@ -7957,7 +8067,8 @@ function trkFrame(c, t, lines, d1, d2){
   const groups = {};
   if (lines) ['A', 'B'].forEach(tm => { const ps = now.filter(o => o.tr.team === tm).map(o => [o.p.x, o.p.y]); if (ps.length >= 2) groups[tm] = lines === 'hull' ? hull(ps) : defLine(ps, tm); });
   const a = now.find(o => o.tr.id === d1), b = now.find(o => o.tr.id === d2);
-  return {now, trails, groups, lines, dist: a && b && a !== b ? {a: a.p, b: b.p, d: Math.hypot(a.p.x - b.p.x, a.p.y - b.p.y)} : null};
+  const bp = c.ball ? ballAt(c, t) : null, bq = []; if (bp) for (let k = t - .9; k <= t + 1e-6; k += .1){ const q = ballAt(c, k); if (q) bq.push(q); else bq.length = 0; }
+  return {now, trails, groups, lines, ball: bp, ballTrail: bq, holder: bp ? passHolderAt(c, t, bp) : null, dist: a && b && a !== b ? {a: a.p, b: b.p, d: Math.hypot(a.p.x - b.p.x, a.p.y - b.p.y)} : null};
 }
 function trkMapSVG(c, t, F){
   const fr = trkFrame(c, t, trk.lines, trk.d1, trk.d2), r = F.L*.016, sw = F.L*.004;
@@ -7966,8 +8077,12 @@ function trkMapSVG(c, t, F){
     s += fr.lines === 'hull' ? `<polygon points="${ps.map(p => p.join(',')).join(' ')}" fill="${col}" fill-opacity=".16" stroke="${col}" stroke-width="${sw}" stroke-dasharray="${sw*3} ${sw*2}"/>` : `<polyline points="${ps.map(p => p.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${sw*1.4}"/>`; });
   fr.trails.forEach(({tr, q}) => { if (q.length > 1) s += `<polyline points="${q.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')}" fill="none" stroke="${trkColor(tr)}" stroke-opacity=".55" stroke-width="${sw*1.2}" stroke-linecap="round"/>`; });
   if (fr.dist){ const {a, b, d} = fr.dist; s += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#ffd400" stroke-width="${sw}" stroke-dasharray="${sw*3} ${sw*2}"/><text x="${((a.x + b.x)/2).toFixed(2)}" y="${((a.y + b.y)/2 - r*1.2).toFixed(2)}" class="tk-dist" style="font-size:${(r*1.6).toFixed(2)}px">${fmt1(d)} m</text>`; }
+  if (fr.holder){ const h = fr.now.find(o => o.tr.id === fr.holder); if (h) s += `<circle cx="${h.p.x.toFixed(2)}" cy="${h.p.y.toFixed(2)}" r="${(r*1.55).toFixed(2)}" fill="none" stroke="#ffd400" stroke-width="${(sw*1.1).toFixed(2)}"/>`; }
   fr.now.forEach(({tr, p}) => { const col = trkColor(tr);
     s += `<g class="tk-p"><circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${r.toFixed(2)}" fill="${col}" stroke="#fff" stroke-width="${(sw*.8).toFixed(2)}"/><text x="${p.x.toFixed(2)}" y="${(p.y + r*.38).toFixed(2)}" style="font-size:${(r*1.1).toFixed(2)}px;fill:${inkFor(col)}">${esc(tr.n || '')}</text><title>${esc(trkLabel(tr))}</title></g>`; });
+  if (fr.ball){ const b = fr.ball, br = r*.55;
+    if (fr.ballTrail.length > 1) s += `<polyline points="${fr.ballTrail.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')}" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="${(sw*1.1).toFixed(2)}" stroke-linecap="round"/>`;
+    s += `<g class="tk-ball"><circle cx="${b.x.toFixed(2)}" cy="${b.y.toFixed(2)}" r="${br.toFixed(2)}" fill="#fff" stroke="#111014" stroke-width="${(sw*.9).toFixed(2)}"/><title>Balón</title></g>`; }
   return s;
 }
 let trkMapLast = '';
@@ -7975,7 +8090,7 @@ function trkMapTick(force){
   const box = map2dBig ? $('#map2dBig') : $('#map2d'); if (!box || box.hidden) return;
   const g = box.querySelector('.trk-g'); if (!g) return;
   const t = video.currentTime, c = trkActiveClip(t), m = matchById(curMatch);
-  const key = c ? `${c.id}|${t.toFixed(2)}|${trk.lines}|${trk.d1}|${trk.d2}|${JSON.stringify(c.tracks).length}` : '';
+  const key = c ? `${c.id}|${t.toFixed(2)}|${trk.lines}|${trk.d1}|${trk.d2}|${JSON.stringify(c.tracks || 0).length}|${c.ball ? c.ball.pts.length + ':' + c.ball.pts.filter(p => p.g).length + ':' + (c.ball.pts.length ? c.ball.pts[c.ball.pts.length - 1].t + c.ball.pts[c.ball.pts.length - 1].x : '') : ''}|${passR()}` : '';
   if (!force && key === trkMapLast) return; trkMapLast = key;
   g.innerHTML = c ? trkMapSVG(c, t, fieldOf(m)) : '';
 }
@@ -7995,12 +8110,17 @@ function trkMapCanvas(ctx, X, Y, w, h, c, t){
   if (fr.dist){ const {a, b, d} = fr.dist; ctx.setLineDash([6, 4]); ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(...P(a.x, a.y)); ctx.lineTo(...P(b.x, b.y)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#ffd400'; ctx.font = `700 ${Math.round(r*1.5)}px Manrope, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.fillText(`${fmt1(d)} m`, ...P((a.x + b.x)/2, (a.y + b.y)/2 - 2.2)); }
   fr.now.forEach(({tr, p}) => { const [x, y] = P(p.x, p.y), col = trkColor(tr); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1, r*.18); ctx.stroke();
     if (tr.n){ ctx.fillStyle = inkFor(col); ctx.font = `800 ${Math.round(r*1.15)}px Manrope, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(tr.n, x, y + .5); } });
+  if (fr.holder){ const h = fr.now.find(o => o.tr.id === fr.holder); if (h){ ctx.strokeStyle = '#ffd400'; ctx.lineWidth = Math.max(1.5, r*.22); ctx.beginPath(); ctx.arc(...P(h.p.x, h.p.y), r*1.5, 0, Math.PI*2); ctx.stroke(); } }
+  if (fr.ball){
+    if (fr.ballTrail.length > 1){ ctx.globalAlpha = .75; ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1.5, s*.3); ctx.lineCap = 'round'; ctx.beginPath(); fr.ballTrail.forEach((p, i) => i ? ctx.lineTo(...P(p.x, p.y)) : ctx.moveTo(...P(p.x, p.y))); ctx.stroke(); ctx.globalAlpha = 1; }
+    const [bx, by] = P(fr.ball.x, fr.ball.y), br = Math.max(3, r*.55); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#111014'; ctx.lineWidth = Math.max(1, br*.3); ctx.stroke();
+  }
   ctx.restore();
 }
 /* presentación */
 function trkPresTick(){
   const cv = $('#pMap'); if (!cv) return;
-  const c = pres.list && pres.list[pres.i], on = !$('#present').hidden && c && c.tracks && c.tracks.length && pv.currentTime >= c.start - .05 && pv.currentTime <= c.end + .05;
+  const c = pres.list && pres.list[pres.i], on = !$('#present').hidden && hasTrk(c) && pv.currentTime >= c.start - .05 && pv.currentTime <= c.end + .05;
   cv.hidden = !on; if (!on) return;
   const w = cv.clientWidth || 260, h = cv.clientHeight || 170, dpr = window.devicePixelRatio || 1;
   if (cv.width !== Math.round(w*dpr)){ cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); }
@@ -8039,12 +8159,18 @@ function trkKeys(e){
   if (!trk.on) return false;
   if (e.target.matches('input,select,textarea') && e.key !== 'Escape') return false;
   const k = (e.key || '').toLowerCase();
-  if (e.key === 'Escape'){ e.preventDefault(); if (trk.auto) trk.auto.cancel = true; else if (trk.adding){ trk.adding = null; $('#trkForm').hidden = true; trkUI(); } else if (trk.prop) $('#trkDiscard').click(); else closeTrk(); return true; }
+  if (e.key === 'Escape'){ e.preventDefault(); if (trk.auto) trk.auto.cancel = true; else if (trk.plog){ trk.plog = null; trkUI(); } else if (trk.adding){ trk.adding = null; $('#trkForm').hidden = true; trkUI(); } else if (trk.prop) $('#trkDiscard').click(); else closeTrk(); return true; }
   if (trk.auto) { e.preventDefault(); return true; }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ e.preventDefault(); video.pause(); seek(video.currentTime + (e.key === 'ArrowRight' ? 1 : -1)*(e.shiftKey ? 1 : JUMP)); return true; }
   if (e.key === ',' || e.key === '.'){ e.preventDefault(); video.pause(); seek(video.currentTime + (e.key === '.' ? FRAME : -FRAME)); return true; }
   if (e.code === 'Space'){ e.preventDefault(); if (video.paused) video.play().catch(() => {}); else video.pause(); return true; }
   if (k === 'j' && !e.ctrlKey && !e.metaKey){ e.preventDefault(); closeTrk(); return true; }
+  if (!e.ctrlKey && !e.metaKey && !e.altKey){
+    if (k === 'b'){ e.preventDefault(); $('#trkBall').click(); return true; }
+    if (k === 'g'){ e.preventDefault(); $('#trkGap').click(); return true; }
+    if (k === 'r'){ e.preventDefault(); $('#trkPlog').click(); return true; }
+    if (trk.plog && /^[1-9]$/.test(e.key)){ e.preventDefault(); const c = trkClip(), o = c && passPeople(c)[+e.key - 1]; if (o) passLogTap(o); return true; }
+  }
   return false;
 }
 $('#bTrk').onclick = () => { const id = board.clipId; closeBoard(true); openTrk(id); };
@@ -8076,6 +8202,424 @@ $('#bMute').onclick = toggleMute;
 /* si el sonido se cambia desde los controles del sistema (pantalla completa del móvil…), lo seguimos */
 video.addEventListener('volumechange', () => { if (!(actx && outGain) && video.muted !== vMuted){ vMuted = video.muted; try{ localStorage.setItem('tacticalab:muted', vMuted ? '1' : '0'); }catch(e){} applyMute(); } });
 applyMute();
+
+
+/* =========================================================
+   v3.17 · BALÓN, POSESIÓN, PASES Y REDES DE PASES
+   clip.ball   = {pts:[{t, x, y, g?}]}   · metros, mismo sistema que clip.tracks; g = hueco (balón aéreo o tapado) hasta el punto siguiente
+   clip.passes = [{id, t, t2?, team, from, to, type:'pass'|'loss', x1?,y1?,x2?,y2?, kind?:'fwd'|'lat'|'back', manual?, del?}]
+     · from / to son dorsales; en una pérdida, «to» es del equipo contrario · del = pase automático borrado a mano (no vuelve al recalcular)
+   Ideas (reescritas en JavaScript propio, sin copiar código) de:
+     · nreHieW/Eagle: interpolar el balón cuando se pierde y suavizar la trayectoria
+     · roboflow/sports y abdullahtarek/football_analysis: balón → jugador más cercano y posesión por equipo
+     · mplsoccer / soccermatics: red de pases (nodo = posición media, tamaño = pases, grosor = pases entre dos jugadores, mínimo de pases)
+   ========================================================= */
+const passCfg = {r: 2}, pa = {scope: 'filt', team: 'A', min: 1};
+try{ const v = +localStorage.getItem('tacticalab:passR'); if (v >= 1 && v <= 5) passCfg.r = v; }catch(e){}
+function passR(){ return passCfg.r; }
+const dorsal = v => String(v ?? '').replace(/[^\d]/g, '').slice(0, 3);
+function sanitizeBall(b, start, end){
+  const seen = new Set();
+  const pts = (b && Array.isArray(b.pts) ? b.pts : []).map(p => ({t: cleanNum(p && p.t), x: +(p && p.x), y: +(p && p.y), g: !!(p && p.g)}))
+    .filter(p => p.t !== null && Number.isFinite(p.x) && Number.isFinite(p.y) && p.x >= -10 && p.x <= 140 && p.y >= -10 && p.y <= 110 && p.t >= start - .05 && p.t <= end + .05)
+    .sort((a, b) => a.t - b.t).filter(p => { const k = p.t.toFixed(2); if (seen.has(k)) return false; seen.add(k); return true; })
+    .slice(0, 300).map(p => { const o = {t: +p.t.toFixed(2), x: +p.x.toFixed(2), y: +p.y.toFixed(2)}; if (p.g) o.g = 1; return o; });
+  return pts.length ? {pts} : null;
+}
+function sanitizePasses(arr, start, end){
+  const ids = new Set();
+  const out = (Array.isArray(arr) ? arr : []).slice(0, 400).filter(e => e && typeof e === 'object').map(e => {
+    const t = cleanNum(e.t); if (t === null || t < start - .5 || t > end + .5) return null;
+    let id = String(e.id || '').replace(/[^\w-]/g, '').slice(0, 24) || uid(); while (ids.has(id)) id = uid(); ids.add(id);
+    const o = {id, t, team: e.team === 'B' ? 'B' : 'A', from: dorsal(e.from), to: dorsal(e.to), type: e.type === 'loss' ? 'loss' : 'pass'};
+    const t2 = cleanNum(e.t2); if (t2 !== null && t2 >= t && t2 <= end + .5) o.t2 = t2;
+    const xy = ['x1', 'y1', 'x2', 'y2'].map(k => +e[k]);
+    if (['x1', 'y1', 'x2', 'y2'].every(k => e[k] != null) && xy.every(v => Number.isFinite(v) && v >= -10 && v <= 140)) ['x1', 'y1', 'x2', 'y2'].forEach((k, i) => o[k] = +xy[i].toFixed(2));
+    if (['fwd', 'lat', 'back'].includes(e.kind)) o.kind = e.kind;
+    if (e.manual) o.manual = 1; if (e.del) o.del = 1;
+    return o;
+  }).filter(Boolean).sort((a, b) => a.t - b.t);
+  return out.length ? out : null;
+}
+/* ---------- geometría del balón ---------- */
+const ballCache = new WeakMap();
+function ballClean(b){   // descarta saltos imposibles (más de 35 m/s entre dos puntos seguidos)
+  let r = ballCache.get(b.pts); if (r) return r;
+  const k = []; let dropped = 0;
+  b.pts.forEach(p => { const a = k[k.length - 1]; if (a && !a.g && p.t > a.t && Math.hypot(p.x - a.x, p.y - a.y)/(p.t - a.t) > 35){ dropped++; return; } k.push(p); });
+  r = {k, dropped}; ballCache.set(b.pts, r); return r;
+}
+function ballDropped(b){ return ballClean(b).dropped; }
+function ballGapAt(b, t){
+  const k = b.pts; for (let i = 0; i < k.length - 1; i++) if (k[i].g && t > k[i].t + .02 && t < k[i + 1].t - .02) return true;
+  return false;
+}
+function ballRaw(k, t){   // interpolación entre puntos; null fuera del tramo seguido o dentro de un hueco
+  if (!k.length || t < k[0].t - .02 || t > k[k.length - 1].t + .02) return null;
+  let i = 0; while (i < k.length - 2 && t > k[i + 1].t) i++;
+  const a = k[i], b = k[i + 1] || a;
+  if (a.g && b !== a && t > a.t + .02 && t < b.t - .02) return null;
+  const u = b.t > a.t ? clamp((t - a.t)/(b.t - a.t), 0, 1) : 0;
+  return {x: a.x + (b.x - a.x)*u, y: a.y + (b.y - a.y)*u};
+}
+function ballAt(c, t, clampEnds){   // posición suavizada (media móvil 1-2-1 en ±0,12 s)
+  const b = c.ball; if (!b || !b.pts.length) return null;
+  const k = ballClean(b).k;
+  if (clampEnds){ if (t < k[0].t) return {x: k[0].x, y: k[0].y}; if (t > k[k.length - 1].t) return {x: k[k.length - 1].x, y: k[k.length - 1].y}; }
+  const p = ballRaw(k, t); if (!p) return null;
+  const a = ballRaw(k, t - .12), d = ballRaw(k, t + .12);
+  let x = p.x*2, y = p.y*2, w = 2; if (a){ x += a.x; y += a.y; w++; } if (d){ x += d.x; y += d.y; w++; }
+  return {x: x/w, y: y/w};
+}
+/* ---------- posesión ---------- */
+function passHolderAt(c, t, bp){
+  let id = null, bd = passR();
+  (c.tracks || []).forEach(tr => { const q = trkAt(tr, t); if (!q) return; const d = Math.hypot(q.x - bp.x, q.y - bp.y); if (d <= bd){ bd = d; id = tr.id; } });
+  return id;
+}
+function ballPoss(c){
+  const out = {spells: [], time: {A: 0, B: 0}, free: 0, gap: 0, dur: 0, S: []};
+  const b = c.ball; if (!b || b.pts.length < 2) return out;
+  const trs = (c.tracks || []).filter(tr => tr.pts.length), k = ballClean(b).k, t0 = k[0].t, t1 = k[k.length - 1].t, dt = .1, S = out.S;
+  for (let t = t0; t <= t1 + 1e-6; t += dt){ const p = ballAt(c, t); S.push({t, p, id: p ? passHolderAt(c, t, p) : undefined}); }
+  out.dur = t1 - t0;
+  const runs = [];
+  S.forEach(s => { const L = runs[runs.length - 1]; if (L && L.id === s.id){ L.b = s.t; L.pb = s.p; L.n++; } else runs.push({id: s.id, a: s.t, b: s.t, pa: s.p, pb: s.p, n: 1}); });
+  runs.forEach(r => { if (r.id === null) out.free += r.n*dt; else if (r.id === undefined) out.gap += r.n*dt; });
+  runs.filter(r => r.id && r.n*dt >= .3 - 1e-6).forEach(r => {   // el balón debe estar al menos 0,3 s junto al jugador
+    const L = out.spells[out.spells.length - 1];
+    if (L && L.id === r.id){ L.b = r.b; L.pb = r.pb; L.n += r.n; } else out.spells.push({...r, tr: trs.find(x => x.id === r.id)});
+  });
+  out.spells.forEach(r => { if (r.tr) out.time[r.tr.team] += r.n*dt; });
+  return out;
+}
+function passKind(team, x1, y1, x2, y2){
+  const d = Math.hypot(x2 - x1, y2 - y1), dx = (x2 - x1)*(team === 'B' ? -1 : 1);   // el propio ataca hacia la derecha; el rival, hacia la izquierda
+  return d < .5 ? 'lat' : dx >= d*.5 ? 'fwd' : dx <= -d*.5 ? 'back' : 'lat';
+}
+const KIND_TXT = {fwd: 'adelante', lat: 'lateral', back: 'atrás'};
+const pr2 = v => +v.toFixed(2);
+/* pases automáticos a partir de la posesión; lo tocado a mano (manual) no se recalcula */
+function passAuto(c){
+  const man = (c.passes || []).filter(e => e.manual);
+  const set = all => { if (all.length) c.passes = all.sort((a, b) => a.t - b.t); else delete c.passes; };
+  if (!c.ball || c.ball.pts.length < 2 || !(c.tracks || []).length){ set(man); return; }
+  const sp = ballPoss(c).spells, auto = [];
+  for (let i = 1; i < sp.length; i++){
+    const a = sp[i - 1], b = sp[i]; if (!a.tr || !b.tr || !a.pb || !b.pa) continue;
+    const e = {id: uid(), t: pr2(a.b), t2: pr2(b.a), team: a.tr.team, from: a.tr.n, to: b.tr.n, type: a.tr.team === b.tr.team ? 'pass' : 'loss', x1: pr2(a.pb.x), y1: pr2(a.pb.y), x2: pr2(b.pa.x), y2: pr2(b.pa.y)};
+    e.kind = passKind(e.team, e.x1, e.y1, e.x2, e.y2);
+    if (man.some(m => Math.abs(m.t - e.t) < .5)) continue;
+    auto.push(e);
+  }
+  set(man.concat(auto).slice(0, 400));
+}
+/* ---------- jugadores disponibles para los pases ---------- */
+const passKey = tr => tr.team + '|' + (tr.n || '');
+function passPeople(c){   // jugadores seguidos + plantilla propia sin seguir
+  const out = (c.tracks || []).map(tr => ({key: passKey(tr), team: tr.team, n: tr.n || '', name: tr.name || '', tr}));
+  players.forEach(p => { const key = 'A|' + p.n; if (!out.some(o => o.key === key)) out.push({key, team: 'A', n: p.n, name: p.name.split(' ')[0], tr: null}); });
+  return out;
+}
+const passWho = (team, n, name) => `${team === 'B' ? 'Rival ' : ''}${n || '?'}${name ? ' · ' + name : ''}`;
+function passPos(c, tr, t){   // posición del jugador en ese instante; si no está seguido, la posición o la zona del corte
+  const p = tr && tr.pts && tr.pts.length ? trkAt(tr, t, true) : null; if (p) return {x: p.x, y: p.y};
+  if (c.pos) return {x: c.pos.x, y: c.pos.y};
+  if (c.zone){ const F = fieldOf(matchById(c.matchId)), f = Math.floor((c.zone - 1)/3), k = (c.zone - 1) % 3; return {x: (f + .5)/6*F.L, y: (k + .5)/3*F.W}; }
+  return null;
+}
+function passMake(c, A, B, t, t2, manual){
+  const e = {id: uid(), t: pr2(t), t2: pr2(Math.max(t, t2)), team: A.team, from: A.n || '', to: B.n || '', type: A.team === B.team ? 'pass' : 'loss'};
+  const p1 = passPos(c, A.tr, t), p2 = passPos(c, B.tr, t2);
+  if (p1 && p2){ e.x1 = pr2(p1.x); e.y1 = pr2(p1.y); e.x2 = pr2(p2.x); e.y2 = pr2(p2.y); e.kind = passKind(e.team, e.x1, e.y1, e.x2, e.y2); }
+  if (manual) e.manual = 1;
+  return e;
+}
+/* ---------- registrar pases a mano: pasador y receptor ---------- */
+function passLogList(c){ return passPeople(c); }
+function passLogTap(who){
+  const c = trkClip(), t = video.currentTime, P = trk.plog; if (!c || !P) return;
+  const w = who.key ? who : passPeople(c).find(o => o.key === passKey(who)); if (!w) return;
+  if (t < c.start - .05 || t > c.end + .05){ flash('Colócate dentro del corte para registrar pases', 2500); return; }
+  if (!P.from || P.from === w.key){ P.from = w.key; P.w = w; P.t = t; trkUI(); return; }
+  pushUndo('registrar pase');
+  const e = passMake(c, P.w, w, Math.max(P.t, t - 1), t, true);
+  c.passes = (c.passes || []).filter(x => x.manual || Math.abs(x.t - e.t) >= .5).concat([e]).sort((a, b) => a.t - b.t).slice(0, 400);
+  flash(`${e.type === 'pass' ? 'Pase' : 'Pérdida'} ${P.w.n || '?'} → ${w.n || '?'}`, 1100);
+  P.from = w.key; P.w = w; P.t = t;
+  trkSave();
+}
+/* ---------- barra de seguimiento: balón, hueco y eventos ---------- */
+function passUI(c){
+  const evs = (c.passes || []).filter(e => !e.del), nP = evs.filter(e => e.type === 'pass').length, nL = evs.length - nP;
+  $('#trkEvSum').textContent = `Eventos del balón · ${nP} pase${nP === 1 ? '' : 's'}${nL ? ` · ${nL} pérdida${nL === 1 ? '' : 's'}` : ''}`;
+  const ballOn = trk.sel === 'ball' || !!(trk.adding && trk.adding.ball);
+  $('#trkBall').setAttribute('aria-pressed', String(ballOn)); $('#trkBall').disabled = !!trk.prop;
+  $('#trkGap').disabled = !(c.ball && c.ball.pts.length) || !!trk.prop;
+  $('#trkGap').setAttribute('aria-pressed', String(!!(c.ball && ballGapAt(c.ball, video.currentTime))));
+  $('#trkPlog').setAttribute('aria-pressed', String(!!trk.plog));
+  $('#trkBar').classList.toggle('plog', !!trk.plog);
+  if (document.activeElement !== $('#trkR')) $('#trkR').value = passR();
+  // plantilla sin seguir: fichas extra mientras se registran pases
+  if (trk.plog){
+    const extra = passPeople(c).filter(o => !o.tr);
+    if (extra.length) $('#trkList').insertAdjacentHTML('beforeend', extra.map(o => `<span class="tk-chip roster${trk.plog.from === o.key ? ' from' : ''}" data-key="${esc(o.key)}" style="--c:${esc(trkColor({team: 'A'}))}" role="button" tabindex="0" aria-label="${esc(passWho(o.team, o.n, o.name))} (sin seguir)"><b>${esc(o.n)}</b><span class="nm">${esc(o.name)}</span></span>`).join(''));
+    $('#trkList').querySelectorAll('.tk-chip.roster').forEach(ch => { ch.onclick = () => { const o = passPeople(c).find(x => x.key === ch.dataset.key); if (o) passLogTap(o); }; ch.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopPropagation(); ch.click(); } }; });
+  }
+  const P = c.ball && c.ball.pts.length > 1 ? ballPoss(c) : null, tot = P ? P.time.A + P.time.B : 0;
+  $('#trkPoss').textContent = tot > 0 ? `Posesión · ${brand.short || 'Propio'} ${Math.round(P.time.A/tot*100)} % · Rival ${Math.round(P.time.B/tot*100)} %` : (c.ball ? 'Sigue también a los jugadores para calcular la posesión.' : '');
+  const people = passPeople(c);
+  const opts = (sel, team, n) => { const key = team + '|' + n, list = people.some(o => o.key === key) ? people : people.concat([{key, team, n, name: ''}]);
+    return list.map(o => `<option value="${esc(o.key)}"${o.key === key ? ' selected' : ''}>${esc(passWho(o.team, o.n, o.name))}</option>`).join(''); };
+  $('#trkEvList').innerHTML = evs.map(e => { const toTeam = e.type === 'loss' ? (e.team === 'B' ? 'A' : 'B') : e.team, d = e.x1 != null ? Math.hypot(e.x2 - e.x1, e.y2 - e.y1) : null;
+    return `<div class="tk-evr${e.type === 'loss' ? ' loss' : ''}" data-id="${esc(e.id)}"><button type="button" class="tk-evt mono" data-a="go" title="Ir a este instante">${fmtShort(e.t)}</button><select data-f="from" aria-label="Quién pasa">${opts('from', e.team, e.from)}</select><span aria-hidden="true">→</span><select data-f="to" aria-label="Quién recibe">${opts('to', toTeam, e.to)}</select><span class="tk-evk">${e.type === 'loss' ? 'Pérdida' : 'Pase'}${e.kind && e.type === 'pass' ? ' · ' + KIND_TXT[e.kind] : ''}${d != null ? ' · ' + fmt1(d) + ' m' : ''}${e.manual ? ' · a mano' : ''}</span><button type="button" data-a="del" title="Borrar este evento" aria-label="Borrar el evento de ${fmtShort(e.t)}">✕</button></div>`; }).join('')
+    || '<p class="hint">Todavía no hay pases. Sigue el balón y a los jugadores, o usa «Registrar pases».</p>';
+  $('#trkEvList').querySelectorAll('.tk-evr').forEach(row => {
+    const e = (c.passes || []).find(x => x.id === row.dataset.id); if (!e) return;
+    row.querySelector('[data-a=go]').onclick = () => { video.pause(); seek(e.t); };
+    row.querySelector('[data-a=del]').onclick = () => { pushUndo('borrar pase'); e.del = 1; e.manual = 1; trkSave(); };
+    row.querySelectorAll('select').forEach(s => { s.onchange = () => {
+      const [ft, fn] = row.querySelector('[data-f=from]').value.split('|'), [tt, tn] = row.querySelector('[data-f=to]').value.split('|');
+      if (ft === tt && fn === tn){ flash('El pasador y el receptor no pueden ser el mismo jugador'); trkUI(); return; }
+      pushUndo('editar pase');
+      const A = people.find(o => o.key === ft + '|' + fn) || {team: ft, n: fn, tr: null}, B = people.find(o => o.key === tt + '|' + tn) || {team: tt, n: tn, tr: null};
+      const n = passMake(c, A, B, e.t, e.t2 != null ? e.t2 : e.t, true);
+      Object.assign(e, {team: n.team, from: n.from, to: n.to, type: n.type, manual: 1}); ['x1', 'y1', 'x2', 'y2', 'kind'].forEach(k => { if (n[k] != null) e[k] = n[k]; else delete e[k]; });
+      trkSave();
+    }; });
+  });
+}
+$('#trkBall').onclick = () => {
+  const c = trkClip(); if (!c || trk.prop) return;
+  trk.plog = null; $('#trkForm').hidden = true;
+  if (c.ball && c.ball.pts.length){ trk.adding = null; trk.sel = 'ball'; }
+  else { trk.adding = trk.adding && trk.adding.ball ? null : {ball: true}; if (trk.adding) flash('Pulsa el balón en el vídeo', 2200); }
+  trkUI(); trkPaint();
+};
+$('#trkGap').onclick = () => {
+  const c = trkClip(), b = c && c.ball; if (!b || !b.pts.length) return;
+  const t = video.currentTime; let i = -1; b.pts.forEach((p, j) => { if (p.t <= t + .02) i = j; });
+  if (i < 0){ flash('Colócate después de un punto del balón para marcar el hueco'); return; }
+  if (i === b.pts.length - 1 && !b.pts[i].g){ flash('El hueco empieza en el último punto del balón: cuando vuelva a verse, pulsa el balón en el vídeo', 4000); }
+  pushUndo('hueco del balón');
+  b.pts = b.pts.map((p, j) => { if (j !== i) return p; const o = {t: p.t, x: p.x, y: p.y}; if (!p.g) o.g = 1; return o; });
+  trk.sel = 'ball'; trkSave();
+};
+$('#trkPlog').onclick = () => {
+  const c = trkClip(); if (!c || trk.prop) return;
+  if (!trk.plog && passPeople(c).length < 2){ flash('Para registrar pases hacen falta al menos dos jugadores: síguelos con «+ Jugador» o añádelos a la plantilla', 4500); return; }
+  trk.plog = trk.plog ? null : {from: null}; trk.adding = null; $('#trkForm').hidden = true;
+  if (trk.plog) $('#trkEv').open = true;
+  trkUI();
+};
+$('#trkR').onchange = e => {
+  const v = clamp(+e.target.value || 2, 1, 5); passCfg.r = v; e.target.value = v;
+  try{ localStorage.setItem('tacticalab:passR', String(v)); }catch(er){}
+  const c = trkClip(); if (c){ pushUndo('radio de posesión'); trkSave(); }
+};
+$('#trkEvAdd').onclick = () => {
+  const c = trkClip(); if (!c) return;
+  const people = passPeople(c), t = video.currentTime;
+  if (people.length < 2){ flash('Hacen falta al menos dos jugadores (seguidos o de la plantilla) para añadir un pase', 3500); return; }
+  if (t < c.start - .05 || t > c.end + .05){ flash('Colócate dentro del corte para añadir un pase'); return; }
+  // por defecto: quien tiene el balón ahora y su compañero más cercano en la lista
+  const bp = c.ball && ballAt(c, t), hid = bp ? passHolderAt(c, t, bp) : null, A = people.find(o => o.tr && o.tr.id === hid) || people[0], B = people.find(o => o !== A && o.team === A.team) || people.find(o => o !== A);
+  pushUndo('añadir pase');
+  c.passes = (c.passes || []).concat([passMake(c, A, B, t, t, true)]).sort((a, b) => a.t - b.t).slice(0, 400);
+  $('#trkEv').open = true; trkSave(); flash('Pase añadido: elige quién pasa y quién recibe', 2500);
+};
+$('#trkEvCalc').onclick = () => { const c = trkClip(); if (!c) return; pushUndo('recalcular pases'); trkSave(); const n = (c.passes || []).filter(e => !e.del).length; flash(c.ball && c.ball.pts.length > 1 ? `Pases recalculados: ${n} evento${n === 1 ? '' : 's'}` : 'Sigue el balón para calcular los pases automáticamente', 2600); };
+/* resumen de un corte (diálogo del corte) */
+function passClipHTML(c){
+  const evs = (c.passes || []).filter(e => !e.del), nP = evs.filter(e => e.type === 'pass').length, nL = evs.length - nP, bits = [];
+  if (c.ball && c.ball.pts.length) bits.push(`Balón: ${c.ball.pts.length} punto${c.ball.pts.length === 1 ? '' : 's'}`);
+  if (evs.length) bits.push(`${nP} pase${nP === 1 ? '' : 's'}${nL ? ` y ${nL} pérdida${nL === 1 ? '' : 's'}` : ''}`);
+  const P = c.ball && c.ball.pts.length > 1 ? ballPoss(c) : null, tot = P ? P.time.A + P.time.B : 0;
+  if (tot > 0) bits.push(`posesión ${esc(brand.short || 'Propio')} ${Math.round(P.time.A/tot*100)} %`);
+  return bits.length ? `<p>${bits.join(' · ')}</p>` : '';
+}
+/* =========================================================
+   ESTADÍSTICAS: red de pases, matriz, jugadores, posesión, balón
+   ========================================================= */
+function passClips(){
+  if (pa.scope === 'clip'){ const c = selClip && clipById(selClip); return c ? [c] : []; }
+  if (pa.scope === 'list'){ const p = curPL(); return p ? p.ids.map(clipById).filter(Boolean) : []; }
+  return filtered();
+}
+function passAgg(cs){
+  const data = cs.filter(c => (c.passes && c.passes.some(e => !e.del)) || (c.ball && c.ball.pts.length > 1));
+  const F = fieldOf(matchById((data[0] || cs[0] || {}).matchId));
+  const A = {F, nodes: new Map(), edges: new Map(), evs: [], ballPts: [], poss: {A: 0, B: 0, free: 0}, ball: {dist: 0, time: 0, max: 0, gap: 0}, clips: data.length, nPass: {A: 0, B: 0}, nLoss: {A: 0, B: 0}};
+  const node = (team, n, name) => { const key = team + '|' + n; let o = A.nodes.get(key); if (!o){ o = {key, team, n, name: '', out: 0, in: 0, fwd: 0, loss: 0, rec: 0, sx: 0, sy: 0, k: 0}; A.nodes.set(key, o); } if (name && !o.name) o.name = name; return o; };
+  data.forEach(c => {
+    const f = fieldOf(matchById(c.matchId)), sx = F.L/f.L, sy = F.W/f.W, names = {};
+    (c.tracks || []).forEach(tr => { if (tr.name) names[passKey(tr)] = tr.name; });
+    players.forEach(p => { if (!names['A|' + p.n]) names['A|' + p.n] = p.name.split(' ')[0]; });
+    (c.passes || []).filter(e => !e.del).forEach(e => {
+      const toTeam = e.type === 'loss' ? (e.team === 'B' ? 'A' : 'B') : e.team;
+      const a = node(e.team, e.from, names[e.team + '|' + e.from]), b = node(toTeam, e.to, names[toTeam + '|' + e.to]);
+      if (e.type === 'pass'){ a.out++; b.in++; if (e.kind === 'fwd') a.fwd++; A.nPass[e.team]++; const k = a.key + '>' + b.key; A.edges.set(k, (A.edges.get(k) || 0) + 1); }
+      else { a.loss++; b.rec++; A.nLoss[e.team]++; }
+      const has = e.x1 != null;
+      if (has && e.type === 'pass'){ a.sx += e.x1*sx; a.sy += e.y1*sy; a.k++; b.sx += e.x2*sx; b.sy += e.y2*sy; b.k++; }
+      A.evs.push({c, e, toTeam, x1: has ? e.x1*sx : null, y1: has ? e.y1*sy : null, x2: has ? e.x2*sx : null, y2: has ? e.y2*sy : null});
+    });
+    if (c.ball && c.ball.pts.length > 1){
+      const P = ballPoss(c), S = P.S; A.poss.A += P.time.A; A.poss.B += P.time.B; A.poss.free += P.free; A.ball.gap += P.gap;
+      for (let i = 0; i < S.length; i++){
+        const s = S[i]; if (!s.p) continue;
+        if (i % 2 === 0) A.ballPts.push({x: s.p.x*sx, y: s.p.y*sy});
+        if (i && S[i - 1].p){ A.ball.dist += Math.hypot(s.p.x - S[i - 1].p.x, s.p.y - S[i - 1].p.y); A.ball.time += .1; }
+        if (i >= 3 && S[i - 1].p && S[i - 2].p && S[i - 3].p){ const v = Math.hypot(s.p.x - S[i - 3].p.x, s.p.y - S[i - 3].p.y)/.3; if (v > A.ball.max) A.ball.max = Math.min(v, 35); }
+      }
+    }
+  });
+  return A;
+}
+const teamCol = team => team === 'B' ? '#2f8cff' : (hexToRgb(brand.accent) ? brand.accent : '#ff3550');
+const plN = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const teamTxt = team => team === 'B' ? 'Rival' : (brand.short || 'Propio');
+/* modelo de la red (común al SVG y al PNG) */
+function passNetModel(A, team, min){
+  const F = A.F, ns = [...A.nodes.values()].filter(n => n.team === team && n.out + n.in > 0).sort((a, b) => (+a.n || 999) - (+b.n || 999));
+  const maxN = Math.max(1, ...ns.map(n => n.out + n.in));
+  const pos = new Map();
+  ns.forEach((n, i) => {
+    let x, y;
+    if (n.k){ x = n.sx/n.k; y = n.sy/n.k; }
+    else { const a = i/Math.max(1, ns.length)*Math.PI*2 - Math.PI/2; x = F.L/2 + Math.cos(a)*F.L*.3; y = F.W/2 + Math.sin(a)*F.W*.34; }   // sin coordenadas: en círculo
+    pos.set(n.key, {key: n.key, n, x: clamp(x, F.L*.03, F.L*.97), y: clamp(y, F.W*.05, F.W*.95), r: F.L*(.02 + .018*Math.sqrt((n.out + n.in)/maxN))});
+  });
+  const pairs = new Map();
+  A.edges.forEach((cnt, k) => { const [a, b] = k.split('>'); if (!pos.has(a) || !pos.has(b)) return; const key = a < b ? a + '>' + b : b + '>' + a; const o = pairs.get(key) || {a: a < b ? a : b, b: a < b ? b : a, ab: 0, ba: 0}; if (a === o.a) o.ab += cnt; else o.ba += cnt; pairs.set(key, o); });
+  const all = [...pairs.values()], maxE = Math.max(1, ...all.map(p => p.ab + p.ba));
+  const edges = all.filter(p => p.ab + p.ba >= min).sort((p, q) => (p.ab + p.ba) - (q.ab + q.ba)).map(p => {
+    const A1 = pos.get(p.a), B1 = pos.get(p.b), tot = p.ab + p.ba, w = F.L*(.004 + .016*tot/maxE);
+    let arrow = null;
+    if (p.ab !== p.ba){ const s = p.ab > p.ba ? A1 : B1, d = p.ab > p.ba ? B1 : A1, L = Math.hypot(d.x - s.x, d.y - s.y) || 1, ux = (d.x - s.x)/L, uy = (d.y - s.y)/L, h = Math.max(F.L*.018, w*2.2), tip = L - d.r - F.L*.004, cx = s.x + ux*tip, cy = s.y + uy*tip;
+      if (tip > h*1.5) arrow = [[cx, cy], [cx - ux*h - uy*h*.55, cy - uy*h + ux*h*.55], [cx - ux*h + uy*h*.55, cy - uy*h - ux*h*.55]]; }
+    return {a: p.a, b: p.b, x1: A1.x, y1: A1.y, x2: B1.x, y2: B1.y, w, op: .35 + .55*tot/maxE, tot, ab: p.ab, ba: p.ba, arrow};
+  });
+  return {F, col: teamCol(team), nodes: [...pos.values()], edges, total: A.nPass[team], hidden: all.length - edges.length};
+}
+function passNetSVG(A, team, min){
+  const M = passNetModel(A, team, min), F = M.F, f2 = v => v.toFixed(2);
+  let s = '';
+  M.edges.forEach(e => { s += `<g class="pn-e" data-a="${esc(e.a)}" data-b="${esc(e.b)}"><line x1="${f2(e.x1)}" y1="${f2(e.y1)}" x2="${f2(e.x2)}" y2="${f2(e.y2)}" stroke="${M.col}" stroke-opacity="${f2(e.op)}" stroke-width="${f2(e.w)}" stroke-linecap="round"/>${e.arrow ? `<polygon points="${e.arrow.map(p => f2(p[0]) + ',' + f2(p[1])).join(' ')}" fill="${M.col}"/>` : ''}<title>${esc(e.a.split('|')[1] || '?')} → ${esc(e.b.split('|')[1] || '?')}: ${e.ab} · ${esc(e.b.split('|')[1] || '?')} → ${esc(e.a.split('|')[1] || '?')}: ${e.ba}</title></g>`; });
+  M.nodes.forEach(o => { s += `<g class="pn-n" data-k="${esc(o.key)}" tabindex="0" role="img" aria-label="${esc(passWho(team, o.n.n, o.n.name))}: ${o.n.out} pases dados, ${o.n.in} recibidos"><circle cx="${f2(o.x)}" cy="${f2(o.y)}" r="${f2(o.r)}" fill="${M.col}" stroke="#fff" stroke-width="${f2(F.L*.004)}"/><text x="${f2(o.x)}" y="${f2(o.y + o.r*.36)}" style="font-size:${f2(o.r*1.05)}px;fill:${inkFor(M.col)}">${esc(o.n.n || '?')}</text><title>${esc(passWho(team, o.n.n, o.n.name))}: ${o.n.out} dados · ${o.n.in} recibidos</title></g>`; });
+  return {svg: fieldSVGm(F.type, F.L, F.W, {over: `<g class="pn">${s}</g>`}, 'role="img" aria-label="Red de pases"'), M};
+}
+function passMapSVG(A, team){
+  const F = A.F, col = teamCol(team), f2 = v => v.toFixed(2), h = F.L*.014;
+  const s = A.evs.filter(o => o.e.team === team && o.x1 != null).map(o => { const L = Math.hypot(o.x2 - o.x1, o.y2 - o.y1) || 1, ux = (o.x2 - o.x1)/L, uy = (o.y2 - o.y1)/L, loss = o.e.type === 'loss', c2 = loss ? '#ff5a5a' : col;
+    return `<g><line x1="${f2(o.x1)}" y1="${f2(o.y1)}" x2="${f2(o.x2)}" y2="${f2(o.y2)}" stroke="${c2}" stroke-width="${f2(F.L*.0045)}" stroke-opacity=".85"${loss ? ` stroke-dasharray="${f2(F.L*.012)} ${f2(F.L*.008)}"` : ''}/><polygon points="${f2(o.x2)},${f2(o.y2)} ${f2(o.x2 - ux*h - uy*h*.5)},${f2(o.y2 - uy*h + ux*h*.5)} ${f2(o.x2 - ux*h + uy*h*.5)},${f2(o.y2 - uy*h - ux*h*.5)}" fill="${c2}"/><title>${esc(o.e.from || '?')} → ${esc(o.e.to || '?')} · ${loss ? 'pérdida' : 'pase'}</title></g>`; }).join('');
+  return fieldSVGm(F.type, F.L, F.W, {over: s}, 'role="img" aria-label="Mapa de pases"');
+}
+function passTablesHTML(A, team, light){
+  const ns = [...A.nodes.values()].filter(n => n.team === team).sort((a, b) => (+a.n || 999) - (+b.n || 999)), act = ns.filter(n => n.out + n.in > 0);
+  const rows = ns.map(n => `<tr><td>${esc(passWho('A', n.n, n.name))}</td><td class="n">${n.out}</td><td class="n">${n.in}</td><td class="n">${n.fwd}</td><td class="n">${n.loss}</td><td class="n">${n.rec}</td></tr>`).join('');
+  let h = `<div class="tk-stats${light ? ' light' : ''}"><table><thead><tr><th>Jugador</th><th class="n">Dados</th><th class="n">Recibidos</th><th class="n">Adelante</th><th class="n">Pérdidas</th><th class="n" title="Recuperaciones">Recup.</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  if (act.length > 1 && act.length <= 16){
+    h += `<h5>Matriz pasador → receptor</h5><div class="tk-stats pa-mx${light ? ' light' : ''}"><table><thead><tr><th>De \\ A</th>${act.map(n => `<th class="n">${esc(n.n || '?')}</th>`).join('')}</tr></thead><tbody>${act.map(a => `<tr><th>${esc(a.n || '?')}</th>${act.map(b => { const v = a === b ? '' : (A.edges.get(a.key + '>' + b.key) || ''); return `<td class="n${v ? ' v' : ''}">${a === b ? '·' : v}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
+  }
+  const pairs = new Map(); A.edges.forEach((cnt, k) => { const [a, b] = k.split('>'); if (!a.startsWith(team + '|')) return; const key = a < b ? a + '>' + b : b + '>' + a; pairs.set(key, (pairs.get(key) || 0) + cnt); });
+  const top = [...pairs.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  if (top.length) h += `<p class="fmtnote"><b>Parejas más repetidas:</b> ${top.map(([k, v]) => { const [a, b] = k.split('>'); return `${esc(a.split('|')[1] || '?')} – ${esc(b.split('|')[1] || '?')} (${v})`; }).join(' · ')}</p>`;
+  return h;
+}
+function passPossHTML(A){
+  const tot = A.poss.A + A.poss.B; let h = '';
+  if (tot > 0){ const a = Math.round(A.poss.A/tot*100);
+    h += `<div class="pa-poss" role="img" aria-label="Posesión: ${esc(teamTxt('A'))} ${a} %, rival ${100 - a} %"><span style="width:${a}%;background:${teamCol('A')};color:${inkFor(teamCol('A'))}">${a >= 12 ? esc(teamTxt('A')) + ' ' + a + ' %' : ''}</span><span style="width:${100 - a}%;background:${teamCol('B')};color:#fff">${100 - a >= 12 ? 'Rival ' + (100 - a) + ' %' : ''}</span></div>`; }
+  if (A.ball.time > 0) h += `<p class="fmtnote">Balón seguido ${fmt1(A.ball.time)} s · recorre ${fmt1(A.ball.dist)} m · velocidad media ${fmt1(A.ball.dist/A.ball.time*3.6)} km/h · máxima ${fmt1(A.ball.max*3.6)} km/h${A.poss.free > .05 ? ` · balón libre ${fmt1(A.poss.free)} s` : ''}${A.ball.gap > .05 ? ` · sin ver (aéreo o tapado) ${fmt1(A.ball.gap)} s` : ''}</p>`;
+  return h;
+}
+/* tarjeta en Resumen */
+function passStatsMount(box){
+  if (!box) return;
+  const el = document.createElement('section'); el.className = 'pa-card'; el.id = 'paCard';
+  el.innerHTML = `<h4>Balón y pases</h4>
+    <div class="pa-ctl"><label>Ámbito <select id="paScope"><option value="clip">Corte seleccionado</option><option value="filt">Cortes filtrados</option><option value="list">Lista actual</option></select></label>
+    <label>Equipo <select id="paTeam"><option value="A">${esc(teamTxt('A'))}</option><option value="B">Rival</option></select></label>
+    <label>Mínimo de pases <input type="range" id="paMin" min="1" max="5" step="1" value="${pa.min}"> <b id="paMinV">${pa.min}</b></label>
+    <button type="button" id="paPng" title="Descargar la red de pases como imagen">⤓ Red en PNG</button></div><div id="paBody"></div>`;
+  box.appendChild(el);
+  $('#paScope').value = pa.scope; $('#paTeam').value = pa.team;
+  $('#paScope').onchange = e => { pa.scope = e.target.value; passStatsRender(); };
+  $('#paTeam').onchange = e => { pa.team = e.target.value; passStatsRender(); };
+  $('#paMin').oninput = e => { pa.min = clamp(+e.target.value || 1, 1, 5); $('#paMinV').textContent = pa.min; passStatsRender(); };
+  $('#paPng').onclick = passNetPNG;
+  passStatsRender();
+}
+function passStatsRender(){
+  const body = $('#paBody'); if (!body) return;
+  const cs = passClips(), A = passAgg(cs), team = pa.team, has = A.evs.length || A.ballPts.length;
+  $('#paPng').disabled = !A.nPass[team];
+  if (!has){ body.innerHTML = `<div class="empty">${pa.scope === 'clip' && !selClip ? 'Selecciona un corte en la lista de Cortes.' : 'No hay balón ni pases en este ámbito.'} Abre un corte, pulsa «Seguir jugadores» (J), sigue a los jugadores y el balón (B), o usa «Registrar pases» (R).</div>`; return; }
+  let h = `<p class="fmtnote">${nCortes(A.clips)} con balón o pases · ${esc(teamTxt('A'))}: ${plN(A.nPass.A, 'pase')}, ${plN(A.nLoss.A, 'pérdida')} · Rival: ${plN(A.nPass.B, 'pase')}, ${plN(A.nLoss.B, 'pérdida')}.</p>` + passPossHTML(A);
+  if (A.nPass[team]){
+    const N = passNetSVG(A, team, pa.min);
+    h += `<h5>Red de pases · ${esc(teamTxt(team))}</h5><figure class="pa-net">${N.svg}<figcaption>Cada círculo es un jugador en su posición media al pasar y recibir; cuanto mayor, más pases. El grosor de la línea es el número de pases entre los dos y la flecha, el sentido más repetido.${N.M.hidden ? ` Ocultas ${N.M.hidden} conexión${N.M.hidden === 1 ? '' : 'es'} por debajo del mínimo.` : ''} ${team === 'B' ? 'El rival ataca hacia la izquierda.' : 'El equipo propio ataca hacia la derecha.'}</figcaption></figure>`;
+  } else h += `<div class="empty">${esc(teamTxt(team))} no tiene pases en este ámbito.</div>`;
+  if ([...A.nodes.values()].some(n => n.team === team)) h += `<h5>Pases por jugador · ${esc(teamTxt(team))}</h5>` + passTablesHTML(A, team);
+  const maps = [];
+  if (A.evs.some(o => o.e.team === team && o.x1 != null)) maps.push(`<figure>${passMapSVG(A, team)}<figcaption>Mapa de pases · línea discontinua roja: pérdida</figcaption></figure>`);
+  if (A.ballPts.length > 3) maps.push(`<figure>${fieldSVGm(A.F.type, A.F.L, A.F.W, {under: `<image href="${heatURL({F: A.F, pts: A.ballPts})}" x="0" y="0" width="${A.F.L}" height="${A.F.W}" preserveAspectRatio="none"/>`}, 'role="img" aria-label="Mapa de calor del balón"')}<figcaption>Mapa de calor del balón</figcaption></figure>`);
+  if (maps.length) h += `<div class="posmaps">${maps.join('')}</div>`;
+  body.innerHTML = h;
+  // resaltar las conexiones de un jugador
+  const net = body.querySelector('.pa-net svg');
+  if (net){
+    let pin = null;
+    const show = k => { net.classList.toggle('hl', !!k); net.querySelectorAll('.pn-e').forEach(e => e.classList.toggle('on', !!k && (e.dataset.a === k || e.dataset.b === k)));
+      const on = new Set([k]); net.querySelectorAll('.pn-e.on').forEach(e => { on.add(e.dataset.a); on.add(e.dataset.b); });
+      net.querySelectorAll('.pn-n').forEach(n => n.classList.toggle('on', !!k && on.has(n.dataset.k))); };
+    net.querySelectorAll('.pn-n').forEach(n => {
+      n.addEventListener('pointerenter', () => { if (!pin) show(n.dataset.k); }); n.addEventListener('pointerleave', () => { if (!pin) show(null); });
+      n.addEventListener('focus', () => { if (!pin) show(n.dataset.k); }); n.addEventListener('blur', () => { if (!pin) show(null); });
+      n.addEventListener('click', e => { e.stopPropagation(); pin = pin === n.dataset.k ? null : n.dataset.k; show(pin); });
+    });
+    net.addEventListener('click', () => { pin = null; show(null); });
+  }
+}
+/* red de pases en PNG (dibujada en canvas, sin depender del CSS de la página) */
+function passNetCanvas(A, team, min, W){
+  const M = passNetModel(A, team, min), F = M.F, mg = F.L*.05, top = Math.round(W*.062), s = W/(F.L + 2*mg), H = Math.round((F.W + 2*mg)*s) + top;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d'), P = (x, y) => [(x + mg)*s, (y + mg)*s + top];
+  ctx.fillStyle = '#0e0d10'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#fff'; ctx.font = `800 ${Math.round(W*.022)}px Manrope, system-ui, sans-serif`; ctx.textBaseline = 'middle'; ctx.fillText(`Red de pases · ${teamTxt(team)}`, mg*s*.5, top*.34);
+  ctx.fillStyle = '#b9b4c0'; ctx.font = `500 ${Math.round(W*.013)}px Manrope, system-ui, sans-serif`; ctx.fillText(`${M.total} pases · mínimo ${min} por conexión · ${team === 'B' ? 'ataca hacia la izquierda' : 'ataca hacia la derecha'} · Táctica Lab`, mg*s*.5, top*.76);
+  ctx.fillStyle = '#163a26'; ctx.fillRect(mg*s*.4, top + mg*s*.4, (F.L + mg*1.2)*s, (F.W + mg*1.2)*s);
+  const {segs, arcs} = calLines(F.type, F.L, F.W); ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = Math.max(1.5, s*.22);
+  segs.forEach(q => { ctx.beginPath(); ctx.moveTo(...P(q[0], q[1])); ctx.lineTo(...P(q[2], q[3])); ctx.stroke(); });
+  arcs.forEach(([cx, cy, r, a0, a1]) => { ctx.beginPath(); ctx.arc(...P(cx, cy), r*s, a0, a1); ctx.stroke(); });
+  ctx.lineCap = 'round';
+  M.edges.forEach(e => { ctx.globalAlpha = e.op; ctx.strokeStyle = M.col; ctx.lineWidth = e.w*s; ctx.beginPath(); ctx.moveTo(...P(e.x1, e.y1)); ctx.lineTo(...P(e.x2, e.y2)); ctx.stroke(); ctx.globalAlpha = 1;
+    if (e.arrow){ ctx.fillStyle = M.col; ctx.beginPath(); e.arrow.forEach((p, i) => i ? ctx.lineTo(...P(p[0], p[1])) : ctx.moveTo(...P(p[0], p[1]))); ctx.closePath(); ctx.fill(); } });
+  M.nodes.forEach(o => { const [x, y] = P(o.x, o.y); ctx.fillStyle = M.col; ctx.beginPath(); ctx.arc(x, y, o.r*s, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(2, s*.4); ctx.stroke();
+    ctx.fillStyle = inkFor(M.col); ctx.font = `800 ${Math.round(o.r*s*1.05)}px Manrope, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.n.n || '?', x, y + 1); ctx.textAlign = 'left'; });
+  return cv;
+}
+function passNetPNG(){
+  const A = passAgg(passClips()); if (!A.nPass[pa.team]){ flash('No hay pases de este equipo que exportar'); return; }
+  passNetCanvas(A, pa.team, pa.min, 1600).toBlob(b => { if (b){ download(`red-de-pases_${pa.team === 'B' ? 'rival' : 'propio'}.png`, b); flash('Red de pases descargada', 2200); } }, 'image/png');
+}
+/* Informe imprimible */
+function passReportHTML(cs){
+  const A = passAgg(cs); if (!A.evs.length && !A.ballPts.length) return '';
+  let h = `<h2>Balón y pases</h2><p class="fmtnote">${nCortes(A.clips)} con balón o pases · ${esc(teamTxt('A'))}: ${plN(A.nPass.A, 'pase')}, ${plN(A.nLoss.A, 'pérdida')} · Rival: ${plN(A.nPass.B, 'pase')}, ${plN(A.nLoss.B, 'pérdida')}.</p>` + passPossHTML(A);
+  ['A', 'B'].forEach(team => { if (!A.nPass[team]) return;
+    h += `<div class="rp-pass"><figure class="pa-net">${passNetSVG(A, team, 1).svg}<figcaption>Red de pases · ${esc(teamTxt(team))} · ${team === 'B' ? 'ataca hacia la izquierda' : 'ataca hacia la derecha'}</figcaption></figure><div>${passTablesHTML(A, team, true)}</div></div>`; });
+  return h;
+}
+/* Excel: hojas «Pases» y «Red de pases» */
+function passSheets(clips){
+  const pases = [['Corte', 'Etiqueta', 'Partido', 't (s)', 'Tipo', 'Equipo', 'De', 'A', 'Dirección', 'Distancia (m)', 'x1 (m)', 'y1 (m)', 'x2 (m)', 'y2 (m)', 'Origen']];
+  clips.forEach((c, i) => (c.passes || []).filter(e => !e.del).forEach(e => pases.push([i + 1, catById(c.cat).name, matchTitle(matchById(c.matchId)), e.t, e.type === 'loss' ? 'Pérdida' : 'Pase', teamTxt(e.team), e.from || '?', e.to || '?', e.type === 'pass' && e.kind ? KIND_TXT[e.kind] : '', e.x1 != null ? +Math.hypot(e.x2 - e.x1, e.y2 - e.y1).toFixed(1) : '', e.x1 ?? '', e.y1 ?? '', e.x2 ?? '', e.y2 ?? '', e.manual ? 'A mano' : 'Automático'])));
+  const A = passAgg(clips), red = [['Equipo', 'Pasador', 'Receptor', 'Pases']];
+  [...A.edges.entries()].sort((a, b) => b[1] - a[1]).forEach(([k, v]) => { const [a, b] = k.split('>'); red.push([teamTxt(a.split('|')[0]), a.split('|')[1] || '?', b.split('|')[1] || '?', v]); });
+  return {pases, red};
+}
 
 
 /* =========================================================
