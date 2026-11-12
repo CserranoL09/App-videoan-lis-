@@ -982,6 +982,27 @@ body.cal-open{overflow:hidden}
   body.lay-mixed .controls .jl,body.lay-below .controls .jl{display:none}
   body.lay-mixed .controls .jump input,body.lay-below .controls .jump input{width:3.2rem}
 }
+/* ===== v3.13 · vista del jugador ===== */
+.tac-main{flex:1 1 auto;min-height:0;display:flex;gap:.5rem}
+.tac-main .tac-stage{flex:1 1 auto;min-width:0}
+.tac-pov{flex:0 0 42%;min-width:0;display:flex;flex-direction:column;gap:.35rem}
+.tac-pov[hidden]{display:none}
+.pov-wrap{position:relative;flex:1 1 auto;min-height:0;border-radius:10px;overflow:hidden;background:#16181c}
+#povCv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:ew-resize}
+.pov-x{position:absolute;top:6px;right:6px;min-width:0;min-height:0;padding:.15rem .45rem;background:rgba(14,13,16,.7);color:#fff;border-color:transparent;font-size:.8rem}
+.pov-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .7rem;font-size:.8rem}
+.pov-ctl label{display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap}
+.pov-ctl input[type=range]{width:7.5rem}
+.pov-ctl b{min-width:2.6rem;font-size:.76rem}
+.pov-ctl button{padding:.25rem .55rem;font-size:.8rem}
+#tacPovBtn.on{background:color-mix(in srgb,var(--accent-hi) 26%,var(--panel2));border-color:var(--accent-hi)}
+@media (min-width:761px){ .tac-main.pov-on .pov-wrap{aspect-ratio:auto} }
+@media (max-width:760px){
+  .tac-main{flex-direction:column}
+  .tac-main.pov-on .tac-stage{flex:1 1 50%}
+  .tac-pov{flex:1 1 50%}
+  .pov-ctl input[type=range]{width:5.5rem}
+}
 </style>
 </head>
 <body>
@@ -1449,12 +1470,25 @@ body.cal-open{overflow:hidden}
     <button data-tool="free" title="Trazo libre">✎ Libre</button>
     <button data-tool="text" title="Texto">T Texto</button>
     <button data-tool="erase" title="Borrar al hacer clic">⌫ Borrar</button>
+    <button type="button" id="tacPovBtn" aria-pressed="false" title="Vista del jugador: selecciona un jugador y mira la jugada desde sus ojos">👁 Vista</button>
     <span class="tac-colors" id="tacColors" aria-label="Color de los dibujos"></span>
     <button id="tacDelSel" title="Borrar lo seleccionado (Supr)">🗑 Selección</button>
   </div>
+  <div class="tac-main" id="tacMain">
   <div class="tac-stage" id="tacStage"><canvas id="tacCv" aria-label="Campo de la pizarra táctica"></canvas>
     <div class="tac-edit" id="tacEdit" hidden><input id="tacEdN" inputmode="numeric" maxlength="3" placeholder="Dorsal" aria-label="Dorsal"><input id="tacEdName" maxlength="20" placeholder="Nombre" aria-label="Nombre"><button id="tacEdOk" class="primary">OK</button></div>
     <div class="tac-prog" id="tacProg" hidden aria-live="polite"></div>
+  </div>
+  <div class="tac-pov" id="tacPov" hidden role="region" aria-label="Vista del jugador">
+    <div class="pov-wrap" id="povWrap"><canvas id="povCv" aria-label="Vista del jugador: arrastra para girar la mirada"></canvas><button type="button" class="pov-x" id="povClose" aria-label="Cerrar la vista del jugador" title="Cerrar">✕</button></div>
+    <div class="pov-ctl">
+      <label>Mirada <input type="range" id="povDir" min="0" max="359" step="1" value="0" aria-label="Dirección de la mirada (grados)"> <b id="povDirV" class="mono">0°</b></label>
+      <label>Visión <input type="range" id="povFov" min="60" max="110" step="1" value="75" aria-label="Campo de visión (grados)"> <b id="povFovV" class="mono">75°</b></label>
+      <button type="button" id="povBall" title="Orientar la mirada hacia el balón">⚽ Mirar al balón</button>
+      <label class="pov-chk" title="La mirada apunta siempre al balón, también al reproducir"><input type="checkbox" id="povFollow"> Seguir el balón</label>
+      <button type="button" id="povPng" title="Descargar la vista como imagen PNG">⤓ PNG</button>
+    </div>
+  </div>
   </div>
   <p class="tac-hint" id="tacHint"></p>
   <div class="tac-bot">
@@ -1467,6 +1501,7 @@ body.cal-open{overflow:hidden}
     <label><input type="checkbox" id="tacTitle" checked> Portada</label>
     <label><input type="checkbox" id="tacCrest" checked> Escudo</label>
     <button id="tacPng" title="Descargar el paso actual como imagen PNG">⤓ PNG</button>
+    <label title="Incluir en el vídeo lo que ve el jugador elegido en «👁 Vista»">Vista del jugador <select id="tacPovVid" disabled><option value="">No</option><option value="split">Pantalla partida</option><option value="corner">En una esquina</option></select></label>
     <button id="tacVid" title="Descargar la jugada animada como vídeo">⤓ Vídeo</button>
   </div>
 </div>
@@ -1512,8 +1547,13 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.12';
+const APP_VERSION = '3.13';
 const CHANGELOG = [
+  {v:'3.13', date:'Noviembre 2026', items:[
+    '<b>Vista del jugador</b> en la Pizarra táctica: selecciona un jugador con «✥ Mover» y pulsa «👁 Vista». Verás la jugada desde sus ojos (a 1,7 m): compañeros y rivales con su dorsal, balón, material, porterías, líneas del campo y las flechas y zonas del paso dibujadas en el suelo.',
+    'Gira la mirada arrastrando en la vista o con el control de 0–360°, ajusta el campo de visión (60–110°) o pulsa «⚽ Mirar al balón»; con «Seguir el balón» la mirada lo acompaña sola. En el campo 2D un cono marca lo que ve. Al reproducir los pasos, la vista se anima con la jugada.',
+    'Descarga la vista como PNG y, en «⤓ Vídeo», elige «Vista del jugador: a pantalla partida o en una esquina».'
+  ]},
   {v:'3.12', date:'Noviembre 2026', items:[
     '<b>Calibrar el campo:</b> en ✎ del partido (o en la barra de la pizarra), «📐 Calibrar el campo». Elige en el mini-campo 4 puntos conocidos (esquinas del área, centro del campo, córners…) y púlsalos en el vídeo; las líneas verdes muestran si encaja. Si la cámara se mueve, añade otra calibración desde ese instante.',
     '<b>📍 Posición real:</b> al etiquetar pulsa «📍 Posición» (tecla P) y luego los pies del jugador en el vídeo: el corte guarda su posición en metros y la zona 1–18 se rellena sola. En un corte ya hecho: ✎ del corte → «📍 Marcar en el vídeo».',
@@ -1742,7 +1782,12 @@ function sanitizeBoards(arr){
       shapes: sanitizeShapes(st && st.shapes).map(s => { delete s.track; delete s.tsm; return s; }),
       dur: +clamp(+(st && st.dur) || 2, .5, 10).toFixed(1)
     }));
-    return {id, name: cleanStr(b.name, 60).trim() || 'Pizarra', field: TAC_FIELDS[b.field] ? b.field : 'f11', vertical: b.vertical === true, steps: steps.length ? steps : [{items: [], shapes: [], dur: 2}]};
+    const o = {id, name: cleanStr(b.name, 60).trim() || 'Pizarra', field: TAC_FIELDS[b.field] ? b.field : 'f11', vertical: b.vertical === true, steps: steps.length ? steps : [{items: [], shapes: [], dur: 2}]};
+    // v3.13 (opcional): vista del jugador
+    const P = b.pov;
+    if (P && typeof P === 'object' && typeof P.id === 'string' && /^[\w-]{1,40}$/.test(P.id))
+      o.pov = {id: P.id, dir: Math.round(((+P.dir || 0) % 360 + 360) % 360), fov: Math.round(clamp(+P.fov || 75, 60, 110)), follow: P.follow === true};
+    return o;
   });
 }
 const holdOf = d => d && d.hold ? d.hold : 3;   // v3.4: segundos que dura un dibujo (por defecto se congela 3 s)
@@ -1909,7 +1954,7 @@ const FIXED_KEYS = new Set(Object.values(KEY));
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
 function save(){
   try{ localStorage.setItem(KEY.cats, JSON.stringify(state.cats)); }catch(e){}
-  try{ localStorage.setItem(KEY.project, JSON.stringify({version:12, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
+  try{ localStorage.setItem(KEY.project, JSON.stringify({version:13, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
   catch(e){ flash('No se pudo guardar en este navegador (almacenamiento lleno). Usa «Guardar proyecto» para no perder el trabajo.', 5000); }
 }
 function saveBrand(){ try{ localStorage.setItem(KEY.brand, JSON.stringify(brand)); }catch(e){ flash('No se pudo guardar el escudo en este navegador (imagen demasiado grande)', 3500); } }
@@ -3565,7 +3610,7 @@ $('#catReset').onclick = async () => {
    GUARDAR / CARGAR PROYECTO (v5 con partidos y registro en directo; abre también v4 y proyectos v1–v3 de un solo vídeo)
    ========================================================= */
 $('#btnSave').onclick = () => {
-  const data = {app:'TacticaLab', version:12, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
+  const data = {app:'TacticaLab', version:13, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const one = state.matches.length === 1 ? baseFile(state.matches[0].fileName) : 'tactica-lab';
   download(`${slug(one)}_analisis_${stamp}.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
@@ -5549,6 +5594,7 @@ function paintTac(ctx, cw, ch, dpr, b, stepIdx, tween, opts){
   const sc = tacScene(b, stepIdx, tween), FW = v.L*v.s, FH = v.W*v.s;
   const shapes = sc.shapes.concat(opts.preview ? [opts.preview] : []);
   if (shapes.length){ tacFieldTransform(ctx, v, dpr); ctx.save(); drawShapes(ctx, FW, FH, shapes); ctx.restore(); }
+  if (opts.cone) povCone(ctx, v, dpr, b, stepIdx, tween);   // v3.13 · lo que ve el jugador
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const r = tacItemR(v);
   sc.items.slice().sort((p, q) => (p.it.k === 'ball') - (q.it.k === 'ball')).forEach(o => { const [X, Y] = tacToPx(v, o.x, o.y); drawTacItem(ctx, o.it, X, Y, r, o.a, opts.sel && opts.sel.type === 'item' && opts.sel.id === o.it.id); });
@@ -5564,7 +5610,7 @@ function openTac(id){
   if (!state.boards) state.boards = [];
   if (!state.boards.length){ state.boards.push(newBoard('Pizarra 1')); save(); }
   tac.bid = id && state.boards.some(b => b.id === id) ? id : (tac.bid && tacBoard() ? tac.bid : state.boards[0].id);
-  tac.open = true; tac.step = 0; tac.sel = null; tac.undo = []; tac.redo = [];
+  tac.open = true; tac.step = 0; tac.sel = null; tac.undo = []; tac.redo = []; pov.open = false;
   video.pause(); closeBoard(true);
   $('#tac').hidden = false; document.body.classList.add('tac-open');
   renderTacUI(); requestAnimationFrame(renderTac);
@@ -5585,6 +5631,7 @@ function renderTacUI(){
   $('#tacPlay').textContent = tac.play ? '■ Parar' : '▶ Reproducir'; $('#tacPlay').disabled = b.steps.length < 2 && !tac.play;
   $('#tacTools').querySelectorAll('[data-tool]').forEach(x => { x.classList.toggle('on', x.dataset.tool === tac.tool); x.setAttribute('aria-pressed', x.dataset.tool === tac.tool); });
   $('#tacDelSel').disabled = !tac.sel;
+  povUI();   // v3.13
   $('#tacHint').textContent = tac.tool === 'move' ? 'Arrastra fichas y dibujos para moverlos · doble clic en un jugador para cambiar dorsal y nombre · Supr borra lo seleccionado'
     : tac.tool === 'poly' ? 'Zona libre: clic en cada vértice y clic en el primero (o doble clic) para cerrar'
     : TAC_ITEMS[tac.tool] ? `Clic en el campo para colocar: ${TAC_ITEMS[tac.tool].label.toLowerCase()}` : tac.tool === 'erase' ? 'Clic en una ficha o un dibujo para borrarlo' : 'Arrastra sobre el campo para dibujar';
@@ -5597,7 +5644,8 @@ function renderTac(){
   if (cv.width !== Math.round(cw*dpr) || cv.height !== Math.round(ch*dpr)){ cv.width = Math.round(cw*dpr); cv.height = Math.round(ch*dpr); }
   const ctx = cv.getContext('2d');
   const tw = tac.play ? tac.play.tween : null, stepIdx = tac.play ? tac.play.from : clamp(tac.step, 0, b.steps.length - 1);
-  tac.view = paintTac(ctx, cw, ch, dpr, b, stepIdx, tw, {sel: tac.play ? null : tac.sel, preview: tac.cur || (tac.poly ? Object.assign({}, tac.poly, {pts: tac.poly.pts.concat(tac.polyHover ? [tac.polyHover] : [])}) : null)});
+  tac.view = paintTac(ctx, cw, ch, dpr, b, stepIdx, tw, {cone: true, sel: tac.play ? null : tac.sel, preview: tac.cur || (tac.poly ? Object.assign({}, tac.poly, {pts: tac.poly.pts.concat(tac.polyHover ? [tac.polyHover] : [])}) : null)});
+  povDraw();   // v3.13
 }
 function tacPoint(e){ const r = $('#tacCv').getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
 function tacHit(X, Y){
@@ -5768,8 +5816,13 @@ async function tacExportVideo(){
   const b = tacBoard(); if (!b || tac.exporting || exporting) return;
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){ flash('Este navegador no permite generar vídeo: usa Chrome, Edge o Safari actualizados'); return; }
   tacStop();
-  const cap = Q_RES[quality.res].cap, H = cap - cap % 2, W = (b.vertical ? Math.round(H*.75) : Math.round(H*16/9)) & ~1, fps = quality.fps;
+  const cap = Q_RES[quality.res].cap, H = cap - cap % 2, povMode = b.pov ? $('#tacPovVid').value : '';
+  const W = (povMode === 'split' ? Math.round(H*16/9) : b.vertical ? Math.round(H*.75) : Math.round(H*16/9)) & ~1, fps = quality.fps;
   const c = document.createElement('canvas'); c.width = W; c.height = H; const ctx = c.getContext('2d');
+  // v3.13 · vista del jugador en el vídeo: a pantalla partida o en una esquina
+  const fc = povMode ? document.createElement('canvas') : null, pc = povMode ? document.createElement('canvas') : null;
+  if (povMode === 'split'){ fc.width = W >> 1; fc.height = H; pc.width = W - fc.width; pc.height = H; }
+  else if (povMode === 'corner'){ fc.width = W; fc.height = H; pc.width = Math.round(W*.36); pc.height = Math.round(pc.width*9/16); }
   const withTitle = $('#tacTitle').checked, T = tacTimeline(b, withTitle), total = T.reduce((s, x) => s + x.dur, 0);
   const f = camPickMime(false), st = c.captureStream(fps), chunks = [];
   let rec; try{ rec = new MediaRecorder(st, Object.assign({videoBitsPerSecond: qualityBitrate(H, total)}, f.mime ? {mimeType: f.mime} : {})); }catch(e){ flash('No se pudo iniciar la grabación del vídeo'); return; }
@@ -5778,7 +5831,15 @@ async function tacExportVideo(){
   const draw = t => {
     const r = tacAt(T, t);
     if (r && r.seg.kind === 'title') drawTacTitle(ctx, W, H, b);
-    else { const seg = r ? r.seg : null; paintTac(ctx, W, H, 1, b, seg ? seg.from : b.steps.length - 1, seg && seg.kind === 'move' ? {to: seg.to, k: r.k} : null, {pad: Math.round(H*.04)});
+    else { const seg = r ? r.seg : null, si = seg ? seg.from : b.steps.length - 1, tw = seg && seg.kind === 'move' ? {to: seg.to, k: r.k} : null;
+      if (povMode){
+        const was = pov.open; pov.open = true;
+        paintTac(fc.getContext('2d'), fc.width, fc.height, 1, b, si, tw, {pad: Math.round(H*.04), cone: true}); povRender(pc.getContext('2d'), pc.width, pc.height, b, si, tw);
+        pov.open = was;
+        ctx.fillStyle = '#0e0d10'; ctx.fillRect(0, 0, W, H); ctx.drawImage(fc, 0, 0);
+        if (povMode === 'split') ctx.drawImage(pc, fc.width, 0);
+        else { const m = Math.round(H*.03), x = W - pc.width - m, y = H - pc.height - m; ctx.fillStyle = '#fff'; ctx.fillRect(x - 3, y - 3, pc.width + 6, pc.height + 6); ctx.drawImage(pc, x, y); }
+      } else paintTac(ctx, W, H, 1, b, si, tw, {pad: Math.round(H*.04)});
       if ($('#tacCrest').checked && crestReady()){ const h = H*.11, w = h*CREST.naturalWidth/CREST.naturalHeight; ctx.globalAlpha = .6; ctx.drawImage(CREST, W - w - H*.03, H - h - H*.03, w, h); ctx.globalAlpha = 1; } }
   };
   draw(0); rec.start(500);
@@ -5798,7 +5859,7 @@ function tacReportHTML(){
 /* ---------- eventos ---------- */
 $('#btnTac').onclick = () => openTac();
 $('#tacClose').onclick = closeTac;
-$('#tacSel').onchange = e => { tacStop(); tac.bid = e.target.value; tac.step = 0; tac.sel = null; tac.undo = []; tac.redo = []; renderTacUI(); renderTac(); };
+$('#tacSel').onchange = e => { tacStop(); pov.open = false; tac.bid = e.target.value; tac.step = 0; tac.sel = null; tac.undo = []; tac.redo = []; renderTacUI(); renderTac(); };
 $('#tacName').oninput = e => { const b = tacBoard(); if (!b) return; b.name = e.target.value.slice(0, 60) || 'Pizarra'; save(); const o = $('#tacSel').selectedOptions[0]; if (o) o.textContent = b.name; };
 $('#tacNew').onclick = () => { tacStop(); const b = newBoard(`Pizarra ${state.boards.length + 1}`); state.boards.push(b); tac.bid = b.id; tac.step = 0; tac.undo = []; tac.redo = []; tacCommit(); $('#tacName').focus(); $('#tacName').select(); };
 $('#tacDup').onclick = () => { const b = tacBoard(); if (!b) return; const c = sanitizeBoards([Object.assign(JSON.parse(JSON.stringify(b)), {id: uid(), name: (b.name + ' (copia)').slice(0, 60)})])[0]; state.boards.push(c); tac.bid = c.id; tacCommit(); flash('Pizarra duplicada'); };
@@ -6980,6 +7041,291 @@ function renderMap2d(force){
 $('#bMap').onclick = () => { map2d = !map2d; try{ localStorage.setItem('tacticalab:map2d', map2d ? '1' : '0'); }catch(e){} renderMap2d(true); };
 $('#map2d').addEventListener('click', e => e.stopPropagation());
 function mapTick(){ const n = performance.now(); if (map2d && n - map2dT > 250){ map2dT = n; renderMap2d(); } }
+
+
+/* =========================================================
+   v3.13 · VISTA DEL JUGADOR (pizarra táctica)
+   board.pov = {id, dir (0–360°, 0 = hacia la derecha del campo, 90 = hacia la banda de abajo), fov (60–110°), follow}
+   Perspectiva hecha a mano en canvas 2D: cámara a 1,7 m en la posición del jugador.
+   ========================================================= */
+const POV_EYE = 1.7, POV_NEAR = .35;
+const POV_GOAL = {f11: {w: 7.32, h: 2.44, d: 2}, f7: {w: 6, h: 2, d: 1.5}, sala: {w: 3, h: 2, d: 1}};
+let pov = {open: false, drag: null};
+const povCv = $('#povCv');
+/* posición en metros (campo base completo) de una ficha */
+function povM(f, x, y){ return [f.x0 + x*f.L, y*f.W]; }
+function povScene(b, stepIdx, tween){
+  const f = TAC_FIELDS[b.field], sc = tacScene(b, stepIdx, tween);
+  return {f, base: TAC_BASE[f.base], items: sc.items.map(o => { const [X, Y] = povM(f, o.x, o.y); return Object.assign({}, o, {X, Y}); }), shapes: sc.shapes};
+}
+function povDefaultDir(S, me){
+  const ball = S.items.find(o => o.it.k === 'ball');
+  if (ball && Math.hypot(ball.X - me.X, ball.Y - me.Y) > .3) return (Math.atan2(ball.Y - me.Y, ball.X - me.X)*180/Math.PI + 360) % 360;
+  return me.it.k === 'B' ? 180 : 0;
+}
+function povAngles(b, S){
+  const P = b.pov, me = P && S.items.find(o => o.it.id === P.id);
+  if (!me) return null;
+  const dir = P.follow ? povDefaultDir(S, me) : P.dir;
+  return {me, dir, fov: P.fov};
+}
+/* ---------- proyección ---------- */
+function povCam(me, dir, fov, W, H){
+  const a = dir*Math.PI/180, fx = Math.cos(a), fy = Math.sin(a);
+  return {px: me.X, py: me.Y, fx, fy, rx: -fy, ry: fx, F: (W/2)/Math.tan(fov*Math.PI/360), cx: W/2, cy: H*.4, W, H};
+}
+const povDepth = (c, X, Y) => (X - c.px)*c.fx + (Y - c.py)*c.fy;
+function povProj(c, X, Y, Z){
+  const dx = X - c.px, dy = Y - c.py, z = dx*c.fx + dy*c.fy; if (z < POV_NEAR) return null;
+  const xr = dx*c.rx + dy*c.ry; return [c.cx + xr/z*c.F, c.cy - (Z - POV_EYE)/z*c.F, z];
+}
+/* recorta un segmento del suelo (o en el aire) contra el plano cercano */
+function povSeg(c, a, b){
+  let za = povDepth(c, a[0], a[1]), zb = povDepth(c, b[0], b[1]);
+  if (za < POV_NEAR && zb < POV_NEAR) return null;
+  if (za < POV_NEAR || zb < POV_NEAR){
+    const t = (POV_NEAR - za)/(zb - za), m = [a[0] + (b[0] - a[0])*t, a[1] + (b[1] - a[1])*t, (a[2] || 0) + ((b[2] || 0) - (a[2] || 0))*t];
+    if (za < POV_NEAR) a = m; else b = m;
+  }
+  const p = povProj(c, a[0], a[1], a[2] || 0), q = povProj(c, b[0], b[1], b[2] || 0);
+  return p && q ? [p, q] : null;
+}
+/* recorta un polígono del suelo contra el plano cercano (Sutherland–Hodgman) */
+function povPoly(c, pts){
+  const out = [];
+  for (let i = 0; i < pts.length; i++){
+    const a = pts[i], b = pts[(i + 1) % pts.length], za = povDepth(c, a[0], a[1]), zb = povDepth(c, b[0], b[1]);
+    if (za >= POV_NEAR) out.push(a);
+    if ((za >= POV_NEAR) !== (zb >= POV_NEAR)){ const t = (POV_NEAR - za)/(zb - za); out.push([a[0] + (b[0] - a[0])*t, a[1] + (b[1] - a[1])*t]); }
+  }
+  return out.length >= 3 ? out.map(p => povProj(c, p[0], p[1], 0)).filter(Boolean) : null;
+}
+function povFill(ctx, c, pts, style){ const q = povPoly(c, pts); if (!q) return; ctx.beginPath(); q.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fillStyle = style; ctx.fill(); }
+function povLine(ctx, c, pts, width, color){
+  // polilínea sobre el suelo, con grosor según la distancia
+  ctx.strokeStyle = color; ctx.lineCap = 'round';
+  for (let i = 0; i < pts.length - 1; i++){
+    const s = povSeg(c, pts[i], pts[i + 1]); if (!s) continue;
+    ctx.lineWidth = clamp(width*c.F/((s[0][2] + s[1][2])/2), .6, 14);
+    ctx.beginPath(); ctx.moveTo(s[0][0], s[0][1]); ctx.lineTo(s[1][0], s[1][1]); ctx.stroke();
+  }
+}
+/* ---------- dibujo de la escena ---------- */
+function povRender(ctx, W, H, b, stepIdx, tween, opts){
+  opts = opts || {};
+  const S = povScene(b, stepIdx, tween), A = povAngles(b, S);
+  ctx.save();
+  if (!A){
+    ctx.fillStyle = '#16181c'; ctx.fillRect(0, 0, W, H); ctx.fillStyle = '#c9c3cb'; ctx.textAlign = 'center';
+    ctx.font = `600 ${Math.round(clamp(W*.035, 11, 20))}px Manrope, system-ui, sans-serif`;
+    ctx.fillText(b.pov ? 'Este jugador no está en este paso' : 'Selecciona un jugador y pulsa «👁 Vista del jugador»', W/2, H/2);
+    ctx.restore(); return null;
+  }
+  const c = povCam(A.me, A.dir, A.fov, W, H), base = S.base, type = S.f.base, L = base.L, Wd = base.W;
+  // cielo y fondo
+  const sky = ctx.createLinearGradient(0, 0, 0, c.cy); sky.addColorStop(0, '#6aa6d8'); sky.addColorStop(1, '#cfe3f1');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, c.cy + 1);
+  // grada lejana (franja en el horizonte)
+  ctx.fillStyle = '#3d4450'; ctx.fillRect(0, c.cy - H*.035, W, H*.035);
+  ctx.fillStyle = '#245a34'; ctx.fillRect(0, c.cy, W, H - c.cy);
+  // césped del campo con franjas
+  const M = Math.max(4, L*.06);
+  povFill(ctx, c, [[-M, -M], [L + M, -M], [L + M, Wd + M], [-M, Wd + M]], '#2c6e40');
+  const n = type === 'sala' ? 8 : 12;
+  for (let i = 0; i < n; i++) povFill(ctx, c, [[i*L/n, 0], [(i + 1)*L/n, 0], [(i + 1)*L/n, Wd], [i*L/n, Wd]], i % 2 ? '#2f7745' : '#357f4b');
+  if (type === 'sala') povFill(ctx, c, [[0, 0], [L, 0], [L, Wd], [0, Wd]], 'rgba(40,90,170,.35)');
+  // líneas del campo
+  const {segs, arcs} = calLines(type, L, Wd), lw = type === 'sala' ? .08 : .12;
+  segs.forEach(s => povLine(ctx, c, [[s[0], s[1]], [s[2], s[3]]], lw, 'rgba(255,255,255,.92)'));
+  arcs.forEach(([cx, cy, r, a0, a1]) => { const pts = []; const k = Math.max(12, Math.round((a1 - a0)/(Math.PI*2)*48)); for (let i = 0; i <= k; i++){ const a = a0 + (a1 - a0)*i/k; pts.push([cx + r*Math.cos(a), cy + r*Math.sin(a)]); } povLine(ctx, c, pts, lw, 'rgba(255,255,255,.92)'); });
+  // dibujos del paso (sobre el suelo)
+  const f = S.f, toM = p => povM(f, p[0], p[1]);
+  S.shapes.forEach(s => {
+    const col = s.color || '#fff', w = .22, fa = s.fill != null ? s.fill : .25;
+    const p = (s.pts || []).map(toM); if (!p.length) return;
+    if (s.type === 'line' || s.type === 'arrow'){
+      povLine(ctx, c, [p[0], p[1] || p[0]], w, col);
+      if (s.type === 'arrow' && p[1]) povHead(ctx, c, p[0], p[1], col);
+    } else if (s.type === 'curve'){
+      const a = p[0], m = p[2] ? p[1] : [(p[0][0] + p[1][0])/2, (p[0][1] + p[1][1])/2], e = p[2] || p[1], q = [];
+      for (let i = 0; i <= 24; i++){ const t = i/24; q.push([(1-t)**2*a[0] + 2*(1-t)*t*m[0] + t*t*e[0], (1-t)**2*a[1] + 2*(1-t)*t*m[1] + t*t*e[1]]); }
+      povLine(ctx, c, q, w, col); povHead(ctx, c, q[q.length - 3], e, col);
+    } else if (s.type === 'free'){ povLine(ctx, c, p, w, col); }
+    else if (s.type === 'ellipse' || s.type === 'rect' || s.type === 'poly'){
+      let q;
+      if (s.type === 'ellipse'){ const cx = (p[0][0] + p[1][0])/2, cy = (p[0][1] + p[1][1])/2, rx = Math.abs(p[1][0] - p[0][0])/2, ry = Math.abs(p[1][1] - p[0][1])/2; q = []; for (let i = 0; i < 40; i++){ const a = i/40*Math.PI*2; q.push([cx + rx*Math.cos(a), cy + ry*Math.sin(a)]); } }
+      else if (s.type === 'rect') q = [[p[0][0], p[0][1]], [p[1][0], p[0][1]], [p[1][0], p[1][1]], [p[0][0], p[1][1]]];
+      else q = p;
+      if (q.length >= 3){ ctx.globalAlpha = fa; povFill(ctx, c, q, col); ctx.globalAlpha = 1; povLine(ctx, c, q.concat([q[0]]), .1, col); }
+    }
+  });
+  // objetos con altura, de lejos a cerca: porterías y fichas
+  const objs = [], G = POV_GOAL[type] || POV_GOAL.f11;
+  [[0, -1], [L, 1]].forEach(([gx, d]) => objs.push({kind: 'goal', X: gx, Y: Wd/2, d}));
+  S.items.forEach(o => { if (o.it.id !== A.me.it.id) objs.push({kind: 'item', o, X: o.X, Y: o.Y}); });
+  objs.forEach(o => { o.z = povDepth(c, o.X, o.Y); });
+  objs.filter(o => o.z > POV_NEAR).sort((a, b2) => b2.z - a.z).forEach(o => o.kind === 'goal' ? povGoal(ctx, c, o.X, Wd/2, o.d, G) : povItem(ctx, c, o.o));
+  // marco: dorsal y rumbo
+  const me = A.me.it, tcol = TAC_COLORS[me.k === 'B' ? 'B' : 'A']();
+  ctx.fillStyle = 'rgba(14,13,16,.72)'; const bh = Math.round(clamp(H*.07, 18, 34)); ctx.fillRect(0, H - bh, W, bh);
+  ctx.font = `700 ${Math.round(bh*.5)}px Manrope, system-ui, sans-serif`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  ctx.fillStyle = tcol; ctx.beginPath(); ctx.arc(bh*.55, H - bh/2, bh*.28, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.fillText(`Vista de ${me.n ? me.n : 'jugador'}${me.name ? ' · ' + me.name : ''}`, bh*1.05, H - bh/2 + 1);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#c9c3cb'; ctx.fillText(`${Math.round(A.dir)}° · campo de visión ${Math.round(A.fov)}°`, W - bh*.4, H - bh/2 + 1);
+  ctx.restore();
+  return A;
+}
+function povHead(ctx, c, from, tip, col){
+  const ang = Math.atan2(tip[1] - from[1], tip[0] - from[0]), L = .9, sp = .55;
+  const l = [tip[0] - L*Math.cos(ang - sp), tip[1] - L*Math.sin(ang - sp)], r = [tip[0] - L*Math.cos(ang + sp), tip[1] - L*Math.sin(ang + sp)];
+  povFill(ctx, c, [tip, l, r], col);
+}
+function povGoal(ctx, c, gx, gy, d, G){
+  const y1 = gy - G.w/2, y2 = gy + G.w/2, bx = gx + d*G.d;
+  // red
+  ctx.save(); ctx.globalAlpha = .45;
+  const net = [[[bx, y1, 0], [bx, y1, G.h*.85]], [[bx, y2, 0], [bx, y2, G.h*.85]], [[bx, y1, G.h*.85], [bx, y2, G.h*.85]], [[gx, y1, G.h], [bx, y1, G.h*.85]], [[gx, y2, G.h], [bx, y2, G.h*.85]], [[gx, y1, 0], [bx, y1, 0]], [[gx, y2, 0], [bx, y2, 0]]];
+  for (let i = 1; i < 6; i++){ const y = y1 + (y2 - y1)*i/6; net.push([[gx, y, G.h], [bx, y, G.h*.85]], [[bx, y, 0], [bx, y, G.h*.85]]); }
+  for (let i = 1; i < 4; i++){ const z = G.h*.85*i/4; net.push([[bx, y1, z], [bx, y2, z]]); }
+  ctx.strokeStyle = '#e8e8e8'; ctx.lineWidth = 1;
+  net.forEach(([a, b]) => { const s = povSeg(c, a, b); if (s){ ctx.beginPath(); ctx.moveTo(s[0][0], s[0][1]); ctx.lineTo(s[1][0], s[1][1]); ctx.stroke(); } });
+  ctx.restore();
+  // postes y larguero
+  ctx.strokeStyle = '#fff'; ctx.lineCap = 'round';
+  [[[gx, y1, 0], [gx, y1, G.h]], [[gx, y2, 0], [gx, y2, G.h]], [[gx, y1, G.h], [gx, y2, G.h]]].forEach(([a, b]) => {
+    const s = povSeg(c, a, b); if (!s) return; ctx.lineWidth = clamp(.12*c.F/((s[0][2] + s[1][2])/2), 1.5, 16);
+    ctx.beginPath(); ctx.moveTo(s[0][0], s[0][1]); ctx.lineTo(s[1][0], s[1][1]); ctx.stroke();
+  });
+}
+function povItem(ctx, c, o){
+  const it = o.it, base = povProj(c, o.X, o.Y, 0); if (!base) return;
+  const [x, y, z] = base, k = c.F/z, alpha = o.a == null ? 1 : o.a;
+  if (x < -c.W*.5 || x > c.W*1.5) return;
+  ctx.save(); ctx.globalAlpha = alpha;
+  // sombra
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(x, y, .38*k, .1*k, 0, 0, Math.PI*2); ctx.fill();
+  if (it.k === 'A' || it.k === 'B'){
+    const col = TAC_COLORS[it.k](), h = 1.8*k, w = .52*k, sh = col, skin = '#e8b894';
+    // piernas
+    ctx.strokeStyle = '#1b1b1f'; ctx.lineWidth = Math.max(1, .14*k); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x - w*.18, y); ctx.lineTo(x - w*.12, y - h*.46); ctx.moveTo(x + w*.18, y); ctx.lineTo(x + w*.12, y - h*.46); ctx.stroke();
+    // pantalón
+    ctx.fillStyle = it.k === 'A' ? '#f4f4f4' : '#15233d'; povRR(ctx, x - w*.4, y - h*.56, w*.8, h*.14, w*.08); ctx.fill();
+    // camiseta
+    ctx.fillStyle = sh; povRR(ctx, x - w/2, y - h*.84, w, h*.32, w*.18); ctx.fill();
+    // brazos
+    ctx.strokeStyle = sh; ctx.lineWidth = Math.max(1, .13*k);
+    ctx.beginPath(); ctx.moveTo(x - w*.48, y - h*.8); ctx.lineTo(x - w*.62, y - h*.56); ctx.moveTo(x + w*.48, y - h*.8); ctx.lineTo(x + w*.62, y - h*.56); ctx.stroke();
+    // cabeza
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, y - h*.92, h*.075, 0, Math.PI*2); ctx.fill();
+    // dorsal
+    if (it.n && w > 7){ ctx.fillStyle = inkFor(col); ctx.font = `800 ${Math.max(7, Math.round(h*.15))}px Manrope, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(it.n, x, y - h*.68); }
+    if (it.name && w > 14){ ctx.font = `700 ${Math.max(8, Math.round(h*.075))}px Manrope, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(0,0,0,.55)'; const tw = ctx.measureText(it.name).width; ctx.fillRect(x - tw/2 - 3, y - h*1.06 - h*.09, tw + 6, h*.095); ctx.fillStyle = '#fff'; ctx.fillText(it.name, x, y - h*1.06); }
+  } else if (it.k === 'ball'){
+    const r = Math.max(2, .11*k), cy = y - r;
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, cy, r, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#222'; ctx.lineWidth = Math.max(.6, r*.15); ctx.stroke();
+    if (r > 4){ ctx.fillStyle = '#222'; ctx.beginPath(); for (let i = 0; i < 5; i++){ const a = -Math.PI/2 + i*2*Math.PI/5; ctx.lineTo(x + Math.cos(a)*r*.4, cy + Math.sin(a)*r*.4); } ctx.closePath(); ctx.fill(); }
+  } else if (it.k === 'cone'){
+    const h = .3*k, w = .26*k; ctx.fillStyle = '#ff8a1f'; ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + w/2, y); ctx.lineTo(x - w/2, y); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillRect(x - w*.22, y - h*.52, w*.44, h*.14);
+  } else if (it.k === 'pole'){
+    const h = 1.5*k, w = Math.max(1.2, .035*k); ctx.fillStyle = '#ffd400'; ctx.fillRect(x - w/2, y - h, w, h);
+    ctx.fillStyle = '#111'; for (let i = 1; i < 5; i += 2) ctx.fillRect(x - w/2, y - h*i/5, w, h/10);
+  } else if (it.k === 'hurdle'){
+    const h = .3*k, w = .9*k; ctx.strokeStyle = '#f2f2f2'; ctx.lineWidth = Math.max(1, .04*k);
+    ctx.beginPath(); ctx.moveTo(x - w/2, y); ctx.lineTo(x - w/2, y - h); ctx.lineTo(x + w/2, y - h); ctx.lineTo(x + w/2, y); ctx.stroke();
+  } else if (it.k === 'mini' || it.k === 'goal'){
+    const w = (it.k === 'goal' ? 3 : 1.2)*k, h = (it.k === 'goal' ? 2 : .8)*k;
+    ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(x - w/2, y - h, w, h);
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1, .06*k); ctx.beginPath(); ctx.moveTo(x - w/2, y); ctx.lineTo(x - w/2, y - h); ctx.lineTo(x + w/2, y - h); ctx.lineTo(x + w/2, y); ctx.stroke();
+    ctx.globalAlpha = alpha*.5; ctx.lineWidth = 1; for (let i = 1; i < 5; i++){ ctx.beginPath(); ctx.moveTo(x - w/2 + i*w/5, y - h); ctx.lineTo(x - w/2 + i*w/5, y); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+function povRR(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+/* cono de visión en el campo 2D (lo llama paintTac) */
+function povCone(ctx, v, dpr, b, stepIdx, tween){
+  if (!b.pov || !pov.open) return;
+  const S = povScene(b, stepIdx, tween), A = povAngles(b, S); if (!A) return;
+  const f = S.f, x = (A.me.X - f.x0)*v.s, y = A.me.Y*v.s, R = Math.max(f.L, f.W)*1.2*v.s, a = A.dir*Math.PI/180, h = A.fov*Math.PI/360;
+  tacFieldTransform(ctx, v, dpr); ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, f.L*v.s, f.W*v.s); ctx.clip();
+  const g = ctx.createRadialGradient(x, y, 0, x, y, R*.6); g.addColorStop(0, 'rgba(255,255,255,.32)'); g.addColorStop(1, 'rgba(255,255,255,.05)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, R, a - h, a + h); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x + Math.cos(a - h)*R, y + Math.sin(a - h)*R); ctx.lineTo(x, y); ctx.lineTo(x + Math.cos(a + h)*R, y + Math.sin(a + h)*R); ctx.stroke();
+  ctx.restore();
+}
+/* ---------- panel ---------- */
+function povDraw(){
+  if (!pov.open || !tac.open) return;
+  const b = tacBoard(); if (!b) return;
+  const wrap = $('#povWrap'), w = Math.max(10, wrap.clientWidth), h = Math.max(10, wrap.clientHeight), dpr = window.devicePixelRatio || 1;
+  if (povCv.width !== Math.round(w*dpr) || povCv.height !== Math.round(h*dpr)){ povCv.width = Math.round(w*dpr); povCv.height = Math.round(h*dpr); }
+  const ctx = povCv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const tw = tac.play ? tac.play.tween : null, si = tac.play ? tac.play.from : clamp(tac.step, 0, b.steps.length - 1);
+  const A = povRender(ctx, w, h, b, si, tw);
+  if (A && document.activeElement !== $('#povDir')){ $('#povDir').value = Math.round(A.dir); }
+  $('#povDirV').textContent = A ? `${Math.round(A.dir)}°` : '—';
+}
+function povUI(){
+  const b = tacBoard(), P = b && b.pov;
+  $('#tacPov').hidden = !pov.open; $('#tacMain').classList.toggle('pov-on', pov.open);
+  $('#tacPovBtn').setAttribute('aria-pressed', String(pov.open)); $('#tacPovBtn').classList.toggle('on', pov.open);
+  if (P){ $('#povDir').value = Math.round(P.dir); $('#povFov').value = P.fov; $('#povFovV').textContent = `${P.fov}°`; $('#povFollow').checked = !!P.follow; }
+  ['povDir', 'povFov', 'povBall', 'povFollow', 'povPng'].forEach(id => $('#' + id).disabled = !P);
+  $('#povDir').disabled = !P || !!(P && P.follow);
+  $('#tacPovVid').disabled = !P;
+  if (!P) $('#tacPovVid').value = '';
+}
+function povSet(b, id){
+  const st = b.steps[clamp(tac.step, 0, b.steps.length - 1)], S = povScene(b, tac.step, null), me = S.items.find(o => o.it.id === id);
+  b.pov = {id, dir: me ? Math.round(povDefaultDir(S, me)) : 0, fov: (b.pov && b.pov.fov) || 75, follow: false};
+  save();
+}
+function povToggle(){
+  const b = tacBoard(); if (!b) return;
+  const st = tacStep(), sel = tac.sel && tac.sel.type === 'item' && st ? st.items.find(x => x.id === tac.sel.id) : null, isPl = sel && (sel.k === 'A' || sel.k === 'B');
+  if (pov.open){
+    if (isPl && (!b.pov || b.pov.id !== sel.id)){ povSet(b, sel.id); flash(`👁 Ahora ves lo que ve el ${sel.n || 'jugador'}${sel.name ? ' · ' + sel.name : ''}`); }
+    else { pov.open = false; }
+  } else {
+    if (isPl){ if (!b.pov || b.pov.id !== sel.id) povSet(b, sel.id); }
+    else if (!b.pov || !st.items.some(x => x.id === b.pov.id)){ flash('Selecciona un jugador con «✥ Mover» y vuelve a pulsar «👁 Vista del jugador»', 3500); return; }
+    pov.open = true;
+  }
+  povUI(); renderTac(); requestAnimationFrame(() => { renderTac(); });
+}
+$('#tacPovBtn').onclick = povToggle;
+$('#povClose').onclick = () => { pov.open = false; povUI(); renderTac(); };
+$('#povDir').oninput = e => { const b = tacBoard(); if (!b || !b.pov) return; b.pov.dir = +e.target.value % 360; b.pov.follow = false; $('#povFollow').checked = false; save(); renderTac(); };
+$('#povFov').oninput = e => { const b = tacBoard(); if (!b || !b.pov) return; b.pov.fov = clamp(+e.target.value, 60, 110); $('#povFovV').textContent = `${b.pov.fov}°`; save(); renderTac(); };
+$('#povBall').onclick = () => {
+  const b = tacBoard(); if (!b || !b.pov) return;
+  const S = povScene(b, tac.step, null), me = S.items.find(o => o.it.id === b.pov.id);
+  if (!me){ flash('Este jugador no está en este paso'); return; }
+  if (!S.items.some(o => o.it.k === 'ball')){ flash('Pon un balón en el campo para mirar hacia él'); return; }
+  b.pov.dir = Math.round(povDefaultDir(S, me)); b.pov.follow = false; save(); povUI(); renderTac();
+};
+$('#povFollow').onchange = e => { const b = tacBoard(); if (!b || !b.pov) return; b.pov.follow = e.target.checked; if (!b.pov.follow){ const S = povScene(b, tac.step, null), A = povAngles(Object.assign({}, b, {pov: Object.assign({}, b.pov, {follow: true})}), S); if (A) b.pov.dir = Math.round(A.dir); } save(); povUI(); renderTac(); };
+['povDir', 'povFov'].forEach(id => $('#' + id).addEventListener('keydown', e => { if (e.key !== 'Escape') e.stopPropagation(); }));
+/* girar la mirada arrastrando en la vista */
+povCv.addEventListener('pointerdown', e => { const b = tacBoard(); if (!b || !b.pov) return; pov.drag = {x: e.clientX, dir: povAngles(b, povScene(b, tac.step, null))?.dir ?? b.pov.dir}; povCv.setPointerCapture(e.pointerId); });
+povCv.addEventListener('pointermove', e => {
+  if (!pov.drag) return; const b = tacBoard(); if (!b || !b.pov) return;
+  const w = povCv.clientWidth || 1; b.pov.follow = false; $('#povFollow').checked = false; $('#povDir').disabled = false;
+  b.pov.dir = Math.round(((pov.drag.dir - (e.clientX - pov.drag.x)/w*b.pov.fov) % 360 + 360) % 360); renderTac();
+});
+const povUp = () => { if (pov.drag){ pov.drag = null; save(); } };
+povCv.addEventListener('pointerup', povUp); povCv.addEventListener('pointercancel', povUp);
+$('#povPng').onclick = () => {
+  const b = tacBoard(); if (!b || !b.pov) return;
+  const c = document.createElement('canvas'); c.width = 1920; c.height = 1080;
+  const A = povRender(c.getContext('2d'), 1920, 1080, b, tac.step, null);
+  if (!A){ flash('Este jugador no está en este paso'); return; }
+  c.toBlob(bl => { download(`${slug(b.name)}_vista-${A.me.it.n || 'jugador'}_paso-${tac.step + 1}.png`, bl); flash('Imagen PNG de la vista del jugador descargada'); }, 'image/png');
+};
+window.addEventListener('resize', () => { if (pov.open) povDraw(); });
 
 /* =========================================================
    INICIO
