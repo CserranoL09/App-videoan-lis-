@@ -1051,6 +1051,19 @@ body.trk-on .trkcv{pointer-events:auto;cursor:crosshair}
   .map2d-h > span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .map2d-h{gap:.2rem}
 }
+/* ===== v3.15 · silenciar y tiempo del corte ===== */
+#bMute.on{background:color-mix(in srgb,var(--accent-hi) 26%,var(--panel2));border-color:var(--accent-hi)}
+.vinfo .cliptime,.cliptime{position:relative;font-size:.92rem;font-weight:700;opacity:1;background:rgba(14,13,16,.82);border-left:4px solid var(--cc,#fff);padding:.3rem .65rem .42rem;border-radius:6px;letter-spacing:.01em;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.vinfo .cliptime{left:0;bottom:0}
+.cliptime::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:var(--cp,0%);background:var(--cc,#fff);border-radius:0 2px 2px 0}
+.pr-stage .cliptime{font-size:1.1rem}
+@media (max-width:760px){ .vinfo .cliptime,.cliptime{font-size:.8rem;padding:.22rem .5rem .34rem} }
+/* con el botón de sonido, los controles siguen cabiendo en una fila en pantallas de portátil */
+@media (min-width:1061px) and (max-width:1799px){
+  body.lay-mixed .controls .jump input,body.lay-below .controls .jump input{width:2.8rem}
+  body.lay-mixed .controls #speed,body.lay-below .controls #speed{width:4.4rem;padding-left:.45rem;padding-right:.2rem}
+  body.lay-mixed .controls > button,body.lay-below .controls > button,body.lay-mixed .controls .winwrap > button,body.lay-below .controls .winwrap > button{padding-left:.55rem;padding-right:.55rem}
+}
 </style>
 </head>
 <body>
@@ -1223,6 +1236,7 @@ body.trk-on .trkcv{pointer-events:auto;cursor:crosshair}
         <option value="0.25">0.25×</option><option value="0.5">0.5×</option>
         <option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="4">4×</option>
       </select>
+      <button id="bMute" aria-pressed="false" title="Silenciar el vídeo (tecla M)" aria-label="Silenciar el vídeo"><span aria-hidden="true" class="mi">🔊</span></button>
       <button id="bBoard" title="Pizarra: dibujar sobre el vídeo pausado (tecla D)" aria-label="Pizarra"><span aria-hidden="true">✏️</span><span class="bl"> Pizarra</span></button>
       <button id="bShot" title="Guardar fotograma como imagen PNG (incluye el dibujo si lo hay)" aria-label="Captura"><span aria-hidden="true">📷</span><span class="bl"> Captura</span></button>
       <button id="bMap" aria-pressed="false" title="Campo 2D junto al vídeo con la posición de las acciones del partido (necesita el campo calibrado)" aria-label="Campo 2D"><span aria-hidden="true">🗺</span><span class="bl"> Campo</span></button>
@@ -1624,8 +1638,12 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.14';
+const APP_VERSION = '3.15';
 const CHANGELOG = [
+  {v:'3.15', date:'Noviembre 2026', items:[
+    '<b>Silenciar el vídeo:</b> nuevo botón 🔊/🔇 junto a la velocidad (tecla M, también en la presentación). Se recuerda al volver a abrir la app. Los MP4 generados conservan el sonido del vídeo aunque lo tengas silenciado.',
+    '<b>Tiempo del corte más visible:</b> al reproducir un corte, la esquina del vídeo muestra «⏱ 0:03 / 0:08» más grande, con el color de la etiqueta y una barra que avanza hasta el final del corte. También en la presentación y en la otra ventana. Se puede ocultar en ⚙ Configurar.'
+  ]},
   {v:'3.14', date:'Noviembre 2026', items:[
     '<b>Seguir jugadores:</b> con un corte seleccionado, «🏃 Seguir jugadores» (en la pizarra, en el menú del corte, en ✎ del corte o tecla J). Pulsa «+ Jugador», toca sus pies en el vídeo y elige equipo, dorsal y nombre (hasta 12 por corte). Avanza el vídeo (→ , . o la línea de tiempo) y arrastra su marca: cada vez se guarda un punto, en metros reales gracias a la calibración del campo.',
     '«🤖 Proponer» busca al jugador solo durante 2–5 s comparando la imagen y te enseña el recorrido para aplicarlo, repetirlo o descartarlo; si lo pierde, avisa. Ayuda, no magia: revísalo siempre.',
@@ -1774,6 +1792,7 @@ let vzMain = null, vzPres = null;   // v3.6 · zoom del vídeo (reproductor y pr
 let mirror = null;                  // v3.6 · ventana emergente sincronizada
 let trackLastT = null, trackShown = false, overlayBase = null, paintedShapes = null;   // v3.9 · seguimiento de dibujos
 let ctl = null;                     // v3.10 · línea de tiempo de cortes (se crea en su módulo)
+let vMuted = (() => { try{ return localStorage.getItem('tacticalab:muted') === '1'; }catch(e){ return false; } })();   // v3.15 · sonido del vídeo
 let cam = null;                     // v3.7 · grabación desde la cámara (solo en memoria de esta pestaña)         // v3.3 · corte seleccionado (▶ o clic en su tarjeta)
 const tlv = {mid:null, span:0, v0:0}; // v3.3 · zoom de la línea de tiempo (span 0 = partido entero)     // v3.1 · fin de la vista previa de sincronización (lo consulta el bucle de reproducción)
 // estado de la pizarra (se declara aquí porque el bucle de reproducción lo consulta desde el inicio)
@@ -3266,6 +3285,7 @@ function ensureAudio(){
     outGain = actx.createGain(); recDest = actx.createMediaStreamDestination();
     src.connect(outGain).connect(actx.destination); src.connect(recDest);
   }catch(e){ actx = null; recDest = null; }
+  applyMute();
 }
 const F_BODY = '"Manrope", system-ui, sans-serif';
 const dispFont = () => FONT_CANVAS[brand.font] || FONT_CANVAS.saira;
@@ -3397,7 +3417,7 @@ async function exportClips(list, opts){
   if (outGain) outGain.gain.value = 0;
   const prevRate = +$('#speed').value, startMatch = curMatch;
   try{ await document.fonts.ready; }catch(e){}
-  try{ await ensureMatch(list[0].matchId); }catch(e){ exporting = null; setBusy(false); if (outGain) outGain.gain.value = 1; if (sink) try{ await sink.writable.abort(); }catch(_){} flash('No se pudo abrir el vídeo'); return; }
+  try{ await ensureMatch(list[0].matchId); }catch(e){ exporting = null; setBusy(false); if (outGain) outGain.gain.value = vMuted ? 0 : 1; if (sink) try{ await sink.writable.abort(); }catch(_){} flash('No se pudo abrir el vídeo'); return; }
   video.playbackRate = 1;
   const {W, H} = exportDims(video.videoWidth, video.videoHeight), FPS = quality.fps;
   const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
@@ -3508,7 +3528,7 @@ async function exportClips(list, opts){
     if (sink){ try{ await sink.queue; await sink.writable.abort(); }catch(e){} sink = null; }
     chunks = [];
     drawing = false; video.pause();
-    if (outGain) outGain.gain.value = 1;
+    if (outGain) outGain.gain.value = vMuted ? 0 : 1;
     stream.getVideoTracks().forEach(t => t.stop());
     box.hidden = true; exporting = null; setBusy(false);
     if (startMatch && startMatch !== curMatch && urls[startMatch]){ try{ await ensureMatch(startMatch); }catch(e){} }
@@ -3809,6 +3829,7 @@ document.addEventListener('keydown', e => {
   if (k === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); openBoard(); return; }
   if (k === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); armPos(null); return; }   // v3.12 · posición real
   if (k === 'j' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); openTrk(null); return; }   // v3.14 · seguir jugadores
+  if (k === 'm' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); toggleMute(); return; }   // v3.15 · silenciar
   // v3.3 · deshacer/rehacer y edición del corte seleccionado
   if ((e.ctrlKey || e.metaKey) && !e.altKey && k === 'z'){ e.preventDefault(); e.shiftKey ? redoEdit() : undoEdit(); return; }
   if ((e.ctrlKey || e.metaKey) && !e.altKey && k === 'y'){ e.preventDefault(); redoEdit(); return; }
@@ -4347,6 +4368,7 @@ function overlayKeys(e){
     else if (k === 'ArrowLeft'){ e.preventDefault(); presLoad(pres.i - 1); }
     else if (k.toLowerCase() === 'r'){ e.preventDefault(); presLoad(pres.i); }
     else if (e.code === 'Space'){ e.preventDefault(); $('#prPlay').click(); }
+    else if (k.toLowerCase() === 'm' && !e.ctrlKey && !e.metaKey){ e.preventDefault(); toggleMute(); }
     else zoomKey(vzPres, e);
     return true;
   }
@@ -5096,10 +5118,16 @@ function clipTimeText(c, t){
   if (g && g.p) s += ` · ${g.p}.ª parte · min ${g.txt}`; else if (g && g.brk === 'ht') s += ' · descanso';
   return s;
 }
-function setClipTime(el, txt, v, box){
+function setClipTime(el, txt, v, box, c, t){
   if (!txt){ if (!el.hidden) el.hidden = true; return; }
+  txt = '⏱ ' + txt;
   if (el.textContent !== txt) el.textContent = txt;
   if (el.hidden) el.hidden = false;
+  if (c){   // v3.15: color de la etiqueta y barra que avanza hasta el final del corte
+    const col = catById(c.cat).color, p = Math.round(clamp((t - c.start)/((c.end - c.start) || 1), 0, 1)*1000)/10 + '%';
+    if (el.style.getPropertyValue('--cc') !== col) el.style.setProperty('--cc', col);
+    if (el.style.getPropertyValue('--cp') !== p) el.style.setProperty('--cp', p);
+  }
   el = el.parentElement;   // v3.6: se coloca el grupo de rótulos (tiempo del corte + zoom)
   // dentro de la imagen aunque el vídeo no llene el recuadro (4:3, pantalla completa…)
   const r = box.getBoundingClientRect(), vw = v.videoWidth || 16, vh = v.videoHeight || 9, k = Math.min(r.width/vw, r.height/vh);
@@ -5112,11 +5140,11 @@ function updateClipTime(t){
   const el = $('#clipTime');
   if (!ready() || exporting || board.on || brand.clipTime === false){ setClipTime(el, ''); return; }
   const c = clipAt(curMatch, t);
-  setClipTime(el, c ? clipTimeText(c, t) : '', video, stage);
+  setClipTime(el, c ? clipTimeText(c, t) : '', video, stage, c, t);
 }
 function updatePrClipTime(c, t){
   const el = $('#prClipTime');
-  setClipTime(el, c && brand.clipTime !== false && t >= c.start - .02 && t <= c.end + .05 ? clipTimeText(c, Math.min(t, c.end)) : '', pv, $('#prStage'));
+  setClipTime(el, c && brand.clipTime !== false && t >= c.start - .02 && t <= c.end + .05 ? clipTimeText(c, Math.min(t, c.end)) : '', pv, $('#prStage'), c, Math.min(t, c ? c.end : t));
 }
 /* campo de zonas plegable en la franja de etiquetas (disposición «debajo del vídeo») */
 (function(){
@@ -7883,6 +7911,31 @@ $('#bTrk').onclick = () => { const id = board.clipId; closeBoard(true); openTrk(
 $('#dcTrk').onclick = () => { const c = dcClip; if (!c) return; if (c.matchId !== curMatch){ flash('Abre el partido de este corte para seguir a sus jugadores'); return; } openTrk(c.id); };
 window.addEventListener('resize', () => { if (trk.on) trkPaint(); trkBigApply(); });
 trkReady = true;   // v3.14: listo para el bucle
+
+
+/* =========================================================
+   v3.15 · SILENCIAR EL VÍDEO
+   · si el vídeo ya pasa por el grafo de audio (tras generar un MP4), se silencia con la ganancia de salida
+     para que la grabación del MP4 siga llevando el sonido
+   ========================================================= */
+function applyMute(){
+  if (actx && outGain){ video.muted = false; if (!exporting) outGain.gain.value = vMuted ? 0 : 1; }
+  else video.muted = vMuted;
+  pv.muted = vMuted;
+  const b = $('#bMute'); if (!b) return;
+  b.setAttribute('aria-pressed', String(vMuted)); b.classList.toggle('on', vMuted);
+  b.querySelector('.mi').textContent = vMuted ? '🔇' : '🔊';
+  b.title = vMuted ? 'Activar el sonido del vídeo (tecla M)' : 'Silenciar el vídeo (tecla M)';
+  b.setAttribute('aria-label', vMuted ? 'Activar el sonido del vídeo' : 'Silenciar el vídeo');
+}
+function toggleMute(){
+  vMuted = !vMuted; try{ localStorage.setItem('tacticalab:muted', vMuted ? '1' : '0'); }catch(e){}
+  applyMute(); flash(vMuted ? '🔇 Vídeo silenciado (M para activar el sonido)' : '🔊 Sonido activado', 1600);
+}
+$('#bMute').onclick = toggleMute;
+/* si el sonido se cambia desde los controles del sistema (pantalla completa del móvil…), lo seguimos */
+video.addEventListener('volumechange', () => { if (!(actx && outGain) && video.muted !== vMuted){ vMuted = video.muted; try{ localStorage.setItem('tacticalab:muted', vMuted ? '1' : '0'); }catch(e){} applyMute(); } });
+applyMute();
 
 /* =========================================================
    INICIO
