@@ -1154,6 +1154,25 @@ body.lay-mixed .controls > #bBack5,body.lay-mixed .controls > #bFwd5,body.lay-be
 .trkbar.plog .tk-chip button{display:none}
 .trkbar.plog .tk-chip{padding-right:.5rem;cursor:pointer}
 .trkbar.plog .tk-chip.ball{opacity:.45}
+/* ===== v3.18 · seguimiento continuo del partido ===== */
+.mt-strip{display:block;width:100%;height:18px;border-radius:5px;cursor:pointer;flex:1 1 100%}
+.mt-strip.two{height:9px;margin:.3rem 0 0;border-radius:4px}
+.mtbar .tk-chip.lost{border-style:dashed;opacity:.75}
+.mtbar .tk-chip.lost b::after{content:" ?";font-weight:800}
+.mtbar .tk-chip.outp{opacity:.4}
+.mtbar .tk-empty{font-size:.78rem;color:var(--muted)}
+.mtbar .tk-form input{width:6.5rem;min-width:0}
+.mtbar .tk-form #mtFN{width:4.2rem}
+#mtAdd[aria-pressed="true"],#mtBall[aria-pressed="true"]{background:color-mix(in srgb,var(--accent-hi) 26%,var(--panel2));border-color:var(--accent-hi);color:var(--fg)}
+.mt-clips{display:inline-flex;flex-wrap:wrap;gap:.3rem;align-items:center;font-size:.76rem;color:var(--muted)}
+.mt-clips select{max-width:9rem;min-width:0;padding:.2rem .3rem;font-size:.76rem}
+.mt-chart{margin:0}
+.mt-chart svg{width:100%;max-width:520px;height:auto;display:block}
+.mt-chart figcaption{font-size:.74rem;color:var(--muted);margin-top:.25rem}
+.rp-page .mt-chart figcaption{color:#6b6570}
+/* durante el seguimiento del partido, el Campo 2D pequeño no tapa los clics sobre el vídeo (se puede ampliar para apartarlo) */
+body.mt-on #map2d{pointer-events:none;opacity:.5;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.mt-on #map2d button{pointer-events:auto}
 </style>
 </head>
 <body>
@@ -1335,6 +1354,41 @@ body.lay-mixed .controls > #bBack5,body.lay-mixed .controls > #bFwd5,body.lay-be
     </div>
     <div class="descbar" id="descBar" hidden role="group" aria-label="Descriptores del último corte"></div>
     <div class="map2d map2dbig" id="map2dBig" hidden role="region" aria-label="Campo 2D ampliado"></div>
+    <canvas id="mtStrip2" class="mt-strip two" height="9" hidden title="Seguimiento del partido: verde = seguido, ámbar = con huecos, marcas amarillas = puntos por revisar. Pulsa para ir." role="img" aria-label="Franja del seguimiento del partido"></canvas>
+    <div class="boardbar trkbar mtbar" id="mtBar" hidden role="toolbar" aria-label="Seguir el partido">
+      <div class="grp tk-head"><b class="tk-title" id="mtTitle"></b></div>
+      <canvas id="mtStrip" class="mt-strip" height="18" title="Verde = seguido, ámbar = con huecos, marcas amarillas = puntos por revisar. Pulsa para ir." role="img" aria-label="Franja del seguimiento del partido"></canvas>
+      <div class="grp tk-list" id="mtList" aria-label="Jugadores y balón seguidos"></div>
+      <div class="grp">
+        <button id="mtAdd" aria-pressed="false" title="Añadir un jugador: luego pulsa sus pies en el vídeo">+ Jugador</button>
+        <button id="mtBall" aria-pressed="false" title="Seguir el balón: pulsa el balón en el vídeo (B)">⚽ Balón</button>
+        <select id="mtForm" aria-label="Formación"></select>
+        <select id="mtFormTeam" aria-label="Equipo de la formación"><option value="A">Propio</option><option value="B">Rival</option></select>
+        <button id="mtPlace" title="Reparte a los jugadores de la plantilla en esa formación; después arrastra cada marca hasta su jugador">Colocar plantilla</button>
+      </div>
+      <div class="grp">
+        <button id="mtGo" class="primary" title="Seguir a todos desde aquí (Intro)">▶ Seguir</button>
+        <select id="mtDur" aria-label="Cuánto seguir"><option value="10">10 s</option><option value="30" selected>30 s</option><option value="60">1 min</option><option value="300">5 min</option><option value="0">Hasta el final</option></select>
+        <button id="mtOut" title="El jugador seleccionado sale del campo en este instante (sustitución o expulsión)">Baja</button>
+        <button id="mtCut" title="Borrar lo seguido desde este instante">Borrar desde aquí</button>
+        <button id="mtUndo" title="Deshacer en el seguimiento (Ctrl+Z)" aria-label="Deshacer en el seguimiento">↶</button>
+        <button id="mtRedo" title="Rehacer en el seguimiento (Ctrl+Y)" aria-label="Rehacer en el seguimiento">↷</button>
+      </div>
+      <div class="grp"><button id="mtClose" title="Terminar (Esc)">✕ Cerrar</button></div>
+      <div class="tk-form" id="mtFormBox" hidden>
+        <select id="mtFTeam" aria-label="Equipo"><option value="A">Propio</option><option value="B">Rival</option></select>
+        <input id="mtFN" inputmode="numeric" maxlength="3" placeholder="Dorsal" aria-label="Dorsal">
+        <input id="mtFName" maxlength="24" placeholder="Nombre (opcional)" aria-label="Nombre">
+        <button id="mtFOk" class="primary">Añadir</button><button id="mtFCancel">Cancelar</button>
+      </div>
+      <p class="tk-hint" id="mtHint" aria-live="polite"></p>
+      <details class="tk-ev" id="mtRev"><summary><span id="mtRevSum">Revisar</span></summary><div class="tk-ev-list" id="mtRevList"></div></details>
+      <details class="tk-ev" id="mtEv"><summary><span id="mtEvSum">Eventos del balón</span></summary>
+        <div class="tk-ev-acts"><button id="mtEvAdd" type="button" title="Añadir un pase a mano en este instante">+ Pase</button><button id="mtEvCalc" type="button" title="Volver a calcular los pases automáticos (los corregidos a mano no cambian)">Recalcular</button>
+          <span class="mt-clips">Crear cortes de <select id="mtClipKind" aria-label="Tipo de evento"><option value="pass">pases propios</option><option value="loss">pérdidas</option><option value="rec">recuperaciones</option></select> con <select id="mtCat" aria-label="Etiqueta de los cortes"></select><button id="mtToClips" type="button">Crear cortes</button></span></div>
+        <div class="tk-ev-list" id="mtEvList"></div>
+      </details>
+    </div>
     <div class="boardbar trkbar" id="trkBar" hidden role="toolbar" aria-label="Seguir jugadores">
       <div class="grp tk-head"><b class="tk-title" id="trkTitle"></b></div>
       <div class="grp tk-list" id="trkList" aria-label="Jugadores seguidos"></div>
@@ -1353,7 +1407,7 @@ body.lay-mixed .controls > #bBack5,body.lay-mixed .controls > #bFwd5,body.lay-be
         <select id="trkLines" aria-label="Líneas entre compañeros"><option value="">Sin líneas</option><option value="hull">Bloque</option><option value="def">Línea defensiva</option></select>
         <label class="tk-d">Distancia <select id="trkD1" aria-label="Primer jugador"></select>↔<select id="trkD2" aria-label="Segundo jugador"></select></label>
       </div>
-      <div class="grp"><button id="trkToTac" title="Crear una pizarra táctica con estos jugadores y un paso cada 1–2 s">Enviar a la pizarra táctica</button><button id="trkClose" title="Terminar (Esc)">✕ Cerrar</button></div>
+      <div class="grp"><button id="trkToTac" title="Crear una pizarra táctica con estos jugadores y un paso cada 1–2 s">Enviar a la pizarra táctica</button><button id="trkToMT" title="Pasa el seguimiento de este corte al seguimiento continuo del partido">Pasar al seguimiento del partido</button><button id="trkMT" title="Seguir a los jugadores y el balón de forma continua, desde el inicio del vídeo">Seguir el partido</button><button id="trkClose" title="Terminar (Esc)">✕ Cerrar</button></div>
       <div class="tk-form" id="trkForm" hidden>
         <select id="tkTeam" aria-label="Equipo"><option value="A">Propio</option><option value="B">Rival</option></select>
         <select id="tkPl" aria-label="Jugador de la plantilla"></select>
@@ -1612,6 +1666,7 @@ body.lay-mixed .controls > #bBack5,body.lay-mixed .controls > #bFwd5,body.lay-be
     <label>Minutos por parte <input type="number" id="dmHalf" min="10" max="60" step="1" value="45"></label>
     <label>Marcador <span class="score"><input type="number" id="dmGOwn" min="0" max="99" aria-label="Goles del equipo propio"><b>–</b><input type="number" id="dmGRiv" min="0" max="99" aria-label="Goles del rival"></span></label>
     <p class="hint full" id="dmMinHint">Con el inicio de cada parte, la app calcula el minuto real de juego de cada corte (p. ej. «2.ª parte · min 63»). Con el fin de cada parte, además, avisa de los cortes en el descanso o tras el final.</p>
+    <p class="full" style="margin:.2rem 0 0"><button type="button" id="dmTrack" title="Seguir a los jugadores y el balón de forma continua, desde el inicio del vídeo">Seguir el partido (jugadores y balón)</button></p>
   </div>
   <div class="drow">
     <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button id="dmSync" class="primary" hidden>🎬 Añadir el vídeo y sincronizar</button><button id="dmRelink">Vincular otro vídeo…</button><button id="dmCalib" title="Marca 4 puntos conocidos del campo en el vídeo para guardar posiciones reales">📐 Calibrar el campo</button><button id="dmDelete" class="danger">Borrar partido</button></div>
@@ -1831,8 +1886,16 @@ const stage = $('#stage');
 /* =========================================================
    VERSIÓN Y NOVEDADES
    ========================================================= */
-const APP_VERSION = '3.17';
+const APP_VERSION = '3.18';
 const CHANGELOG = [
+  {v:'3.18', date:'Noviembre 2026', items:[
+    '<b>Seguir el partido de forma continua:</b> en la ficha del partido o en la barra de «Seguir jugadores» pulsa «Seguir el partido». Colocas a los jugadores y el balón una vez (con «Colocar plantilla» se reparten en una formación y arrastras cada marca) y la app los sigue sola por tramos de 10 s a 5 min, o hasta el final.',
+    '<b>Nunca inventa posiciones:</b> si pierde a un jugador o el balón, deja un hueco, lo apunta en «Revisar» y sigue con los demás. Corriges con un clic y «Seguir» continúa desde ahí. Se detiene en los cambios de plano. Pensado para cámara fija que ve todo el campo.',
+    '<b>Altas y bajas</b> a mitad de partido (sustituciones y expulsiones), deshacer y rehacer propios (Ctrl+Z / Ctrl+Y) y una franja que muestra qué partes del vídeo están seguidas, con huecos o por revisar.',
+    '<b>El Campo 2D acompaña al vídeo durante todo el partido</b> y los cortes sin seguimiento propio usan el tramo del partido: también en la presentación, la otra ventana y el MP4 con mapa.',
+    '<b>Estadísticas del partido</b> en Resumen → «Balón y pases» → ámbito «Partido»: por partes o tramos de 15 min, red de pases, posesión por equipo y por zonas, distancia y velocidad por franjas, bloque en el tiempo y mapa de calor por jugador. También en el Informe y en el Excel. Se pueden crear cortes a partir de pases, pérdidas y recuperaciones.',
+    'Las posiciones se guardan aparte (en este navegador y dentro del archivo del proyecto), así que conviene usar «Guardar proyecto». Los proyectos anteriores se abren igual.'
+  ]},
   {v:'3.17', date:'Noviembre 2026', items:[
     '<b>Seguir el balón:</b> en «Seguir jugadores» (J) pulsa «Balón» (B) y márcalo en el vídeo como a un jugador más; «Proponer» lo busca solo durante unos segundos. Si va por el aire o no se ve, pulsa «Hueco» (G) y la app no inventa esa parte.',
     '<b>Posesión y pases automáticos:</b> con el balón y los jugadores seguidos, la app calcula quién tiene el balón, los pases, las pérdidas y las recuperaciones. Todo se puede corregir en «Eventos del balón»; lo que corrijas a mano no se recalcula.',
@@ -2214,6 +2277,7 @@ function sanitizeMatches(arr){
       h1: m.h1 == null ? null : cleanNum(m.h1), h2: m.h2 == null ? null : cleanNum(m.h2), e1: m.e1 == null ? null : cleanNum(m.e1), e2: m.e2 == null ? null : cleanNum(m.e2), half: half >= 10 && half <= 60 ? half : 45, gOwn: goal(m.gOwn), gRiv: goal(m.gRiv)});
     const live = sanitizeMatchLive(m.live); if (live) out[out.length-1].live = live;
     const calib = sanitizeCalib(m.calib); if (calib) out[out.length-1].calib = calib;   // v3.12
+    const track = sanitizeMT(m.track); if (track) out[out.length-1].track = track;   // v3.18
   });
   return {matches: out, map};
 }
@@ -2261,7 +2325,7 @@ const FIXED_KEYS = new Set(Object.values(KEY));
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
 function save(){
   try{ localStorage.setItem(KEY.cats, JSON.stringify(state.cats)); }catch(e){}
-  try{ localStorage.setItem(KEY.project, JSON.stringify({version:15, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
+  try{ localStorage.setItem(KEY.project, JSON.stringify({version:16, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards})); }
   catch(e){ flash('No se pudo guardar en este navegador (almacenamiento lleno). Usa «Guardar proyecto» para no perder el trabajo.', 5000); }
 }
 function saveBrand(){ try{ localStorage.setItem(KEY.brand, JSON.stringify(brand)); }catch(e){ flash('No se pudo guardar el escudo en este navegador (imagen demasiado grande)', 3500); } }
@@ -2668,7 +2732,7 @@ function cancelFreeze(){ if (freeze){ clearTimeout(freeze.timer); freeze = null;
   trackTick(t);
   if (ctl) ctlHead(false);
   mapTick();
-  if (trkReady) trkTick();
+  if (trkReady){ trkTick(); if (mtReady) mtTick(); }
   liveTick();
   updateClipTime(t);
   mirrorTick();
@@ -3648,7 +3712,7 @@ async function exportClips(list, opts){
     if (scene.type === 'intro') drawIntro(ctx, W, H, opts.name, list.length, nMatches, total/1000);
     else if (scene.type === 'title') drawTitle(ctx, W, H, scene.clip, scene.i, list.length);
     else if (scene.type === 'video' || scene.type === 'freeze'){
-      const withMap = mapMode && hasTrk(scene.clip);
+      const withMap = mapMode && hasTrkAny(scene.clip);
       if (withMap && mapMode === 'split'){ ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); const b0 = videoBox(Math.round(W*.6), H); if (video.videoWidth) ctx.drawImage(video, b0.x, b0.y, b0.w, b0.h); }
       else drawVideoFit(ctx, W, H);
       drawWatermark(ctx, W, H);
@@ -3790,7 +3854,7 @@ $('#dmDelete').onclick = e => {
   const gone = new Set(state.clips.filter(c => c.matchId === m.id).map(c => c.id));
   state.clips = state.clips.filter(c => c.matchId !== m.id);
   state.playlists.forEach(p => p.ids = p.ids.filter(id => !gone.has(id)));
-  state.matches = state.matches.filter(x => x !== m);
+  state.matches = state.matches.filter(x => x !== m); MT.delete(m.id); delete m.track; mtIdbPut(m.id);
   if (urls[m.id]){ URL.revokeObjectURL(urls[m.id]); delete urls[m.id]; }
   if (curMatch === m.id){ closeBoard(true); cancelFreeze(); playback = null; curMatch = null; video.removeAttribute('src'); video.load(); }
   clearHistory(); save(); $('#dlgMatch').close(); renderAll(); flash('Partido borrado');
@@ -3924,7 +3988,7 @@ $('#catReset').onclick = async () => {
    GUARDAR / CARGAR PROYECTO (v5 con partidos y registro en directo; abre también v4 y proyectos v1–v3 de un solo vídeo)
    ========================================================= */
 $('#btnSave').onclick = () => {
-  const data = {app:'TacticaLab', version:15, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches, clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
+  const data = {app:'TacticaLab', version:16, appVersion:APP_VERSION, created:new Date().toISOString(), brand, players, cats:state.cats, matches:state.matches.map(mtExportMatch), clips:state.clips, playlists:state.playlists, cur:state.cur, boards:state.boards};
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const one = state.matches.length === 1 ? baseFile(state.matches[0].fileName) : 'tactica-lab';
   download(`${slug(one)}_analisis_${stamp}.json`, new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
@@ -4292,6 +4356,7 @@ function buildReport(){
     <p style="font-size:.78rem;color:#6b6570;margin:.2rem 0 0">Barra superior (color lleno): ${esc(own)} · barra inferior (color suave): rival.</p>
     ${(() => { const h = posMapsHTML(cs); return h ? `<h2>Posiciones en el campo</h2><div class="rp-pos">${h.replace(/<h4>[^<]*<\/h4>/, '').replace('Pulsa un punto para ver el corte.', '')}</div>` : ''; })()}
     ${passReportHTML(cs)}
+    ${mtReportHTML()}
     <h2>Cortes (${cs.length})</h2>
     ${cs.map((c, i) => { const cat = catById(c.cat), img = reportShots[c.id];
       const meta = [matchTitle(matchById(c.matchId)), minuteText(c) || `vídeo ${fmtShort(c.start)}`, `${(c.end-c.start).toFixed(1)} s`, teamName(c), c.result === 'ok' ? '✓ éxito' : c.result === 'ko' ? '✗ fallo' : '', c.zone ? `zona ${c.zone}` : '', c.pos ? posText(c.pos) : '', (c.players||[]).length ? playersText(c.players) : '', tagsText(c)].filter(Boolean).join(' · ');
@@ -4398,6 +4463,10 @@ async function exportXlsx(){
   clips.forEach((c, i) => (c.tracks || []).forEach(tr => tr.pts.forEach(p => seg.push([i + 1, catById(c.cat).name, matchTitle(matchById(c.matchId)), trkLabel(tr), tr.team === 'B' ? 'Rival' : (brand.short || 'Propio'), p.t, p.x, p.y]))));
   clips.forEach((c, i) => ((c.ball && c.ball.pts) || []).forEach(p => seg.push([i + 1, catById(c.cat).name, matchTitle(matchById(c.matchId)), p.g ? 'Balón (hueco desde aquí)' : 'Balón', '', p.t, p.x, p.y])));
   if (seg.length > 1) X.utils.book_append_sheet(wb, sheet(seg, [], [7,20,26,18,10,8,8,8]), 'Seguimiento');
+  mtSheets().forEach((S, k) => { const sfx = k ? ' ' + (k + 1) : '';   // v3.18
+    if (S.fis.length > 1) X.utils.book_append_sheet(wb, sheet(S.fis, [], [26,12,8,16,10,12,8,10,10,12,12,12]), 'Partido físico' + sfx);
+    if (S.ev.length > 1) X.utils.book_append_sheet(wb, sheet(S.ev, [], [26,8,10,10,7,7,11,12,8,8,8,8,12]), 'Partido pases' + sfx);
+    if (S.pos.length > 1) X.utils.book_append_sheet(wb, sheet(S.pos, [], [8]), 'Partido posiciones' + sfx); });
   { const PS = passSheets(clips);   // v3.17
     if (PS.pases.length > 1){ X.utils.book_append_sheet(wb, sheet(PS.pases, [], [7,20,26,8,10,10,7,7,11,12,8,8,8,8,12]), 'Pases'); X.utils.book_append_sheet(wb, sheet(PS.red, [], [12,10,10,8]), 'Red de pases'); } }
   const out = X.write(wb, {bookType:'xlsx', type:'array'});
@@ -4568,6 +4637,7 @@ $('#cmRate').onchange = e => cmV.forEach(v => v.playbackRate = +e.target.value);
    ========================================================= */
 function overlayKeys(e){
   if (calKeys(e)) return true;
+  if (mtKeys(e)) return true;
   if (trkKeys(e)) return true;
   if (tacKeys(e)) return true;
   if (!$('#present').hidden){
@@ -7296,7 +7366,7 @@ document.addEventListener('keydown', e => {
 /* en el diálogo del corte */
 function renderDcPos(c){
   const lbl = $('#dcPosLbl'); if (!lbl) return;
-  if (trkReady){ $('#dcTrkStats').innerHTML = trkStatsHTML(c); $('#dcTrk').disabled = isVirtual(c); }
+  if (trkReady){ $('#dcTrkStats').innerHTML = trkStatsHTML(c) || (mtClipHas(c) ? '<p class="fmtnote">Este corte usa el seguimiento continuo del partido (Campo 2D, pases y estadísticas).</p>' : ''); $('#dcTrk').disabled = isVirtual(c); }
   lbl.textContent = c.pos ? posText(c.pos) : 'sin posición';
   $('#dcPosClear').hidden = !c.pos;
   $('#dcPosPick').disabled = isVirtual(c);
@@ -7676,6 +7746,7 @@ window.addEventListener('resize', () => { if (pov.open) povDraw(); });
    ========================================================= */
 const TRK_MAX = 12, TRK_PTS = 60, TRK_TRAIL = 3, BALL_PTS = 300;
 const trk = {on: false, clipId: null, sel: null, adding: null, drag: null, auto: null, prop: null, lines: '', d1: '', d2: ''};
+let mtReady = false;
 const trkCv = $('#trkCv');
 function sanitizeTracks(arr, start, end){
   const ids = new Set();
@@ -7779,7 +7850,12 @@ async function openTrk(clipId){
     return;
   }
   const c = clipId ? clipById(clipId) : trkCandidate();
-  if (!c || c.matchId !== curMatch || isVirtual(c)){ flash('Selecciona un corte del partido abierto (o colócate dentro de uno) para seguir a sus jugadores', 3500); return; }
+  if (!c || c.matchId !== curMatch || isVirtual(c)){
+    const r = await ask({title: 'Seguir jugadores', text: 'Para seguir a los jugadores de un corte, selecciona un corte del partido abierto o colócate dentro de uno. También puedes seguir el partido de forma continua, desde el inicio del vídeo.', buttons: [{label: 'Ahora no', value: null}, {label: 'Seguir el partido', value: 'mt', kind: 'primary'}]});
+    if (r.value === 'mt') openMT();
+    return;
+  }
+  if (mtReady && mt.on) closeMT();
   closeBoard(true); cancelFreeze(); playback = null; video.pause(); markPlaying();
   if ($('#dlgClip').open) $('#dlgClip').close();
   trk.on = true; trk.clipId = c.id; trk.sel = c.tracks && c.tracks[0] ? c.tracks[0].id : (c.ball && c.ball.pts.length ? 'ball' : null); trk.adding = null; trk.prop = null; trk.plog = null;
@@ -7833,7 +7909,7 @@ function trkPaint(){
   const r = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1, W = Math.max(1, Math.round(r.width*dpr)), H = Math.max(1, Math.round(r.height*dpr));
   if (trkCv.width !== W || trkCv.height !== H){ trkCv.width = W; trkCv.height = H; }
   const ctx = trkCv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
-  if (!trk.on) return;
+  if (!trk.on){ if (mtReady && mt.on) mtPaint(); return; }
   const c = trkClip(), m = matchById(curMatch); if (!c || !m) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const cr = contentRect(), t = video.currentTime, S = (u, v) => [cr.x + u*cr.w, cr.y + v*cr.h];
@@ -8043,7 +8119,8 @@ $('#trkToTac').onclick = () => {
 /* ---------- Campo 2D con los jugadores en movimiento ---------- */
 function trkActiveClip(t){
   if (trk.on){ const c = trkClip(); if (hasTrk(c)) return c; }
-  return state.clips.find(c => c.matchId === curMatch && hasTrk(c) && t >= c.start - .05 && t <= c.end + .05) || null;
+  if (mtReady && mt.on) return mtView(matchById(curMatch), t);
+  return state.clips.find(c => c.matchId === curMatch && hasTrk(c) && t >= c.start - .05 && t <= c.end + .05) || (mtReady ? mtView(matchById(curMatch), t) : null);   // v3.18 · si el corte no tiene seguimiento propio, el del partido
 }
 function hull(P){
   if (P.length < 3) return P.slice();
@@ -8061,6 +8138,7 @@ function defLine(ps, team){
 }
 /* escena del momento: posiciones, estelas, bloque y distancia (en metros) */
 function trkFrame(c, t, lines, d1, d2){
+  c = clipTrk(c, t);   // v3.18
   const trs = (c.tracks || []).filter(tr => tr.pts.length);
   const now = trs.map(tr => ({tr, p: trkAt(tr, t)})).filter(o => o.p);
   const trails = now.map(o => { const q = []; for (let k = Math.max(o.tr.pts[0].t, t - TRK_TRAIL); k <= t + 1e-6; k += .15) q.push(trkAt(o.tr, k)); return {tr: o.tr, q: q.filter(Boolean)}; });
@@ -8120,7 +8198,7 @@ function trkMapCanvas(ctx, X, Y, w, h, c, t){
 /* presentación */
 function trkPresTick(){
   const cv = $('#pMap'); if (!cv) return;
-  const c = pres.list && pres.list[pres.i], on = !$('#present').hidden && hasTrk(c) && pv.currentTime >= c.start - .05 && pv.currentTime <= c.end + .05;
+  const c = pres.list && pres.list[pres.i], on = !$('#present').hidden && hasTrkAny(c) && pv.currentTime >= c.start - .05 && pv.currentTime <= c.end + .05;
   cv.hidden = !on; if (!on) return;
   const w = cv.clientWidth || 260, h = cv.clientHeight || 170, dpr = window.devicePixelRatio || 1;
   if (cv.width !== Math.round(w*dpr)){ cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); }
@@ -8226,9 +8304,9 @@ function sanitizeBall(b, start, end){
     .slice(0, 300).map(p => { const o = {t: +p.t.toFixed(2), x: +p.x.toFixed(2), y: +p.y.toFixed(2)}; if (p.g) o.g = 1; return o; });
   return pts.length ? {pts} : null;
 }
-function sanitizePasses(arr, start, end){
+function sanitizePasses(arr, start, end, max){
   const ids = new Set();
-  const out = (Array.isArray(arr) ? arr : []).slice(0, 400).filter(e => e && typeof e === 'object').map(e => {
+  const out = (Array.isArray(arr) ? arr : []).slice(0, max || 400).filter(e => e && typeof e === 'object').map(e => {
     const t = cleanNum(e.t); if (t === null || t < start - .5 || t > end + .5) return null;
     let id = String(e.id || '').replace(/[^\w-]/g, '').slice(0, 24) || uid(); while (ids.has(id)) id = uid(); ids.add(id);
     const o = {id, t, team: e.team === 'B' ? 'B' : 'A', from: dorsal(e.from), to: dorsal(e.to), type: e.type === 'loss' ? 'loss' : 'pass'};
@@ -8446,13 +8524,16 @@ function passClips(){
   if (pa.scope === 'list'){ const p = curPL(); return p ? p.ids.map(clipById).filter(Boolean) : []; }
   return filtered();
 }
-function passAgg(cs){
-  const data = cs.filter(c => (c.passes && c.passes.some(e => !e.del)) || (c.ball && c.ball.pts.length > 1));
-  const F = fieldOf(matchById((data[0] || cs[0] || {}).matchId));
+function passAgg(cs, MR){   // MR = {m, a, b}: un tramo del seguimiento del partido (v3.18)
+  const own = c => (c.passes && c.passes.some(e => !e.del)) || (c.ball && c.ball.pts.length > 1);
+  const data = cs.filter(c => own(c) || mtClipHas(c));
+  const F = fieldOf(MR ? MR.m : matchById((data[0] || cs[0] || {}).matchId));
   const A = {F, nodes: new Map(), edges: new Map(), evs: [], ballPts: [], poss: {A: 0, B: 0, free: 0}, ball: {dist: 0, time: 0, max: 0, gap: 0}, clips: data.length, nPass: {A: 0, B: 0}, nLoss: {A: 0, B: 0}};
   const node = (team, n, name) => { const key = team + '|' + n; let o = A.nodes.get(key); if (!o){ o = {key, team, n, name: '', out: 0, in: 0, fwd: 0, loss: 0, rec: 0, sx: 0, sy: 0, k: 0}; A.nodes.set(key, o); } if (name && !o.name) o.name = name; return o; };
+  if (MR) mtAggRange(A, node, MR.m, MR.a, MR.b, 1, 1);
   data.forEach(c => {
     const f = fieldOf(matchById(c.matchId)), sx = F.L/f.L, sy = F.W/f.W, names = {};
+    if (!own(c) && !hasTrk(c)){ mtAggRange(A, node, matchById(c.matchId), c.start, c.end, sx, sy); return; }   // corte sin seguimiento propio: el tramo del partido
     (c.tracks || []).forEach(tr => { if (tr.name) names[passKey(tr)] = tr.name; });
     players.forEach(p => { if (!names['A|' + p.n]) names['A|' + p.n] = p.name.split(' ')[0]; });
     (c.passes || []).filter(e => !e.del).forEach(e => {
@@ -8539,13 +8620,15 @@ function passStatsMount(box){
   if (!box) return;
   const el = document.createElement('section'); el.className = 'pa-card'; el.id = 'paCard';
   el.innerHTML = `<h4>Balón y pases</h4>
-    <div class="pa-ctl"><label>Ámbito <select id="paScope"><option value="clip">Corte seleccionado</option><option value="filt">Cortes filtrados</option><option value="list">Lista actual</option></select></label>
+    <div class="pa-ctl"><label>Ámbito <select id="paScope"><option value="clip">Corte seleccionado</option><option value="filt">Cortes filtrados</option><option value="list">Lista actual</option><option value="match">Partido (seguimiento)</option></select></label>
+    <label id="paRangeL" hidden>Tramo <select id="paRange"></select></label>
     <label>Equipo <select id="paTeam"><option value="A">${esc(teamTxt('A'))}</option><option value="B">Rival</option></select></label>
     <label>Mínimo de pases <input type="range" id="paMin" min="1" max="5" step="1" value="${pa.min}"> <b id="paMinV">${pa.min}</b></label>
     <button type="button" id="paPng" title="Descargar la red de pases como imagen">⤓ Red en PNG</button></div><div id="paBody"></div>`;
   box.appendChild(el);
   $('#paScope').value = pa.scope; $('#paTeam').value = pa.team;
   $('#paScope').onchange = e => { pa.scope = e.target.value; passStatsRender(); };
+  $('#paRange').onchange = e => { pa.range = e.target.value; passStatsRender(); };
   $('#paTeam').onchange = e => { pa.team = e.target.value; passStatsRender(); };
   $('#paMin').oninput = e => { pa.min = clamp(+e.target.value || 1, 1, 5); $('#paMinV').textContent = pa.min; passStatsRender(); };
   $('#paPng').onclick = passNetPNG;
@@ -8553,10 +8636,15 @@ function passStatsMount(box){
 }
 function passStatsRender(){
   const body = $('#paBody'); if (!body) return;
-  const cs = passClips(), A = passAgg(cs), team = pa.team, has = A.evs.length || A.ballPts.length;
+  const mm = pa.scope === 'match' ? matchById(curMatch) : null, mok = mm && mtHas(mm) && mtRange(mm);
+  $('#paRangeL').hidden = !mok;
+  if (mok){ const o = mtRangeOpts(mm); if (!o.some(x => x[0] === pa.range)) pa.range = 'all'; $('#paRange').innerHTML = o.map(x => `<option value="${x[0]}"${x[0] === pa.range ? ' selected' : ''}>${x[1]}</option>`).join(''); }
+  const MR = mok ? mtScopeRange(mm) : null;
+  if (pa.scope === 'match' && !MR){ $('#paPng').disabled = true; body.innerHTML = `<div class="empty">${mm ? (mtHas(mm) ? 'Este tramo no tiene datos de seguimiento' + (mtData(mm) ? '.' : ': las posiciones no están en este navegador; carga el archivo del proyecto.') : 'Este partido todavía no tiene seguimiento continuo. Ábrelo y pulsa «Seguir el partido» en la ficha del partido o en la barra de seguimiento.') : 'Abre un partido para ver su seguimiento.'}</div>`; return; }
+  const cs = MR ? [] : passClips(), A = MR ? passAgg([], {m: mm, a: MR.a, b: MR.b}) : passAgg(cs), team = pa.team, has = A.evs.length || A.ballPts.length || !!MR;
   $('#paPng').disabled = !A.nPass[team];
   if (!has){ body.innerHTML = `<div class="empty">${pa.scope === 'clip' && !selClip ? 'Selecciona un corte en la lista de Cortes.' : 'No hay balón ni pases en este ámbito.'} Abre un corte, pulsa «Seguir jugadores» (J), sigue a los jugadores y el balón (B), o usa «Registrar pases» (R).</div>`; return; }
-  let h = `<p class="fmtnote">${nCortes(A.clips)} con balón o pases · ${esc(teamTxt('A'))}: ${plN(A.nPass.A, 'pase')}, ${plN(A.nLoss.A, 'pérdida')} · Rival: ${plN(A.nPass.B, 'pase')}, ${plN(A.nLoss.B, 'pérdida')}.</p>` + passPossHTML(A);
+  let h = `<p class="fmtnote">${MR ? `Partido seguido de ${fmtShort(MR.a)} a ${fmtShort(MR.b)}` : nCortes(A.clips) + ' con balón o pases'} · ${esc(teamTxt('A'))}: ${plN(A.nPass.A, 'pase')}, ${plN(A.nLoss.A, 'pérdida')} · Rival: ${plN(A.nPass.B, 'pase')}, ${plN(A.nLoss.B, 'pérdida')}.</p>` + passPossHTML(A);
   if (A.nPass[team]){
     const N = passNetSVG(A, team, pa.min);
     h += `<h5>Red de pases · ${esc(teamTxt(team))}</h5><figure class="pa-net">${N.svg}<figcaption>Cada círculo es un jugador en su posición media al pasar y recibir; cuanto mayor, más pases. El grosor de la línea es el número de pases entre los dos y la flecha, el sentido más repetido.${N.M.hidden ? ` Ocultas ${N.M.hidden} conexión${N.M.hidden === 1 ? '' : 'es'} por debajo del mínimo.` : ''} ${team === 'B' ? 'El rival ataca hacia la izquierda.' : 'El equipo propio ataca hacia la derecha.'}</figcaption></figure>`;
@@ -8566,7 +8654,16 @@ function passStatsRender(){
   if (A.evs.some(o => o.e.team === team && o.x1 != null)) maps.push(`<figure>${passMapSVG(A, team)}<figcaption>Mapa de pases · línea discontinua roja: pérdida</figcaption></figure>`);
   if (A.ballPts.length > 3) maps.push(`<figure>${fieldSVGm(A.F.type, A.F.L, A.F.W, {under: `<image href="${heatURL({F: A.F, pts: A.ballPts})}" x="0" y="0" width="${A.F.L}" height="${A.F.W}" preserveAspectRatio="none"/>`}, 'role="img" aria-label="Mapa de calor del balón"')}<figcaption>Mapa de calor del balón</figcaption></figure>`);
   if (maps.length) h += `<div class="posmaps">${maps.join('')}</div>`;
+  if (MR){   // v3.18 · físico, bloque, posesión por zonas y mapa de calor por jugador
+    if (A.zones && (A.poss.A + A.poss.B) > 0){ const z = A.zones, pc = (v, t) => t > 0 ? Math.round(v/t*100) + ' %' : '–', tA = z.A[0] + z.A[1] + z.A[2], tB = z.B[0] + z.B[1] + z.B[2];
+      h += `<h5>Posesión por zonas</h5><div class="tk-stats"><table><thead><tr><th>Equipo</th><th class="n">Tercio propio</th><th class="n">Tercio medio</th><th class="n">Tercio rival</th></tr></thead><tbody><tr><td>${esc(teamTxt('A'))}</td><td class="n">${pc(z.A[0], tA)}</td><td class="n">${pc(z.A[1], tA)}</td><td class="n">${pc(z.A[2], tA)}</td></tr><tr><td>Rival</td><td class="n">${pc(z.B[2], tB)}</td><td class="n">${pc(z.B[1], tB)}</td><td class="n">${pc(z.B[0], tB)}</td></tr></tbody></table></div>`; }
+    h += mtStatsHTML(mm, MR.a, MR.b, team);
+    const ph = mtPhys(mm, MR.a, MR.b).filter(o => o.p.team === team && o.pts.length > 3);
+    if (ph.length){ if (!ph.some(o => o.p.id === pa.heat)) pa.heat = ph[0].p.id; const o = ph.find(x => x.p.id === pa.heat);
+      h += `<h5>Mapa de calor por jugador</h5><div class="pa-ctl"><label>Jugador <select id="paHeat">${ph.map(x => `<option value="${esc(x.p.id)}"${x.p.id === pa.heat ? ' selected' : ''}>${esc(passWho('A', x.p.n, x.p.name))}</option>`).join('')}</select></label></div><div class="posmaps"><figure>${fieldSVGm(A.F.type, A.F.L, A.F.W, {under: `<image href="${heatURL({F: A.F, pts: o.pts})}" x="0" y="0" width="${A.F.L}" height="${A.F.W}" preserveAspectRatio="none"/>`}, 'role="img" aria-label="Mapa de calor del jugador"')}<figcaption>${esc(passWho(team, o.p.n, o.p.name))} · ${Math.round(o.dist)} m</figcaption></figure></div>`; }
+  }
   body.innerHTML = h;
+  if ($('#paHeat')) $('#paHeat').onchange = e => { pa.heat = e.target.value; passStatsRender(); };
   // resaltar las conexiones de un jugador
   const net = body.querySelector('.pa-net svg');
   if (net){
@@ -8601,7 +8698,8 @@ function passNetCanvas(A, team, min, W){
   return cv;
 }
 function passNetPNG(){
-  const A = passAgg(passClips()); if (!A.nPass[pa.team]){ flash('No hay pases de este equipo que exportar'); return; }
+  const mm = pa.scope === 'match' ? matchById(curMatch) : null, MR = mm && mtHas(mm) && mtRange(mm) ? mtScopeRange(mm) : null;
+  const A = MR ? passAgg([], {m: mm, a: MR.a, b: MR.b}) : passAgg(passClips()); if (!A.nPass[pa.team]){ flash('No hay pases de este equipo que exportar'); return; }
   passNetCanvas(A, pa.team, pa.min, 1600).toBlob(b => { if (b){ download(`red-de-pases_${pa.team === 'B' ? 'rival' : 'propio'}.png`, b); flash('Red de pases descargada', 2200); } }, 'image/png');
 }
 /* Informe imprimible */
@@ -8703,10 +8801,747 @@ new MutationObserver(recs => {
   g.innerHTML = names.map(n => `<span class="icg" title="${esc(ES[n] || n)}">${ic(n)}<small>${esc(ES[n] || n)}</small></span>`).join('');
 })();
 
+
+/* =========================================================
+   v3.18 · SEGUIMIENTO CONTINUO DEL PARTIDO (jugadores y balón desde el inicio del vídeo)
+   match.track = {step, players:[{id, team, n, name?, in?, out?}], ball?, rev:[{t, id, why}], ev:[…pases y pérdidas…], anc:{id:[índices]}}
+     · resumen ligero: va en localStorage y en el archivo del proyecto
+   Posiciones: MT (memoria) → una fila Int16 por jugador y otra para el balón, 5 muestras por segundo (índice = t / 0,2 s),
+     en decímetros sobre el campo «propio ataca hacia la derecha»; −32768 = hueco (no se ve / no seguido).
+     Se guardan en IndexedDB ('tacticalab-mt') y, en base64, dentro del archivo del proyecto (track.data).
+   Los cortes sin seguimiento propio usan el tramo del partido que les corresponde (mtView / mtAggRange).
+   ========================================================= */
+const MT = new Map(), MT_STEP = .2, MT_GAP = -32768, MT_MAXP = 24, mtPend = new WeakMap();
+const mt = {on: false, sel: null, adding: null, drag: null, run: null, undo: [], redo: [], rev: 0, noIdb: false, idbT: {}, evT: 0, view: null, viewKey: '', cov: null, covKey: ''};
+const MT_WHY = {perdido: 'perdido', fuera: 'sale del campo calibrado', plano: 'cambio de plano', cruce: 'cruce: comprobar', balon: 'balón perdido'};
+function sanitizeMT(tk){
+  if (!tk || typeof tk !== 'object') return null;
+  const ids = new Set();
+  const players = (Array.isArray(tk.players) ? tk.players : []).slice(0, MT_MAXP).filter(p => p && typeof p === 'object').map(p => {
+    let id = String(p.id || '').replace(/[^\w-]/g, '').slice(0, 24); if (!id || id === 'ball' || ids.has(id)) return null; ids.add(id);
+    const o = {id, team: p.team === 'B' ? 'B' : 'A', n: dorsal(p.n)}; const nm = cleanStr(p.name, 24).trim(); if (nm) o.name = nm;
+    const a = cleanNum(p.in), b = cleanNum(p.out); if (a !== null && a > 0) o.in = a; if (b !== null && b > 0) o.out = b;
+    return o;
+  }).filter(Boolean);
+  const out = {step: MT_STEP, players};
+  if (tk.ball) out.ball = 1;
+  out.rev = (Array.isArray(tk.rev) ? tk.rev : []).slice(-400).map(r => ({t: cleanNum(r && r.t), id: String((r && r.id) || '').replace(/[^\w*-]/g, '').slice(0, 24), why: MT_WHY[r && r.why] ? r.why : 'perdido'})).filter(r => r.t !== null && r.id);
+  out.ev = sanitizePasses(tk.ev, 0, 1e7, 4000) || [];
+  out.anc = {};
+  if (tk.anc && typeof tk.anc === 'object') Object.keys(tk.anc).slice(0, MT_MAXP + 1).forEach(k => { if ((k === 'ball' || ids.has(k)) && Array.isArray(tk.anc[k])) out.anc[k] = [...new Set(tk.anc[k].map(v => Math.round(+v)).filter(v => Number.isFinite(v) && v >= 0 && v < 4e5))].sort((a, b) => a - b).slice(0, 3000); });
+  if (!players.length && !out.ball) return null;
+  if (tk.data && typeof tk.data === 'object') mtPend.set(out, tk.data);
+  return out;
+}
+/* ---------- datos ---------- */
+const mtI = t => Math.round(t/MT_STEP + 1e-6);
+function mtB64(a){ const u = new Uint8Array(a.buffer, a.byteOffset, a.byteLength); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+function mtUn64(s){ try{ const b = atob(String(s)), u = new Uint8Array(b.length - (b.length % 2)); for (let i = 0; i < u.length; i++) u[i] = b.charCodeAt(i); return new Int16Array(u.buffer); }catch(e){ return null; } }
+function mtUsed(a){ let n = a.length/2; while (n > 0 && a[2*n - 2] === MT_GAP) n--; return n; }
+function mtData(m, create){
+  if (!m) return null;
+  let D = MT.get(m.id);
+  if (!D && m.track && mtPend.has(m.track)){   // posiciones que venían en el archivo del proyecto
+    const raw = mtPend.get(m.track); mtPend.delete(m.track); D = {P: {}};
+    Object.keys(raw).slice(0, MT_MAXP + 1).forEach(id => { const a = mtUn64(raw[id]); if (a && a.length && a.length <= 2*4e5) D.P[id] = a; });
+    MT.set(m.id, D); mt.rev++; mtIdbSoon(m.id);
+  }
+  if (!D && create){ D = {P: {}}; MT.set(m.id, D); }
+  return D;
+}
+function mtArr(m, id, need){
+  const D = mtData(m, true), len = 2*(need + 1); let a = D.P[id];
+  if (!a || a.length < len){ const n = new Int16Array(Math.ceil(len/6000)*6000).fill(MT_GAP); if (a) n.set(a); D.P[id] = a = n; }
+  return a;
+}
+function mtGet(m, id, i){ const D = mtData(m), a = D && D.P[id]; if (!a || i < 0 || 2*i + 1 >= a.length || a[2*i] === MT_GAP) return null; return {x: a[2*i]/10, y: a[2*i + 1]/10}; }
+function mtSet(m, id, i, x, y){ const a = mtArr(m, id, i); a[2*i] = Math.round(x*10); a[2*i + 1] = Math.round(y*10); }
+function mtClr(m, id, i0, i1){ const D = mtData(m), a = D && D.P[id]; if (!a) return; for (let i = Math.max(0, i0); i < i1 && 2*i + 1 < a.length; i++){ a[2*i] = MT_GAP; a[2*i + 1] = MT_GAP; } }
+function mtAt(m, id, t){   // posición en t; entre dos muestras se interpola, junto a un hueco solo vale la muestra más cercana
+  const f = t/MT_STEP, i = Math.floor(f + 1e-6), u = f - i, a = mtGet(m, id, i);
+  if (u < .02) return a;
+  const b = mtGet(m, id, i + 1);
+  if (a && b) return {x: a.x + (b.x - a.x)*u, y: a.y + (b.y - a.y)*u};
+  return u <= .5 ? a : b;
+}
+function mtLast(m, id, i, back){ for (let k = i; k >= Math.max(0, i - back); k--){ const p = mtGet(m, id, k); if (p) return {p, i: k}; } return null; }
+const mtHas = m => !!(m && m.track && (m.track.players.length || m.track.ball));
+function mtTrack(m, create){ if (!m.track && create) m.track = {step: MT_STEP, players: [], rev: [], ev: [], anc: {}}; return m.track; }
+function mtEnts(m){ const tk = m && m.track; if (!tk) return []; return tk.players.concat(tk.ball ? [MT_BALL] : []); }
+const MT_BALL = {id: 'ball', team: 'ball', n: '', ball: true};
+const mtActive = (p, t) => p.ball || ((p.in == null || t >= p.in - .11) && (p.out == null || t <= p.out + .11));
+function mtRange(m){   // primer y último índice con algún dato
+  const D = mtData(m); if (!D) return null;
+  const key = m.id + '|' + mt.rev; if (mtRange.k === key) return mtRange.v;
+  let a = Infinity, b = -1;
+  Object.keys(D.P).forEach(id => { const arr = D.P[id], n = mtUsed(arr); if (!n) return; b = Math.max(b, n - 1); for (let i = 0; i < n; i++) if (arr[2*i] !== MT_GAP){ a = Math.min(a, i); break; } });
+  mtRange.k = key; mtRange.v = b < 0 ? null : {a, b}; return mtRange.v;
+}
+function mtChanged(m, soft){ mt.rev++; mt.viewKey = ''; mt.covKey = ''; mtIdbSoon(m.id); if (!soft){ clearTimeout(mt.evT); mt.evT = setTimeout(() => { mtEvents(m); save(); if (mt.on) mtUI(); const b = $('#paBody'); if (b && pa.scope === 'match') passStatsRender(); }, 500); } }
+/* ---------- IndexedDB ---------- */
+function mtIdb(){
+  return new Promise(res => {
+    if (mt.noIdb || !window.indexedDB){ res(null); return; }
+    try{ const r = indexedDB.open('tacticalab-mt', 1); r.onupgradeneeded = () => { try{ r.result.createObjectStore('tracks'); }catch(e){} }; r.onsuccess = () => res(r.result); r.onerror = () => { mt.noIdb = true; res(null); }; r.onblocked = () => res(null); }
+    catch(e){ mt.noIdb = true; res(null); }
+  });
+}
+async function mtIdbPut(mid){
+  const D = MT.get(mid), db = await mtIdb(); if (!db) return false;
+  return new Promise(res => { try{
+    const tx = db.transaction('tracks', 'readwrite'), st = tx.objectStore('tracks');
+    if (!D || !matchById(mid) || !matchById(mid).track) st.delete(mid);
+    else { const P = {}; Object.keys(D.P).forEach(id => { const n = mtUsed(D.P[id]); if (n) P[id] = D.P[id].slice(0, 2*n); }); st.put({P, at: Date.now()}, mid); }
+    tx.oncomplete = () => { db.close(); res(true); }; tx.onerror = tx.onabort = () => { db.close(); res(false); };
+  }catch(e){ res(false); } });
+}
+function mtIdbSoon(mid){ clearTimeout(mt.idbT[mid]); mt.idbT[mid] = setTimeout(() => mtIdbPut(mid), 1200); }
+async function mtIdbLoadAll(){
+  const db = await mtIdb(); if (!db) return;
+  const want = state.matches.filter(m => m.track && !MT.has(m.id) && !mtPend.has(m.track));
+  await Promise.all(want.map(m => new Promise(res => { try{
+    const rq = db.transaction('tracks').objectStore('tracks').get(m.id);
+    rq.onsuccess = () => { const v = rq.result; if (v && v.P && !MT.has(m.id)){ const D = {P: {}}; Object.keys(v.P).forEach(id => { if (v.P[id] instanceof Int16Array) D.P[id] = v.P[id]; }); MT.set(m.id, D); } res(); };
+    rq.onerror = () => res();
+  }catch(e){ res(); } })));
+  db.close();
+  if (want.length){ mt.rev++; mt.viewKey = ''; mt.covKey = ''; renderMap2d(true); mtStripAll(); if (mt.on) mtUI(); if ($('#paBody')) passStatsRender(); }
+}
+/* para el archivo del proyecto: el resumen + las posiciones en base64 */
+function mtExportMatch(m){
+  if (!m.track) return m;
+  const D = mtData(m), data = {};
+  if (D) Object.keys(D.P).forEach(id => { const n = mtUsed(D.P[id]); if (n) data[id] = mtB64(D.P[id].slice(0, 2*n)); });
+  return Object.assign({}, m, {track: Object.assign({}, m.track, {data})});
+}
+function mtBytes(m){ const D = mtData(m); let n = 0; if (D) Object.keys(D.P).forEach(id => n += mtUsed(D.P[id])*4); return n; }
+/* ---------- vista para el Campo 2D: un «corte» virtual alrededor del instante ---------- */
+function mtView(m, t){
+  if (!mtHas(m) || !mtData(m)) return null;
+  const i = Math.floor(t/MT_STEP + 1e-6), key = m.id + '|' + i + '|' + mt.rev;
+  if (mt.viewKey === key) return mt.view;
+  const run = (id, back, fwd) => { const pts = []; if (!mtGet(m, id, i) && !mtGet(m, id, i + 1)) return pts;
+    let a = i; if (!mtGet(m, id, a)) a = i + 1; let lo = a; while (lo > 0 && a - lo < back && mtGet(m, id, lo - 1)) lo--;
+    let hi = a; while (hi - i < fwd && mtGet(m, id, hi + 1)) hi++;
+    for (let k = lo; k <= hi; k++){ const p = mtGet(m, id, k); pts.push({t: +(k*MT_STEP).toFixed(2), x: p.x, y: p.y}); }
+    return pts; };
+  const tracks = m.track.players.filter(p => mtActive(p, t)).map(p => ({id: p.id, team: p.team, n: p.n, name: p.name, pts: run(p.id, 16, 2)})).filter(tr => tr.pts.length);
+  const c = {id: 'mt:' + m.id, matchId: m.id, start: 0, end: 1e7, tracks, mt: true};
+  if (m.track.ball){ const pts = run('ball', 6, 2); if (pts.length){ c.ball = {pts}; ballTr(c); } }
+  mt.viewKey = key; mt.view = hasTrk(c) ? c : null; return mt.view;
+}
+function mtClipHas(c){   // ¿el seguimiento del partido cubre este corte?
+  const m = c && matchById(c.matchId); if (!mtHas(m) || !mtData(m) || c.mt) return false;
+  const i0 = mtI(c.start), i1 = mtI(c.end), ents = mtEnts(m);
+  for (let i = i0; i <= i1; i += 3) for (let k = 0; k < ents.length; k++) if (mtGet(m, ents[k].id, i)) return true;
+  return false;
+}
+const hasTrkAny = c => hasTrk(c) || mtClipHas(c);
+function clipTrk(c, t){ if (!c || c.mt || hasTrk(c)) return c; const v = mtView(matchById(c.matchId), t); return v || c; }
+/* ---------- posesión y eventos sobre todo lo seguido ---------- */
+function mtHolders(m, i0, i1){   // por muestra: id del jugador con el balón, null = balón libre, undefined = sin balón (hueco)
+  const D = mtData(m), out = new Array(Math.max(0, i1 - i0 + 1)), ball = D && D.P.ball; if (!ball) return out;
+  const R2 = Math.pow(passR()*10, 2), ps = m.track.players.map(p => ({p, a: D.P[p.id], i0: p.in == null ? -1 : mtI(p.in), i1: p.out == null ? 1e9 : mtI(p.out)})).filter(o => o.a);
+  for (let i = i0; i <= i1; i++){
+    if (2*i + 1 >= ball.length || ball[2*i] === MT_GAP) continue;
+    const bx = ball[2*i], by = ball[2*i + 1]; let best = null, bd = R2;
+    for (let k = 0; k < ps.length; k++){ const o = ps[k], a = o.a; if (i < o.i0 || i > o.i1 || 2*i + 1 >= a.length || a[2*i] === MT_GAP) continue; const dx = a[2*i] - bx, dy = a[2*i + 1] - by, d = dx*dx + dy*dy; if (d <= bd){ bd = d; best = o.p; } }
+    out[i - i0] = best;
+  }
+  return out;
+}
+function mtEvents(m){   // pases y pérdidas automáticos de todo el partido; lo tocado a mano no se recalcula
+  const tk = m && m.track; if (!tk) return;
+  const man = (tk.ev || []).filter(e => e.manual), R = mtRange(m);
+  if (!R || !tk.ball){ tk.ev = man; return; }
+  const H = mtHolders(m, R.a, R.b), sp = [];
+  let cur = null;
+  for (let k = 0; k < H.length; k++){ const h = H[k]; if (cur && cur.p === h){ cur.b = R.a + k; cur.n++; } else { if (cur && cur.p && cur.n >= 2){ const L = sp[sp.length - 1]; if (L && L.p === cur.p){ L.b = cur.b; } else sp.push(cur); } cur = {p: h, a: R.a + k, b: R.a + k, n: 1}; } }
+  if (cur && cur.p && cur.n >= 2){ const L = sp[sp.length - 1]; if (L && L.p === cur.p) L.b = cur.b; else sp.push(cur); }
+  const auto = [];
+  for (let k = 1; k < sp.length && auto.length < 4000; k++){
+    const a = sp[k - 1], b = sp[k], p1 = mtGet(m, 'ball', a.b), p2 = mtGet(m, 'ball', b.a); if (!p1 || !p2) continue;
+    const e = {id: uid(), t: pr2(a.b*MT_STEP), t2: pr2(b.a*MT_STEP), team: a.p.team, from: a.p.n, to: b.p.n, type: a.p.team === b.p.team ? 'pass' : 'loss', x1: pr2(p1.x), y1: pr2(p1.y), x2: pr2(p2.x), y2: pr2(p2.y)};
+    e.kind = passKind(e.team, e.x1, e.y1, e.x2, e.y2);
+    if (man.some(x => Math.abs(x.t - e.t) < .5)) continue;
+    auto.push(e);
+  }
+  tk.ev = man.concat(auto).sort((a, b) => a.t - b.t).slice(0, 4000);
+}
+/* suma a un agregado de pases (passAgg) lo seguido en [t0, t1] del partido */
+function mtAggRange(A, node, m, t0, t1, sx, sy){
+  const tk = m.track, D = mtData(m); if (!tk || !D) return;
+  const names = {}; tk.players.forEach(p => { if (p.name) names[p.team + '|' + p.n] = p.name; });
+  players.forEach(p => { if (!names['A|' + p.n]) names['A|' + p.n] = p.name.split(' ')[0]; });
+  (tk.ev || []).filter(e => !e.del && e.t >= t0 - .05 && e.t <= t1 + .05).forEach(e => {
+    const toTeam = e.type === 'loss' ? (e.team === 'B' ? 'A' : 'B') : e.team;
+    const a = node(e.team, e.from, names[e.team + '|' + e.from]), b = node(toTeam, e.to, names[toTeam + '|' + e.to]);
+    if (e.type === 'pass'){ a.out++; b.in++; if (e.kind === 'fwd') a.fwd++; A.nPass[e.team]++; const k = a.key + '>' + b.key; A.edges.set(k, (A.edges.get(k) || 0) + 1); }
+    else { a.loss++; b.rec++; A.nLoss[e.team]++; }
+    const has = e.x1 != null;
+    if (has && e.type === 'pass'){ a.sx += e.x1*sx; a.sy += e.y1*sy; a.k++; b.sx += e.x2*sx; b.sy += e.y2*sy; b.k++; }
+    A.evs.push({c: null, e, toTeam, x1: has ? e.x1*sx : null, y1: has ? e.y1*sy : null, x2: has ? e.x2*sx : null, y2: has ? e.y2*sy : null});
+  });
+  const ball = D.P.ball; if (!ball) return;
+  const i0 = Math.max(0, mtI(t0)), i1 = Math.min(mtI(t1), ball.length/2 - 1), H = mtHolders(m, i0, i1), L = fieldOf(m).L;
+  A.zones = A.zones || {A: [0, 0, 0], B: [0, 0, 0]};
+  let prev = null, run = 0;
+  for (let i = i0; i <= i1; i++){
+    const p = ball[2*i] === MT_GAP ? null : {x: ball[2*i]/10, y: ball[2*i + 1]/10}, h = H[i - i0];
+    if (!p){ A.ball.gap += MT_STEP; prev = null; run = 0; continue; }
+    if (h){ A.poss[h.team] += MT_STEP; A.zones[h.team][clamp(Math.floor(p.x/L*3), 0, 2)] += MT_STEP; } else A.poss.free += MT_STEP;
+    if ((i - i0) % 2 === 0) A.ballPts.push({x: p.x*sx, y: p.y*sy});
+    if (prev){ const d = Math.hypot(p.x - prev.x, p.y - prev.y); if (d/MT_STEP <= 35){ A.ball.dist += d; A.ball.time += MT_STEP; A.ball.max = Math.max(A.ball.max, Math.min(35, d/MT_STEP)); } }
+    prev = p;
+  }
+}
+/* ---------- físico y bloque ---------- */
+const MT_BANDS = [7, 14, 21];   // km/h: andar < 7 · trotar 7–14 · correr 14–21 · esprintar > 21
+function mtPhys(m, t0, t1){
+  const D = mtData(m), out = []; if (!D) return out;
+  const i0 = Math.max(0, mtI(t0)), i1 = mtI(t1);
+  m.track.players.forEach(p => {
+    const a = D.P[p.id]; if (!a) return;
+    const hi = Math.min(i1, a.length/2 - 1), o = {p, time: 0, dist: 0, max: 0, band: [0, 0, 0, 0], pts: []};
+    const sm = i => { let x = 0, y = 0, n = 0; for (let k = i - 2; k <= i + 2; k++){ if (k < i0 || k > hi || a[2*k] === MT_GAP) continue; x += a[2*k]; y += a[2*k + 1]; n++; } return n ? [x/n/10, y/n/10] : null; };   // media móvil de 1 s: quita el temblor del seguidor
+    let prev = null;
+    for (let i = i0; i <= hi; i++){
+      if (a[2*i] === MT_GAP){ prev = null; continue; }
+      const q = sm(i); if ((i - i0) % 5 === 0) o.pts.push({x: q[0], y: q[1]});
+      if (prev){ const d = Math.hypot(q[0] - prev[0], q[1] - prev[1]), v = d/MT_STEP; if (v <= 12){ o.dist += d; o.time += MT_STEP; const kmh = v*3.6; o.max = Math.max(o.max, kmh); o.band[kmh < MT_BANDS[0] ? 0 : kmh < MT_BANDS[1] ? 1 : kmh < MT_BANDS[2] ? 2 : 3] += d; } }
+      prev = q;
+    }
+    if (o.time > 0) out.push(o);
+  });
+  return out.sort((x, y) => x.p.team.localeCompare(y.p.team) || (+x.p.n || 999) - (+y.p.n || 999));
+}
+function mtBlock(m, t0, t1, team){   // anchura, profundidad y altura medias del bloque por tramos
+  const D = mtData(m), out = []; if (!D) return out;
+  const ps = m.track.players.filter(p => p.team === team).map(p => D.P[p.id]).filter(Boolean), i0 = Math.max(0, mtI(t0)), i1 = mtI(t1), span = Math.max(1, i1 - i0), bk = Math.max(25, Math.ceil(span/12/25)*25);   // como mucho 12 tramos
+  for (let s = i0; s < i1; s += bk){
+    let w = 0, d = 0, h = 0, n = 0;
+    for (let i = s; i < Math.min(i1, s + bk); i += 5){
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, sx = 0, k = 0;
+      ps.forEach(a => { if (2*i + 1 >= a.length || a[2*i] === MT_GAP) return; const x = a[2*i]/10, y = a[2*i + 1]/10; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); sx += x; k++; });
+      if (k >= 4){ w += y1 - y0; d += x1 - x0; h += team === 'B' ? fieldOf(m).L - sx/k : sx/k; n++; }
+    }
+    if (n) out.push({t: s*MT_STEP, t2: Math.min(i1, s + bk)*MT_STEP, w: w/n, d: d/n, h: h/n});
+  }
+  return out;
+}
+function mtScopeRange(m){   // tramo elegido en la tarjeta «Balón y pases» (ámbito Partido)
+  const R = mtRange(m); if (!R) return null;
+  let a = R.a*MT_STEP, b = R.b*MT_STEP; const v = pa.range || 'all';
+  if (v === 'p1'){ const cut = m.e1 != null ? m.e1 : m.h2; if (cut != null) b = Math.min(b, cut); }
+  else if (v === 'p2'){ const cut = m.h2 != null ? m.h2 : m.e1; if (cut != null) a = Math.max(a, cut); }
+  else if (/^q\d+$/.test(v)){ const k = +v.slice(1); a = R.a*MT_STEP + k*900; b = Math.min(b, a + 900); }
+  return b > a ? {a, b} : null;
+}
+function mtRangeOpts(m){
+  const R = mtRange(m), o = [['all', 'Todo lo seguido']]; if (!R) return o;
+  if (m.e1 != null || m.h2 != null){ o.push(['p1', '1.ª parte'], ['p2', '2.ª parte']); }
+  const n = Math.ceil((R.b - R.a)*MT_STEP/900); if (n > 1) for (let k = 0; k < Math.min(n, 12); k++) o.push(['q' + k, `Tramo ${k*15}–${(k + 1)*15} min`]);
+  return o;
+}
+function mtStatsHTML(m, t0, t1, team, light){
+  const ph = mtPhys(m, t0, t1).filter(o => o.p.team === team); let h = '';
+  if (ph.length){
+    h += `<h5>Físico · ${esc(teamTxt(team))}</h5><div class="tk-stats${light ? ' light' : ''}"><table><thead><tr><th>Jugador</th><th class="n" title="Minutos con datos">Min</th><th class="n">Distancia</th><th class="n">m/min</th><th class="n" title="Velocidad máxima">Máx</th><th class="n" title="Menos de 7 km/h">Andar</th><th class="n" title="De 7 a 14 km/h">Trotar</th><th class="n" title="De 14 a 21 km/h">Correr</th><th class="n" title="Más de 21 km/h">Esprintar</th></tr></thead><tbody>${ph.map(o => `<tr><td>${esc(passWho('A', o.p.n, o.p.name))}</td><td class="n">${fmt1(o.time/60)}</td><td class="n">${Math.round(o.dist)} m</td><td class="n">${Math.round(o.dist/(o.time/60))}</td><td class="n">${fmt1(o.max)}</td>${o.band.map(v => `<td class="n">${Math.round(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="fmtnote">Distancias en metros por franja de velocidad (km/h). Son aproximadas: dependen de la calibración y del seguimiento, y solo cuentan el tiempo con datos.</p>`;
+  }
+  const bl = mtBlock(m, t0, t1, team);
+  if (bl.length){
+    const mx = Math.max(10, ...bl.map(b => Math.max(b.w, b.d, b.h))), W = 300, H = 90, X = i => bl.length === 1 ? W/2 : 6 + i/(bl.length - 1)*(W - 12), Y = v => H - 6 - v/mx*(H - 14);
+    const line = (k, col) => `<polyline points="${bl.map((b, i) => X(i).toFixed(1) + ',' + Y(b[k]).toFixed(1)).join(' ')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>` + bl.map((b, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(b[k]).toFixed(1)}" r="2.4" fill="${col}"><title>${fmtShort(b.t)}: ${fmt1(b[k])} m</title></circle>`).join('');
+    h += `<h5>Bloque en el tiempo · ${esc(teamTxt(team))}</h5><figure class="mt-chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Anchura, profundidad y altura del bloque"><line x1="6" y1="${H - 6}" x2="${W - 6}" y2="${H - 6}" stroke="currentColor" stroke-opacity=".25"/>${line('w', '#35c98a')}${line('d', '#f2a33a')}${line('h', '#6aa8ff')}</svg><figcaption><span style="color:#35c98a">■</span> anchura ${fmt1(bl.reduce((s, b) => s + b.w, 0)/bl.length)} m · <span style="color:#f2a33a">■</span> profundidad ${fmt1(bl.reduce((s, b) => s + b.d, 0)/bl.length)} m · <span style="color:#6aa8ff">■</span> altura media ${fmt1(bl.reduce((s, b) => s + b.h, 0)/bl.length)} m desde la portería propia (medias de ${bl.length} tramo${bl.length === 1 ? '' : 's'}; hacen falta 4 jugadores con datos)</figcaption></figure>`;
+  }
+  return h;
+}
+/* ---------- deshacer / rehacer propios (las posiciones no caben en el historial general) ---------- */
+function mtSnap(m, label, ids, i0, i1){
+  const D = mtData(m, true), parts = [];
+  (ids || Object.keys(D.P)).forEach(id => { const a = D.P[id]; if (!a){ parts.push({id, i0: 0, a: null}); return; } const n = a.length/2, lo = i0 == null ? 0 : Math.min(n, Math.max(0, i0)), hi = i1 == null ? n : Math.min(n, i1); parts.push({id, i0: lo, a: a.slice(2*lo, 2*hi), end: hi >= n}); });
+  return {label, mid: m.id, sum: JSON.stringify(m.track || null), parts};
+}
+function mtPush(m, label, ids, i0, i1){ mt.undo.push(mtSnap(m, label, ids, i0, i1)); if (mt.undo.length > 40) mt.undo.shift(); mt.redo = []; }
+function mtApplySnap(S){
+  const m = matchById(S.mid); if (!m) return null;
+  const D = mtData(m, true);
+  const back = {label: S.label, mid: S.mid, sum: JSON.stringify(m.track || null), parts: S.parts.map(p => { const a = D.P[p.id]; if (!a) return {id: p.id, i0: 0, a: null};
+    const n = a.length/2, lo = p.a ? Math.min(n, p.i0) : 0, hi = p.end || !p.a ? n : Math.min(n, p.i0 + p.a.length/2); return {id: p.id, i0: lo, a: a.slice(2*lo, 2*hi), end: p.end || !p.a}; })};
+  S.parts.forEach(p => { if (!p.a){ delete D.P[p.id]; return; } const a = mtArr(m, p.id, p.i0 + p.a.length/2); a.set(p.a, 2*p.i0); if (p.end) a.fill(MT_GAP, 2*p.i0 + p.a.length); });
+  const tk = JSON.parse(S.sum); if (tk && (tk.players.length || tk.ball)) m.track = tk; else delete m.track;
+  return back;
+}
+function mtUndo(redo){
+  if (mt.run) return;
+  const from = redo ? mt.redo : mt.undo, to = redo ? mt.undo : mt.redo, S = from.pop();
+  if (!S){ flash(redo ? 'Nada que rehacer en el seguimiento' : 'Nada que deshacer en el seguimiento'); return; }
+  const back = mtApplySnap(S); if (back) to.push(back);
+  const m = matchById(S.mid); if (m){ if (mt.sel && !mtEnts(m).some(e => e.id === mt.sel)) mt.sel = null; mtChanged(m); save(); }
+  flash(`${redo ? 'Rehecho' : 'Deshecho'}: ${S.label}`, 1600); mtUI(); mtPaint(); renderMap2d(true);
+}
+/* ---------- formación inicial ---------- */
+const MT_FORMS = {f11: ['1-4-3-3', '1-4-4-2', '1-4-2-3-1', '1-3-5-2', '1-5-3-2'], f7: ['1-3-2-1', '1-2-3-1', '1-3-1-2'], sala: ['1-2-2', '1-1-2-1', '1-3-1']};
+function mtFormPos(str, L, W, team){
+  const lines = str.split('-').map(Number), out = [], nl = lines.length;
+  lines.forEach((cnt, li) => { const x = li === 0 ? .05 : .17 + (nl > 2 ? (li - 1)/(nl - 2) : 0)*.29;
+    for (let k = 0; k < cnt; k++){ const y = (k + 1)/(cnt + 1); out.push(team === 'B' ? {x: (1 - x)*L, y: (1 - y)*W} : {x: x*L, y: y*W}); } });
+  return out;
+}
+/* ---------- abrir / cerrar ---------- */
+async function openMT(fromStart){
+  if (!ready()){ flash('Abre el vídeo del partido para seguirlo'); return; }
+  const m = matchById(curMatch);
+  if (!hasCalib(m)){
+    const r = await ask({title: 'Calibrar el campo', text: 'Para seguir el partido sobre el campo real, primero hay que calibrar el campo (4 puntos conocidos en el vídeo). Si la cámara se mueve, la calibración deja de valer y esos tramos no se pueden seguir.', buttons: [{label: 'Ahora no', value: null}, {label: 'Calibrar el campo', value: 'yes', kind: 'primary'}]});
+    if (r.value === 'yes') openCalib();
+    return;
+  }
+  if (trk.on) closeTrk();
+  closeBoard(true); cancelFreeze(); playback = null; video.pause(); markPlaying();
+  ['#dlgClip', '#dlgMatch'].forEach(s => { const d = $(s); if (d && d.open) d.close(); });
+  mt.on = true; mt.adding = null; mt.drag = null; mt.sel = null;
+  if (fromStart === true || (!mtHas(m) && video.currentTime < 1)) seek(0);
+  map2d = true; try{ localStorage.setItem('tacticalab:map2d', '1'); }catch(e){}
+  document.body.classList.add('trk-on', 'mt-on'); $('#mtBar').hidden = false;
+  const F = fieldOf(m), forms = MT_FORMS[F.type] || MT_FORMS.f11;
+  $('#mtForm').innerHTML = forms.map(f => `<option>${f}</option>`).join('');
+  $('#mtCat').innerHTML = state.cats.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  mtUI(); mtPaint(); renderMap2d(true);
+  if (!mtHas(m)) flash('Coloca a los jugadores y el balón en esta imagen y pulsa «Seguir»', 4000);
+}
+function closeMT(){
+  if (!mt.on) return;
+  if (mt.run) mt.run.cancel = true;
+  mt.on = false; mt.adding = null; mt.drag = null;
+  document.body.classList.remove('trk-on', 'mt-on'); $('#mtBar').hidden = true; $('#mtFormBox').hidden = true;
+  const m = matchById(curMatch); if (m && m.track){ mtEvents(m); save(); mtIdbPut(m.id); }
+  trkPaint(); renderAll(); mtStripAll();
+}
+/* ---------- interfaz ---------- */
+function mtLabel(e){ return e.ball ? 'Balón' : `${e.team === 'B' ? 'Rival ' : ''}${e.n || '?'}${e.name ? ' · ' + e.name : ''}`; }
+function mtPending(m, from){   // primer índice ≥ from donde alguien tiene dato y el siguiente es un hueco (ahí se puede continuar)
+  const D = mtData(m); if (!D) return -1; let best = -1;
+  mtEnts(m).forEach(e => { const a = D.P[e.id]; if (!a) return; const n = mtUsed(a);
+    for (let i = Math.max(0, from); i < n; i++){ if (a[2*i] !== MT_GAP && (i + 1 >= n || a[2*i + 2] === MT_GAP) && mtActive(e, (i + 1)*MT_STEP) && (e.ball || e.out == null || (i + 1)*MT_STEP < e.out)){ if (best < 0 || i < best) best = i; break; } } });
+  return best;
+}
+function mtUI(){
+  const m = matchById(curMatch); if (!m || !mt.on) return;
+  const tk = m.track, ents = mtEnts(m), t = video.currentTime, i = mtI(t), R = mtRange(m), running = !!mt.run;
+  $('#mtTitle').textContent = `Seguimiento del partido · ${R ? `${fmtShort(R.a*MT_STEP)} – ${fmtShort(R.b*MT_STEP)} · ${(mtBytes(m)/1024).toFixed(0)} KB` : 'sin datos todavía'}`;
+  $('#mtList').innerHTML = ents.map(e => { const has = !!mtAt(m, e.id, t), act = mtActive(e, t);
+    return `<span class="tk-chip ${e.ball ? 'ball ' : ''}${e.id === mt.sel ? 'on ' : ''}${!act ? 'outp ' : has ? '' : 'lost '}" data-id="${esc(e.id)}" style="--c:${esc(trkColor(e))}" role="button" tabindex="0" aria-label="${esc(mtLabel(e))}${!act ? ' (no está en el campo)' : has ? '' : ' (sin datos en este instante)'}"><b>${e.ball ? ic('ball') : esc(e.n || '?')}</b>${e.ball ? '<span class="nm">Balón</span>' : e.name ? `<span class="nm">${esc(e.name)}</span>` : ''}<button type="button" data-a="del" title="${e.ball ? 'Quitar el balón' : 'Quitar a este jugador y todos sus datos'}" aria-label="Quitar ${esc(mtLabel(e))}">✕</button></span>`; }).join('')
+    || '<span class="tk-empty">Nadie seguido todavía.</span>';
+  $('#mtList').querySelectorAll('.tk-chip').forEach(ch => {
+    ch.onclick = ev => { if (mt.run) return; const id = ch.dataset.id, e = ents.find(x => x.id === id); if (!e) return;
+      if (ev.target.closest('button')){ mtPush(m, e.ball ? 'quitar balón' : 'quitar jugador', [id]); const D = mtData(m, true); delete D.P[id]; if (e.ball) delete tk.ball; else tk.players = tk.players.filter(p => p.id !== id); delete tk.anc[id]; tk.rev = tk.rev.filter(r => r.id !== id); if (mt.sel === id) mt.sel = null; if (!tk.players.length && !tk.ball){ delete m.track; } mtChanged(m); save(); mtUI(); mtPaint(); renderMap2d(true); return; }
+      mt.sel = id; mt.adding = null; mtUI(); mtPaint(); };
+    ch.onkeydown = ev => { if (ev.target === ch && (ev.key === 'Enter' || ev.key === ' ')){ ev.preventDefault(); ev.stopPropagation(); ch.click(); } };
+  });
+  const sel = ents.find(e => e.id === mt.sel), nP = tk ? tk.players.length : 0;
+  $('#mtAdd').disabled = running || nP >= MT_MAXP; $('#mtAdd').setAttribute('aria-pressed', String(!!(mt.adding && !mt.adding.ball)));
+  $('#mtBall').disabled = running; $('#mtBall').setAttribute('aria-pressed', String(mt.sel === 'ball' || !!(mt.adding && mt.adding.ball)));
+  $('#mtPlace').disabled = running || nP >= MT_MAXP; $('#mtForm').disabled = $('#mtFormTeam').disabled = running;
+  $('#mtGo').innerHTML = running ? `${ic('pause')}Pausar` : `${ic('play')}Seguir`; $('#mtGo').disabled = !ents.length;
+  $('#mtDur').disabled = running;
+  $('#mtOut').disabled = running || !sel || sel.ball; $('#mtOut').textContent = sel && !sel.ball && sel.out != null ? 'Quitar la baja' : 'Baja';
+  $('#mtCut').disabled = running || !ents.length; $('#mtUndo').disabled = running || !mt.undo.length; $('#mtRedo').disabled = running || !mt.redo.length;
+  $('#mtToClips').disabled = running || !tk || !(tk.ev || []).some(e => !e.del);
+  const rev = tk ? tk.rev : [];
+  $('#mtRevSum').textContent = `Revisar · ${rev.length} punto${rev.length === 1 ? '' : 's'}`;
+  $('#mtRevList').innerHTML = rev.slice().sort((a, b) => a.t - b.t).slice(0, 200).map(r => { const e = r.id === '*' ? null : ents.find(x => x.id === r.id);
+    return `<div class="tk-evr" data-t="${r.t}" data-id="${esc(r.id)}"><button type="button" class="tk-evt mono" data-a="go" title="Ir a este instante">${fmtShort(r.t)}</button><span class="tk-evk">${esc(e ? mtLabel(e) : r.id === '*' ? 'Todos' : '(quitado)')} · ${MT_WHY[r.why] || r.why}</span><button type="button" data-a="ok" title="Marcar como revisado" aria-label="Marcar como revisado">✓</button></div>`; }).join('')
+    || '<p class="hint">Nada pendiente de revisar.</p>';
+  $('#mtRevList').querySelectorAll('.tk-evr').forEach(row => {
+    const rt = +row.dataset.t, rid = row.dataset.id;
+    row.querySelector('[data-a=go]').onclick = () => { if (mt.run) return; video.pause(); seek(rt); if (rid !== '*' && ents.some(e => e.id === rid)) mt.sel = rid; setTimeout(() => { mtUI(); mtPaint(); }, 120); };
+    row.querySelector('[data-a=ok]').onclick = () => { if (mt.run) return; tk.rev = tk.rev.filter(r => !(r.t === rt && r.id === rid)); save(); mtUI(); mtStripAll(); };
+  });
+  // eventos cercanos al instante actual
+  const evs = tk ? (tk.ev || []).filter(e => !e.del) : [], nPass = evs.filter(e => e.type === 'pass').length, near = evs.filter(e => Math.abs(e.t - t) <= 45).slice(0, 60);
+  $('#mtEvSum').textContent = `Eventos del balón · ${plN(nPass, 'pase')} · ${plN(evs.length - nPass, 'pérdida')}`;
+  const people = tk ? tk.players.map(p => ({key: p.team + '|' + p.n, team: p.team, n: p.n, name: p.name || ''})) : [];
+  const opts = (team, n) => { const key = team + '|' + n, list = people.some(o => o.key === key) ? people : people.concat([{key, team, n, name: ''}]); return list.map(o => `<option value="${esc(o.key)}"${o.key === key ? ' selected' : ''}>${esc(passWho(o.team, o.n, o.name))}</option>`).join(''); };
+  $('#mtEvList').innerHTML = near.map(e => { const toTeam = e.type === 'loss' ? (e.team === 'B' ? 'A' : 'B') : e.team, d = e.x1 != null ? Math.hypot(e.x2 - e.x1, e.y2 - e.y1) : null;
+    return `<div class="tk-evr${e.type === 'loss' ? ' loss' : ''}" data-id="${esc(e.id)}"><button type="button" class="tk-evt mono" data-a="go" title="Ir a este instante">${fmtShort(e.t)}</button><select data-f="from" aria-label="Quién pasa">${opts(e.team, e.from)}</select><span aria-hidden="true">→</span><select data-f="to" aria-label="Quién recibe">${opts(toTeam, e.to)}</select><span class="tk-evk">${e.type === 'loss' ? 'Pérdida' : 'Pase'}${e.kind && e.type === 'pass' ? ' · ' + KIND_TXT[e.kind] : ''}${d != null ? ' · ' + fmt1(d) + ' m' : ''}${e.manual ? ' · a mano' : ''}</span><button type="button" data-a="del" title="Borrar este evento" aria-label="Borrar el evento de ${fmtShort(e.t)}">✕</button></div>`; }).join('')
+    || `<p class="hint">${evs.length ? 'No hay eventos a menos de 45 s de este instante.' : 'Todavía no hay pases: sigue el balón y a los jugadores.'}</p>`;
+  $('#mtEvList').querySelectorAll('.tk-evr').forEach(row => {
+    const e = tk.ev.find(x => x.id === row.dataset.id); if (!e) return;
+    row.querySelector('[data-a=go]').onclick = () => { if (mt.run) return; video.pause(); seek(e.t); };
+    row.querySelector('[data-a=del]').onclick = () => { if (mt.run) return; mtPush(m, 'borrar pase', []); e.del = 1; e.manual = 1; save(); mtUI(); };
+    row.querySelectorAll('select').forEach(s => s.onchange = () => {
+      const [ft, fn] = row.querySelector('[data-f=from]').value.split('|'), [tt, tn] = row.querySelector('[data-f=to]').value.split('|');
+      if (ft === tt && fn === tn){ flash('El pasador y el receptor no pueden ser el mismo jugador'); mtUI(); return; }
+      mtPush(m, 'editar pase', []);
+      Object.assign(e, {team: ft, from: fn, to: tn, type: ft === tt ? 'pass' : 'loss', manual: 1});
+      const A = tk.players.find(p => p.team === ft && p.n === fn), B = tk.players.find(p => p.team === tt && p.n === tn), p1 = A && mtAt(m, A.id, e.t), p2 = B && mtAt(m, B.id, e.t2 != null ? e.t2 : e.t);
+      if (p1 && p2){ e.x1 = pr2(p1.x); e.y1 = pr2(p1.y); e.x2 = pr2(p2.x); e.y2 = pr2(p2.y); e.kind = passKind(e.team, e.x1, e.y1, e.x2, e.y2); }
+      save(); mtUI();
+    });
+  });
+  const pend = sel && mtActive(sel, t) && mtGet(m, sel.id, i) && !mtGet(m, sel.id, i + 1);
+  $('#mtHint').textContent = running ? 'Siguiendo… Puedes pausar con el botón o con Esc. Quien se pierde queda en «Revisar» y los demás continúan.'
+    : mt.adding && mt.adding.ball ? 'Pulsa en el vídeo el balón, sobre el césped (Esc cancela).'
+    : mt.adding ? 'Pulsa en el vídeo los pies del jugador (Esc cancela).'
+    : !ents.length ? 'Empieza por la alineación: «Colocar plantilla» reparte a los jugadores en una formación y luego arrastras cada marca hasta su jugador; o añádelos uno a uno con «+ Jugador». Después, «Balón».'
+    : sel ? `${mtLabel(sel)}: arrastra su marca o pulsa donde esté ahora. Al corregirlo se borra lo seguido de ${sel.ball ? 'el balón' : 'ese jugador'} desde aquí hasta su siguiente corrección; «Seguir» lo rehace${pend ? ' desde este punto' : ''}.`
+    : 'Pulsa una marca para seleccionarla y corregirla. «Seguir» continúa desde este instante o, si aquí no falta nadie, desde el primer punto pendiente.';
+  mtStripAll();
+}
+/* marcas sobre el vídeo */
+function mtPaint(){
+  const r = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1, W = Math.max(1, Math.round(r.width*dpr)), H = Math.max(1, Math.round(r.height*dpr));
+  if (trkCv.width !== W || trkCv.height !== H){ trkCv.width = W; trkCv.height = H; }
+  const ctx = trkCv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+  const m = matchById(curMatch); if (!mt.on || !m) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cr = contentRect(), t = video.currentTime, i = mtI(t), S = (u, v) => [cr.x + u*cr.w, cr.y + v*cr.h];
+  mtEnts(m).forEach(e => {
+    if (!mtActive(e, t)) return;
+    const drag = mt.drag && mt.drag.id === e.id && mt.drag.uv;
+    let p = mtAt(m, e.id, t), lost = false;
+    if (!p){ const L = mtLast(m, e.id, i, 75); if (!L) return; p = L.p; lost = true; }
+    const uv = drag || posToUV(m, p, t); if (!uv) return;
+    const [x, y] = S(uv[0], uv[1]), sel = e.id === mt.sel, col = trkColor(e);
+    ctx.save(); ctx.globalAlpha = lost && !drag ? .6 : 1; if (lost && !drag) ctx.setLineDash([4, 3]);
+    if (e.ball){
+      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(14,13,16,.85)'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI*2); ctx.stroke();
+      ctx.lineWidth = 2.2; ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+      if (sel){ ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI*2); ctx.stroke(); }
+    } else {
+      ctx.lineWidth = sel ? 3.5 : 2.5; ctx.strokeStyle = 'rgba(14,13,16,.8)'; ctx.beginPath(); ctx.ellipse(x, y, 15, 6.5, 0, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = col; ctx.lineWidth = sel ? 2.6 : 1.8; ctx.beginPath(); ctx.ellipse(x, y, 14, 6, 0, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+      if (sel){ ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(x, y, 19, 9, 0, 0, Math.PI*2); ctx.stroke(); }
+      const lb = (e.n || '?') + (lost ? ' ?' : ''); ctx.font = '800 11px Manrope, system-ui, sans-serif'; const tw = ctx.measureText(lb).width + 8;
+      ctx.fillStyle = col; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x - tw/2, y - 30, tw, 15, 4); else ctx.rect(x - tw/2, y - 30, tw, 15); ctx.fill();
+      ctx.fillStyle = inkFor(col); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(lb, x, y - 22);
+    }
+    ctx.restore();
+  });
+}
+function mtHit(ev){
+  const m = matchById(curMatch); if (!m) return null;
+  const [u, v] = relPoint(ev), cr = contentRect(), t = video.currentTime, i = mtI(t); let best = null, bd = ev.pointerType === 'mouse' ? 20 : 30;
+  const list = mt.sel === 'ball' ? mtEnts(m).filter(e => e.ball) : mtEnts(m); if (mt.sel === 'ball') bd = Math.min(bd, 12);
+  list.forEach(e => { if (!mtActive(e, t)) return; let p = mtAt(m, e.id, t); if (!p){ const L = mtLast(m, e.id, i, 75); if (!L) return; p = L.p; } const uv = posToUV(m, p, t); if (!uv) return;
+    const d = Math.hypot((uv[0] - u)*cr.w, (uv[1] - v)*cr.h); if (d < bd){ bd = d; best = e; } });
+  return best;
+}
+/* colocar (o corregir) a alguien en el instante actual: es un punto fijo y borra lo seguido de él desde aquí hasta su siguiente punto fijo */
+function mtPlaceAt(m, e, pos, t, noUndo){
+  const tk = mtTrack(m, true), i = mtI(t), anc = tk.anc[e.id] = tk.anc[e.id] || [];
+  const nx = anc.find(a => a > i), D = mtData(m, true), a = D.P[e.id], end = nx != null ? nx : (a ? a.length/2 : i + 1);
+  if (!noUndo) mtPush(m, e.ball ? 'colocar balón' : 'colocar jugador', [e.id], i, end);
+  mtSet(m, e.id, i, pos.x, pos.y); mtClr(m, e.id, i + 1, end);
+  if (!anc.includes(i)){ anc.push(i); anc.sort((x, y) => x - y); if (anc.length > 3000) anc.shift(); }
+  tk.rev = tk.rev.filter(r => !(r.id === e.id && r.t >= t - 2 && r.t <= (nx != null ? nx*MT_STEP : 1e9)));
+}
+trkCv.addEventListener('pointerdown', ev => {
+  if (!mt.on || ev.button > 0) return;
+  ev.preventDefault(); ev.stopPropagation(); if (mt.run) return; video.pause();
+  const m = matchById(curMatch), [u, v] = relPoint(ev), t = video.currentTime;
+  if (mt.adding){
+    const r = posFromUV(m, u, v, t);
+    if (r.err){ flash(mt.adding.ball ? 'Pulsa el balón cuando esté sobre el césped' : 'Pulsa sobre el césped, en los pies del jugador', 2500); return; }
+    if (mt.adding.ball){ const tk = mtTrack(m, true); mtPush(m, 'seguir balón', ['ball']); tk.ball = 1; mtPlaceAt(m, MT_BALL, r.pos, t, true); mt.sel = 'ball'; mt.adding = null; mtChanged(m); save(); mtUI(); mtPaint(); renderMap2d(true); return; }
+    mt.adding = {pos: r.pos}; $('#mtFormBox').hidden = false; $('#mtFN').value = ''; $('#mtFName').value = ''; $('#mtFN').focus({preventScroll: true}); mtUI(); return;
+  }
+  const hit = mtHit(ev);
+  if (hit){ const wasSel = mt.sel === hit.id; mt.sel = hit.id; mt.drag = {wasSel, id: hit.id, pid: ev.pointerId, x: ev.clientX, y: ev.clientY, moved: false, uv: null}; trkCv.setPointerCapture(ev.pointerId); mtUI(); mtPaint(); return; }
+  const e = mtEnts(m).find(x => x.id === mt.sel);
+  if (e) mtDrop(m, e, u, v);
+});
+function mtDrop(m, e, u, v){
+  const t = video.currentTime;
+  if (!mtActive(e, t)){ flash('Ese jugador no está en el campo en este instante (alta o baja)'); return; }
+  const r = posFromUV(m, u, v, t);
+  if (r.err){ flash(e.ball ? 'Ese punto queda fuera del campo calibrado: pulsa el balón cuando esté sobre el césped' : 'Ese punto queda fuera del campo calibrado: pulsa sobre el césped, en los pies del jugador', 3000); mtPaint(); return; }
+  mtPlaceAt(m, e, r.pos, t); mtChanged(m); save(); mtUI(); mtPaint(); renderMap2d(true);
+}
+trkCv.addEventListener('pointermove', ev => { const d = mt.drag; if (!mt.on || !d || ev.pointerId !== d.pid) return; if (!d.moved && Math.hypot(ev.clientX - d.x, ev.clientY - d.y) < 3) return; d.moved = true; d.uv = relPoint(ev); mtPaint(); });
+const mtUp = ev => {
+  const d = mt.drag; if (!mt.on || !d || (ev && ev.pointerId !== d.pid)) return;
+  mt.drag = null; const m = matchById(curMatch), e = m && mtEnts(m).find(x => x.id === d.id);
+  if (e && d.moved && d.uv) mtDrop(m, e, d.uv[0], d.uv[1]);
+  else if (e && d.wasSel && ev && ev.type === 'pointerup'){ const uv = relPoint(ev); mtDrop(m, e, uv[0], uv[1]); }
+  else mtPaint();
+};
+trkCv.addEventListener('pointerup', mtUp); trkCv.addEventListener('pointercancel', mtUp);
+/* alta de jugadores, balón y plantilla */
+$('#mtAdd').onclick = () => { if (mt.run) return; mt.adding = mt.adding && !mt.adding.ball ? null : {}; $('#mtFormBox').hidden = true; mtUI(); };
+$('#mtBall').onclick = () => { if (mt.run) return; const m = matchById(curMatch); $('#mtFormBox').hidden = true; if (m.track && m.track.ball){ mt.sel = 'ball'; mt.adding = null; } else mt.adding = mt.adding && mt.adding.ball ? null : {ball: true}; mtUI(); mtPaint(); };
+$('#mtFN').oninput = () => { if ($('#mtFTeam').value !== 'A') return; const p = players.find(x => x.n === dorsal($('#mtFN').value)); if (p && !$('#mtFName').value) $('#mtFName').placeholder = p.name.split(' ')[0]; else $('#mtFName').placeholder = 'Nombre (opcional)'; };
+$('#mtFCancel').onclick = () => { mt.adding = null; $('#mtFormBox').hidden = true; mtUI(); };
+$('#mtFOk').onclick = () => {
+  const m = matchById(curMatch), A = mt.adding; if (!A || !A.pos) return;
+  const tk = mtTrack(m, true), team = $('#mtFTeam').value === 'B' ? 'B' : 'A', n = dorsal($('#mtFN').value), t = video.currentTime;
+  if (tk.players.some(p => p.team === team && p.n === n && n && mtActive(p, t))){ flash('Ese dorsal ya está seguido en ese equipo'); return; }
+  if (tk.players.length >= MT_MAXP){ flash(`Máximo ${MT_MAXP} jugadores seguidos a la vez`); return; }
+  const rp = team === 'A' && players.find(x => x.n === n), nm = cleanStr($('#mtFName').value, 24).trim() || (rp ? rp.name.split(' ')[0] : '');
+  const p = {id: uid(), team, n}; if (nm) p.name = nm; if (t > 1) p.in = +t.toFixed(1);
+  mtPush(m, 'añadir jugador', [p.id]); tk.players.push(p); mtPlaceAt(m, p, A.pos, t, true);
+  mt.sel = p.id; mt.adding = {}; $('#mtFormBox').hidden = true; mtChanged(m); save(); mtUI(); mtPaint(); renderMap2d(true);
+  flash(`${mtLabel(p)} añadido · pulsa al siguiente jugador o Esc para terminar`, 2200);
+};
+['#mtFN', '#mtFName'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('#mtFOk').click(); } }));
+$('#mtPlace').onclick = () => {
+  const m = matchById(curMatch), F = fieldOf(m), tk = mtTrack(m, true), team = $('#mtFormTeam').value === 'B' ? 'B' : 'A', t = video.currentTime;
+  const pos = mtFormPos($('#mtForm').value, F.L, F.W, team), ros = team === 'A' ? players.slice(0, pos.length) : [];
+  const add = [];
+  pos.forEach((q, k) => { const r = ros[k], n = r ? r.n : String(k + 1); if (tk.players.some(p => p.team === team && p.n === n) || tk.players.length + add.length >= MT_MAXP) return;
+    const p = {id: uid(), team, n}; if (r) p.name = r.name.split(' ')[0]; if (t > 1) p.in = +t.toFixed(1); add.push({p, q}); });
+  if (!add.length){ flash('Esos jugadores ya están colocados'); if (!tk.players.length && !tk.ball) delete m.track; return; }
+  mtPush(m, 'colocar plantilla', add.map(o => o.p.id));
+  add.forEach(o => { tk.players.push(o.p); mtPlaceAt(m, o.p, o.q, t, true); });
+  mt.sel = add[0].p.id; mtChanged(m); save(); mtUI(); mtPaint(); renderMap2d(true);
+  flash(`${add.length} jugadores colocados en ${$('#mtForm').value}: arrastra cada marca hasta su jugador`, 4000);
+};
+$('#mtOut').onclick = () => {
+  const m = matchById(curMatch), p = m.track && m.track.players.find(x => x.id === mt.sel), t = video.currentTime; if (!p || mt.run) return;
+  if (p.out != null){ mtPush(m, 'quitar la baja', []); delete p.out; }
+  else { const i = mtI(t), a = mtData(m, true).P[p.id]; mtPush(m, 'baja del jugador', [p.id], i + 1, a ? a.length/2 : i + 1); p.out = +t.toFixed(1); mtClr(m, p.id, i + 1, a ? a.length/2 : i + 1); m.track.rev = m.track.rev.filter(r => !(r.id === p.id && r.t >= t)); flash(`${mtLabel(p)} sale del campo en ${fmtShort(t)}`, 2500); }
+  mtChanged(m); save(); mtUI(); mtPaint(); renderMap2d(true);
+};
+$('#mtCut').onclick = async () => {
+  const m = matchById(curMatch), tk = m.track; if (!tk || mt.run) return;
+  const t = video.currentTime, i = mtI(t), e = mtEnts(m).find(x => x.id === mt.sel);
+  const r = await ask({title: 'Borrar desde aquí', text: `Se borra lo seguido desde ${fmtShort(t)} hasta el final${e ? '' : ' de TODOS los jugadores y del balón'}. Se puede deshacer.`, buttons: [{label: 'Cancelar', value: null}].concat(e ? [{label: `Solo ${mtLabel(e)}`, value: 'one', kind: 'primary'}] : []).concat([{label: 'Todos', value: 'all', kind: e ? '' : 'primary'}])});
+  if (!r.value) return;
+  const ids = r.value === 'one' ? [e.id] : mtEnts(m).map(x => x.id);
+  mtPush(m, 'borrar desde aquí', ids, i + 1);
+  ids.forEach(id => { const a = mtData(m, true).P[id]; if (a) mtClr(m, id, i + 1, a.length/2); if (tk.anc[id]) tk.anc[id] = tk.anc[id].filter(v => v <= i); });
+  tk.rev = tk.rev.filter(x => x.t <= t || !(ids.includes(x.id) || (x.id === '*' && r.value === 'all')));
+  mtChanged(m); save(); mtUI(); mtPaint(); renderMap2d(true);
+};
+$('#mtUndo').onclick = () => mtUndo(false); $('#mtRedo').onclick = () => mtUndo(true);
+$('#mtClose').onclick = closeMT;
+$('#mtEvCalc').onclick = () => { const m = matchById(curMatch); if (!m.track || mt.run) return; mtPush(m, 'recalcular pases', []); mtEvents(m); save(); mtUI(); flash(`Pases recalculados: ${plN(m.track.ev.filter(e => !e.del).length, 'evento')}`, 2400); };
+$('#mtEvAdd').onclick = () => {
+  const m = matchById(curMatch), tk = m.track, t = video.currentTime; if (!tk || mt.run) return;
+  const act = tk.players.filter(p => mtActive(p, t)); if (act.length < 2){ flash('Hacen falta al menos dos jugadores seguidos para añadir un pase'); return; }
+  const bp = mtAt(m, 'ball', t); let A = act[0];
+  if (bp){ let bd = 1e9; act.forEach(p => { const q = mtAt(m, p.id, t); if (q){ const d = Math.hypot(q.x - bp.x, q.y - bp.y); if (d < bd){ bd = d; A = p; } } }); }
+  const B = act.find(p => p !== A && p.team === A.team) || act.find(p => p !== A), p1 = mtAt(m, A.id, t), p2 = mtAt(m, B.id, t);
+  const e = {id: uid(), t: pr2(t), t2: pr2(t), team: A.team, from: A.n, to: B.n, type: A.team === B.team ? 'pass' : 'loss', manual: 1};
+  if (p1 && p2){ e.x1 = pr2(p1.x); e.y1 = pr2(p1.y); e.x2 = pr2(p2.x); e.y2 = pr2(p2.y); e.kind = passKind(e.team, e.x1, e.y1, e.x2, e.y2); }
+  mtPush(m, 'añadir pase', []); tk.ev = (tk.ev || []).concat([e]).sort((a, b) => a.t - b.t).slice(0, 4000); $('#mtEv').open = true; save(); mtUI(); flash('Pase añadido: elige quién pasa y quién recibe', 2500);
+};
+/* crear cortes a partir de los eventos */
+$('#mtToClips').onclick = async () => {
+  const m = matchById(curMatch), tk = m.track; if (!tk || mt.run) return;
+  const kind = $('#mtClipKind').value, cat = $('#mtCat').value; if (!state.cats.some(c => c.id === cat)){ flash('Elige una etiqueta'); return; }
+  const evs = (tk.ev || []).filter(e => !e.del && (kind === 'pass' ? e.type === 'pass' && e.team === 'A' : kind === 'loss' ? e.type === 'loss' && e.team === 'A' : e.type === 'loss' && e.team === 'B'));
+  if (!evs.length){ flash('No hay eventos de ese tipo'); return; }
+  const dur = video.duration || 1e7, wins = [];
+  evs.forEach(e => { const a = Math.max(0, e.t - 4), b = Math.min(dur, (e.t2 != null ? e.t2 : e.t) + 4), L = wins[wins.length - 1]; if (L && a <= L[1] + .5) L[1] = Math.max(L[1], b); else wins.push([a, b]); });
+  const use = wins.slice(0, 150), nm = {pass: 'pases', loss: 'pérdidas', rec: 'recuperaciones'}[kind];
+  const r = await ask({title: 'Crear cortes', text: `Se van a crear ${nCortes(use.length)} de «${catById(cat).name}» a partir de ${evs.length} ${nm} (4 s antes y 4 s después; los que se solapan se unen)${wins.length > 150 ? '. Solo los 150 primeros.' : '.'}`, buttons: [{label: 'Cancelar', value: null}, {label: 'Crear cortes', value: 'yes', kind: 'primary'}]});
+  if (r.value !== 'yes') return;
+  pushUndo('crear cortes desde eventos');
+  use.forEach(w => state.clips.push({id: uid(), matchId: m.id, cat, start: +w[0].toFixed(2), end: +w[1].toFixed(2), team: kind === 'pass' || kind === 'loss' ? 'Propio' : 'Propio', result: '', note: `Seguimiento · ${nm}`, zone: null, players: [], drawings: [], tags: {}}));
+  save(); renderAll(); flash(`${nCortes(use.length)} creados`, 2600);
+};
+/* ---------- el seguidor ---------- */
+$('#mtGo').onclick = () => { if (mt.run){ mt.run.cancel = true; return; } mtRun(); };
+async function mtRun(){
+  const m = matchById(curMatch), tk = m && m.track; if (!tk || mt.run) return;
+  video.pause(); $('#mtFormBox').hidden = true; mt.adding = null;
+  const dur = video.duration || 0, iEnd = Math.floor((dur - .25)/MT_STEP), D = +$('#mtDur').value || 0;
+  let i0 = mtI(video.currentTime);
+  const pendHere = () => mtEnts(m).filter(e => mtActive(e, (i0 + 1)*MT_STEP) && mtGet(m, e.id, i0) && !mtGet(m, e.id, i0 + 1) && !(e.out != null && (i0 + 1)*MT_STEP > e.out));
+  if (!pendHere().length){ const nx = mtPending(m, 0); if (nx < 0 || nx >= iEnd){ flash('No queda nada pendiente: todo lo colocado está seguido hasta el final o hasta su siguiente corrección', 3500); return; } i0 = nx; }
+  const iLim = Math.min(iEnd, D ? i0 + Math.round(D/MT_STEP) : iEnd);
+  if (iLim <= i0){ flash('Ya estás al final del vídeo'); return; }
+  const SW = 960, SH = Math.round(SW*(video.videoHeight || 9)/(video.videoWidth || 16)), cv = document.createElement('canvas'); cv.width = SW; cv.height = SH;
+  const cx = cv.getContext('2d', {willReadFrequently: true});
+  const gray = () => { cx.drawImage(video, 0, 0, SW, SH); const d = cx.getImageData(0, 0, SW, SH).data, g = new Float32Array(SW*SH); for (let i = 0; i < g.length; i++) g[i] = d[i*4]*.3 + d[i*4+1]*.59 + d[i*4+2]*.11; return g; };
+  const run = mt.run = {cancel: false, t0: performance.now(), v0: i0*MT_STEP, warned: false, lost: 0, done: 0};
+  mtPush(m, 'seguir', mtEnts(m).map(e => e.id), i0, iLim + 2);
+  mtUI();
+  let lastSave = performance.now(), stop = '';
+  try{
+    while (i0 < iLim && !run.cancel && !stop){
+      const ents = pendHere(); if (!ents.length){ const nx = mtPending(m, i0 + 1); if (nx < 0 || nx >= iLim) break; i0 = nx; continue; }
+      await calSeek(i0*MT_STEP); let G; try{ G = gray(); }catch(err){ stop = 'Este vídeo no deja leer sus imágenes: no se puede seguir'; break; }
+      const E = ents.map(e => {
+        const p0 = mtGet(m, e.id, i0), t0 = i0*MT_STEP, uv0 = posToUV(m, p0, t0); if (!uv0) return null;
+        const uv1 = posToUV(m, {x: p0.x + 1, y: p0.y}, t0), uv2 = posToUV(m, {x: p0.x, y: p0.y + 1}, t0);
+        const mpx = Math.max(uv1 ? Math.hypot((uv1[0] - uv0[0])*SW, (uv1[1] - uv0[1])*SH) : 8, uv2 ? Math.hypot((uv2[0] - uv0[0])*SW, (uv2[1] - uv0[1])*SH) : 8), isB = !!e.ball;
+        const bw = isB ? Math.round(clamp(mpx*1.2, 9, 23)) : Math.round(clamp(mpx*1.1, 10, 56)), bh = isB ? bw : Math.round(clamp(bw*2.2, 20, 120)), oy = isB ? Math.round(bh/2) : bh;
+        const o = {e, isB, bw, bh, oy, fx: uv0[0]*SW, fy: uv0[1]*SH, vx: 0, vy: 0, R: isB ? Math.max(18, Math.round(bw*2.2)) : Math.max(8, Math.round(bw*.9)), pen: isB ? .7 : .6, lim: isB ? .17 : .2, alive: true};
+        o.T = mtCut(G, o.fx, o.fy, bw, bh, oy, SW, SH); o.C0 = mtMad(o.T); return o;
+      }).filter(Boolean);
+      if (!E.length){ i0++; continue; }
+      let prevG = G, i = i0;
+      seg: while (i < iLim && !run.cancel){
+        i++;
+        for (let k = 1; k <= 2; k++){
+          const tt = (i - 1)*MT_STEP + k*MT_STEP/2; await calSeek(tt); const g = gray();
+          let df = 0, nn = 0; for (let q = 0; q < g.length; q += 37){ df += Math.abs(g[q] - prevG[q]); nn++; }
+          if (df/nn > 30){ tk.rev.push({t: +tt.toFixed(1), id: '*', why: 'plano'}); stop = `Cambio de plano en ${fmtShort(tt)}: comprueba la calibración y coloca de nuevo a los jugadores`; i--; break seg; }
+          prevG = g;
+          E.forEach(o => { if (!o.alive) return;
+            const px = o.fx + o.vx, py = o.fy + o.vy, bw = o.bw, bh = o.bh, R = o.R, T = o.T, kp = (bw*bh/4)*o.pen/4; let best = Infinity, raw = Infinity, bx = px, by = py;
+            for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++){
+              const x0 = Math.round(px + dx - bw/2), y0 = Math.round(py + dy - o.oy); if (x0 < 0 || y0 < 0 || x0 + bw >= SW || y0 + bh >= SH) continue;
+              let s = 0; for (let j = 0; j < bh; j += 2){ const row = (y0 + j)*SW + x0, tr0 = j*bw; for (let c = 0; c < bw; c += 2) s += Math.abs(g[row + c] - T[tr0 + c]); if (s >= best) break; }
+              const sp = s + (dx*dx + dy*dy)*kp;
+              if (sp < best){ best = sp; raw = s; bx = px + dx; by = py + dy; }
+            }
+            // perdido si lo encontrado se parece poco a la plantilla en relación con su propio contraste (un jugador que desaparece «encaja» con el césped)
+            const md = raw/(Math.ceil(bw/2)*Math.ceil(bh/2)), C = mtMad(T);
+            if (!isFinite(best) || md > o.lim*255 || md > Math.max(10, C*.8) || C < o.C0*.4){
+              // un fallo aislado (alguien pasa por delante, el balón llega a sus pies) se tolera sin mover la marca; dos seguidos = perdido
+              o.miss = (o.miss || 0) + 1; if (o.miss === 1) o.tm = tt;
+              if (o.miss >= 3){ o.alive = false; o.why = o.isB ? 'balon' : 'perdido'; o.tl = o.tm; }
+              return;
+            }
+            o.miss = 0;
+            o.vx = (bx - o.fx)*.6 + o.vx*.4; o.vy = (by - o.fy)*.6 + o.vy*.4; o.fx = bx; o.fy = by;
+            const T2 = mtCut(g, o.fx, o.fy, bw, bh, o.oy, SW, SH); for (let q = 0; q < T.length; q++) T[q] = T[q]*.8 + T2[q]*.2;
+          });
+        }
+        const ti = i*MT_STEP;
+        E.forEach(o => {
+          if (o.alive){
+            if (mtGet(m, o.e.id, i)){ o.alive = false; o.linked = true; return; }   // enlaza con lo ya seguido o con una corrección posterior
+            if (!mtActive(o.e, ti)){ o.alive = false; o.linked = true; return; }
+            const r = posFromUV(m, o.fx/SW, o.fy/SH, ti); if (r.err){ o.alive = false; o.why = 'fuera'; o.tl = ti; }
+            else if (!o.miss){ mtSet(m, o.e.id, i, r.pos.x, r.pos.y); run.done++; }   // mientras duda, no escribe: queda un hueco
+          }
+          if (!o.alive && o.why && !o.noted){ o.noted = true; run.lost++; tk.rev.push({t: +(o.tl || ti).toFixed(1), id: o.e.id, why: o.why}); if (tk.rev.length > 400) tk.rev.shift(); }
+        });
+        const live = E.filter(o => o.alive);
+        for (let a = 0; a < live.length; a++) for (let b = a + 1; b < live.length; b++){ const A = live[a], B = live[b]; if (A.isB || B.isB) continue;
+          if (Math.hypot(A.fx - B.fx, A.fy - B.fy) < Math.min(A.bw, B.bw)*.45 && !(A.cx > i - 25 && A.cw === B.e.id)){ A.cx = B.cx = i; A.cw = B.e.id; B.cw = A.e.id; tk.rev.push({t: +ti.toFixed(1), id: A.e.id, why: 'cruce'}); if (tk.rev.length > 400) tk.rev.shift(); } }
+        const el = (performance.now() - run.t0)/1000, vd = ti - run.v0;
+        $('#mtHint').textContent = `Siguiendo… ${fmtShort(ti)} de ${fmtShort(iLim*MT_STEP)} · ${live.length} en seguimiento · ${run.lost} por revisar · velocidad ×${vd > .5 && el > 0 ? fmt1(vd/el) : '–'} (Esc para pausar)`;
+        if (!run.warned && vd > 6 && el/vd > 4){ run.warned = true; flash('Este equipo va lento con tantos jugadores: prueba a seguir menos a la vez o tramos más cortos', 5000); }
+        mt.rev++; mt.viewKey = ''; mtPaint(); if (map2d) trkMapTick(true);
+        if (performance.now() - lastSave > 5000){ lastSave = performance.now(); mtIdbPut(m.id); save(); mtStripAll(); }
+        if (!live.length) break;
+      }
+      i0 = i;
+    }
+  }catch(err){ stop = 'El seguimiento se ha detenido por un error: ' + (err && err.message ? err.message : err); }
+  const cancelled = run.cancel; mt.run = null;
+  mtEvents(m); mtChanged(m, true); save(); mtIdbPut(m.id);
+  mtUI(); mtPaint(); renderMap2d(true);
+  const rv = run.lost ? ` · ${plN(run.lost, 'punto')} por revisar` : '';
+  flash(stop || (cancelled ? `Pausado en ${fmtShort(video.currentTime)}${rv}` : `Tramo seguido hasta ${fmtShort(video.currentTime)}${rv}`), stop ? 6000 : 3200);
+}
+function mtMad(T){ let m = 0; for (let i = 0; i < T.length; i++) m += T[i]; m /= T.length; let d = 0; for (let i = 0; i < T.length; i++) d += Math.abs(T[i] - m); return d/T.length; }
+function mtCut(g, x, y, bw, bh, oy, SW, SH){ const T = new Float32Array(bw*bh), x0 = Math.round(x - bw/2), y0 = Math.round(y - oy); for (let j = 0; j < bh; j++) for (let i = 0; i < bw; i++){ const X = clamp(x0 + i, 0, SW - 1), Y = clamp(y0 + j, 0, SH - 1); T[j*bw + i] = g[Y*SW + X]; } return T; }
+/* ---------- franja de la línea de tiempo ---------- */
+function mtCoverage(m, W, dur){
+  const key = m.id + '|' + W + '|' + dur.toFixed(1) + '|' + mt.rev; if (mt.covKey === key) return mt.cov;
+  const cov = new Float32Array(W).fill(-1), ents = mtEnts(m), D = mtData(m);
+  if (D && ents.length) for (let x = 0; x < W; x++){
+    const ia = mtI(x/W*dur), ib = Math.max(ia, mtI((x + 1)/W*dur) - 1), stepI = Math.max(1, Math.floor((ib - ia)/3)); let have = 0, tot = 0;
+    for (let i = ia; i <= ib; i += stepI) ents.forEach(e => { if (!mtActive(e, i*MT_STEP)) return; tot++; const a = D.P[e.id]; if (a && 2*i + 1 < a.length && a[2*i] !== MT_GAP) have++; });
+    cov[x] = tot && have ? have/tot : -1;
+  }
+  mt.covKey = key; mt.cov = cov; return cov;
+}
+function mtStripDraw(cv){
+  const m = matchById(curMatch), dur = video.duration || 0; if (!cv) return;
+  const W = Math.max(50, Math.round(cv.clientWidth || 300)), H = cv.height;
+  if (cv.width !== W) cv.width = W;
+  const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#26232c'; ctx.fillRect(0, 0, W, H);
+  if (!m || !mtHas(m) || !dur) return;
+  const cov = mtCoverage(m, W, dur);
+  for (let x = 0; x < W; x++){ const c = cov[x]; if (c < 0) continue; ctx.fillStyle = c >= .99 ? '#2fae74' : c >= .6 ? '#c9a43a' : '#c9703a'; ctx.fillRect(x, 4, 1, H - 4); }
+  ctx.fillStyle = '#ffd400'; (m.track.rev || []).forEach(r => ctx.fillRect(Math.round(r.t/dur*W) - 1, 0, 2, 6));
+  ctx.fillStyle = '#fff'; ctx.fillRect(Math.round(video.currentTime/dur*W), 0, 1.5, H);
+}
+function mtStripAll(){
+  const m = matchById(curMatch), s2 = $('#mtStrip2'); if (s2) s2.hidden = !(m && mtHas(m) && ready());
+  mtStripDraw($('#mtStrip')); if (s2 && !s2.hidden) mtStripDraw(s2);
+}
+['#mtStrip', '#mtStrip2'].forEach(s => { const cv = $(s); if (!cv) return; cv.addEventListener('click', e => { if (mt.run || !video.duration) return; const r = cv.getBoundingClientRect(); video.pause(); seek(clamp((e.clientX - r.left)/r.width, 0, 1)*video.duration); }); });
+/* ---------- bucle y teclado ---------- */
+let mtLastT = null, mtLastUI = -1;
+function mtTick(){
+  const t = video.currentTime;
+  if (mt.on && !mt.run && t !== mtLastT && !mt.drag){ mtLastT = t; mtPaint(); const i = mtI(t); if (i !== mtLastUI && video.paused){ mtLastUI = i; mtUI(); } }
+  if (t !== mtTick.s){ mtTick.s = t; const m = matchById(curMatch); if (m && mtHas(m)){ if (mt.on) mtStripDraw($('#mtStrip')); const s2 = $('#mtStrip2'); if (s2 && !s2.hidden) mtStripDraw(s2); } }
+}
+function mtKeys(e){
+  if (!mt.on) return false;
+  if (e.target.matches('input,select,textarea') && e.key !== 'Escape') return false;
+  const k = (e.key || '').toLowerCase();
+  if (e.key === 'Escape'){ e.preventDefault(); if (mt.run) mt.run.cancel = true; else if (mt.adding){ mt.adding = null; $('#mtFormBox').hidden = true; mtUI(); } else closeMT(); return true; }
+  if (mt.run){ e.preventDefault(); return true; }
+  if ((e.ctrlKey || e.metaKey) && k === 'z'){ e.preventDefault(); mtUndo(e.shiftKey); return true; }
+  if ((e.ctrlKey || e.metaKey) && k === 'y'){ e.preventDefault(); mtUndo(true); return true; }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ e.preventDefault(); video.pause(); seek(video.currentTime + (e.key === 'ArrowRight' ? 1 : -1)*(e.shiftKey ? 1 : JUMP)); return true; }
+  if (e.key === ',' || e.key === '.'){ e.preventDefault(); video.pause(); seek(video.currentTime + (e.key === '.' ? MT_STEP : -MT_STEP)); return true; }
+  if (e.code === 'Space'){ e.preventDefault(); if (video.paused) video.play().catch(() => {}); else video.pause(); return true; }
+  if (!e.ctrlKey && !e.metaKey && !e.altKey){
+    if (k === 'b'){ e.preventDefault(); $('#mtBall').click(); return true; }
+    if (e.key === 'Enter'){ e.preventDefault(); $('#mtGo').click(); return true; }
+  }
+  return false;
+}
+/* ---------- pasar el seguimiento de un corte al del partido ---------- */
+function mtFromClip(c){
+  const m = matchById(c.matchId); if (!m || !hasTrk(c)) return 0;
+  const tk = mtTrack(m, true); let n = 0;
+  mtPush(m, 'pasar un corte al seguimiento del partido', null);
+  (c.tracks || []).forEach(tr => { if (!tr.pts.length) return;
+    let p = tk.players.find(x => x.team === tr.team && x.n === (tr.n || '') && tr.n); if (!p){ if (tk.players.length >= MT_MAXP) return; p = {id: uid(), team: tr.team, n: tr.n || ''}; if (tr.name) p.name = tr.name; tk.players.push(p); }
+    const a = Math.ceil(tr.pts[0].t/MT_STEP - 1e-6), b = Math.floor(tr.pts[tr.pts.length - 1].t/MT_STEP + 1e-6);
+    for (let i = a; i <= b; i++){ const q = trkAt(tr, i*MT_STEP, true); if (q){ mtSet(m, p.id, i, q.x, q.y); n++; } } });
+  if (c.ball && c.ball.pts.length){ tk.ball = 1; const k = c.ball.pts, a = Math.ceil(k[0].t/MT_STEP - 1e-6), b = Math.floor(k[k.length - 1].t/MT_STEP + 1e-6); for (let i = a; i <= b; i++){ const q = ballAt(c, i*MT_STEP); if (q){ mtSet(m, 'ball', i, q.x, q.y); n++; } } }
+  (c.passes || []).filter(e => e.manual).forEach(e => tk.ev.push(Object.assign({}, e, {id: uid()})));
+  if (!tk.players.length && !tk.ball) delete m.track;
+  return n;
+}
+/* ---------- Informe y Excel ---------- */
+function mtReportHTML(){
+  const m = matchById(curMatch); if (!m || !mtHas(m)) return '';
+  const R = mtRange(m); if (!R) return '';
+  const t0 = R.a*MT_STEP, t1 = R.b*MT_STEP, A = passAgg([], {m, a: t0, b: t1});
+  let h = `<h2>Seguimiento del partido</h2><p class="fmtnote">${esc(matchTitle(m))} · seguido de ${fmtShort(t0)} a ${fmtShort(t1)} · ${m.track.players.length} jugadores${m.track.ball ? ' y balón' : ''}.</p>` + passPossHTML(A);
+  ['A', 'B'].forEach(team => { const st = mtStatsHTML(m, t0, t1, team, true); if (!st && !A.nPass[team]) return;
+    h += `<div class="rp-pass">${A.nPass[team] ? `<figure class="pa-net">${passNetSVG(A, team, 1).svg}<figcaption>Red de pases del partido · ${esc(teamTxt(team))}</figcaption></figure>` : '<div></div>'}<div>${st}</div></div>`; });
+  return h;
+}
+function mtSheets(){
+  const out = [];
+  state.matches.filter(m => mtHas(m) && mtRange(m)).forEach(m => {
+    const R = mtRange(m), t0 = R.a*MT_STEP, t1 = R.b*MT_STEP, title = matchTitle(m);
+    const fis = [['Partido', 'Equipo', 'Dorsal', 'Jugador', 'Minutos con datos', 'Distancia (m)', 'm/min', 'Vel. máx (km/h)', 'Andar <7 (m)', 'Trotar 7–14 (m)', 'Correr 14–21 (m)', 'Esprintar >21 (m)']];
+    mtPhys(m, t0, t1).forEach(o => fis.push([title, teamTxt(o.p.team), o.p.n || '?', o.p.name || '', +(o.time/60).toFixed(1), Math.round(o.dist), Math.round(o.dist/(o.time/60)), +o.max.toFixed(1)].concat(o.band.map(v => Math.round(v)))));
+    const ev = [['Partido', 't (s)', 'Tipo', 'Equipo', 'De', 'A', 'Dirección', 'Distancia (m)', 'x1 (m)', 'y1 (m)', 'x2 (m)', 'y2 (m)', 'Origen']];
+    (m.track.ev || []).filter(e => !e.del).forEach(e => ev.push([title, e.t, e.type === 'loss' ? 'Pérdida' : 'Pase', teamTxt(e.team), e.from || '?', e.to || '?', e.type === 'pass' && e.kind ? KIND_TXT[e.kind] : '', e.x1 != null ? +Math.hypot(e.x2 - e.x1, e.y2 - e.y1).toFixed(1) : '', e.x1 ?? '', e.y1 ?? '', e.x2 ?? '', e.y2 ?? '', e.manual ? 'A mano' : 'Automático']));
+    const ents = mtEnts(m), pos = [['t (s)'].concat(...ents.map(e => { const l = e.ball ? 'Balón' : `${teamTxt(e.team)} ${e.n || '?'}`; return [l + ' x', l + ' y']; }))];
+    for (let i = R.a; i <= R.b && pos.length < 20000; i += 5) pos.push([+(i*MT_STEP).toFixed(1)].concat(...ents.map(e => { const p = mtGet(m, e.id, i); return p ? [p.x, p.y] : ['', '']; })));
+    out.push({m, fis, ev, pos});
+  });
+  return out;
+}
+
+mtReady = true;
+setTimeout(() => { mtIdbLoadAll(); mtStripAll(); }, 0);
+
+/* v3.18 · accesos al seguimiento del partido */
+$('#trkMT').onclick = () => { closeTrk(); openMT(); };
+$('#dmTrack').onclick = () => { if ($('#dlgMatch').open) $('#dlgMatch').close(); openMT(); };
+$('#trkToMT').onclick = async () => {
+  const c = trkClip(); if (!c || !hasTrk(c)){ flash('Este corte no tiene seguimiento propio que pasar'); return; }
+  const r = await ask({title: 'Pasar al seguimiento del partido', text: 'Las posiciones de este corte pasan al seguimiento continuo del partido y el corte deja de tener seguimiento propio (los pases corregidos a mano se conservan).', buttons: [{label: 'Cancelar', value: null}, {label: 'Pasar', value: 'yes', kind: 'primary'}]});
+  if (r.value !== 'yes') return;
+  pushUndo('pasar al seguimiento del partido'); const n = mtFromClip(c), m = matchById(c.matchId);
+  delete c.tracks; delete c.ball; delete c.passes; mtEvents(m); mtChanged(m, true); save(); closeTrk(); renderMap2d(true);
+  flash(`${n} posiciones pasadas al seguimiento del partido`, 3000);
+};
+
 /* =========================================================
    INICIO
    ========================================================= */
-function renderAll(){ renderMatchUI(); renderTags(); renderPlayerPick(); renderZonePick(); renderList(); renderPlaylist(); renderTimeline(); renderStats(); refreshDescBar(); }
+function renderAll(){ if (mtReady) setTimeout(mtStripAll, 0); renderMatchUI(); renderTags(); renderPlayerPick(); renderZonePick(); renderList(); renderPlaylist(); renderTimeline(); renderStats(); refreshDescBar(); }
 const migrated = loadStore();
 applyBrand();
 renderAll();
